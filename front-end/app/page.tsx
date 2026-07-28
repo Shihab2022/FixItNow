@@ -2,32 +2,32 @@ import { HeroSection } from "@/components/home/hero-section";
 import { SearchBookingCard } from "@/components/home/search-booking-card";
 import { PopularCategories } from "@/components/home/popular-categories";
 import { FeaturedServices } from "@/components/home/featured-services";
-// import { TopRatedTechnicians } from '@/components/home/top-rated-technicians';
-// import { WhyChooseUs } from '@/components/home/why-choose-us';
-// import { HowItWorks } from '@/components/home/how-it-works';
-// import { Testimonials } from '@/components/home/testimonials';
-// import { StatsSection } from '@/components/home/stats-section';
-// import { TechnicianCTA } from '@/components/home/technician-cta';
-// import { AppPromotion } from '@/components/home/app-promotion';
-// import { FAQSection } from '@/components/home/faq-section';
-// import { Newsletter } from '@/components/home/newsletter';
+import { TopRatedTechnicians } from "@/components/home/top-rated-technicians";
+import { WhyChooseUs } from "@/components/home/why-choose-us";
+import { HowItWorks } from "@/components/home/how-it-works";
+import { Testimonials } from "@/components/home/testimonials";
+import { StatsSection } from "@/components/home/stats-section";
+import { TechnicianCTA } from "@/components/home/technician-cta";
+import { FAQSection } from "@/components/home/faq-section";
+import { Newsletter } from "@/components/home/newsletter";
 
 export default function HomePage() {
   return (
     <>
+      {/* <div className="relative min-h-screen overflow-hidden bg-linear-to-br/decreasing from-[#0F172A] via-[#111827] to-[#2563EB]/20"> */}
       <HeroSection />
       <SearchBookingCard />
       <PopularCategories />
       <FeaturedServices />
-      {/* <TopRatedTechnicians />
+      <TopRatedTechnicians />
       <WhyChooseUs />
       <HowItWorks />
       <Testimonials />
       <StatsSection />
       <TechnicianCTA />
-      <AppPromotion />
       <FAQSection />
-      <Newsletter /> */}
+      <Newsletter />
+      {/* </div> */}
     </>
   );
 }

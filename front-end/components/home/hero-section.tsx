@@ -7,9 +7,8 @@ import { motion } from "framer-motion";
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden pt-12 pb-24 lg:pt-20 lg:pb-32">
-      {/* Background Decorative Blur Elements */}
-      <div className="pointer-events-none absolute -top-24 right-0 -z-10 h-96 w-96 rounded-full bg-blue-400/20 blur-3xl" />
-      <div className="pointer-events-none absolute top-1/2 left-0 -z-10 h-96 w-96 rounded-full bg-teal-400/15 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 right-0 -z-10 h-96 w-96 rounded-full bg-blue-400/50 blur-3xl" />
+      <div className="pointer-events-none absolute top-1/2 left-0 -z-10 h-96 w-96 rounded-full bg-teal-400/55 blur-3xl" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
