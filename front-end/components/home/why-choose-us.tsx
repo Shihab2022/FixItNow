@@ -57,7 +57,7 @@ const REASONS = [
 
 export function WhyChooseUs() {
   return (
-    <section className="bg-slate-900 py-20 text-white">
+    <section className="">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto">
           <h2 className="font-bold text-3xl tracking-tight sm:text-4xl">
@@ -76,7 +76,7 @@ export function WhyChooseUs() {
               <motion.div
                 key={i}
                 whileHover={{ y: -5 }}
-                className="rounded-3xl border border-slate-800 bg-slate-800/50 p-6 backdrop-blur-xs"
+                className="rounded-3xl border border-slate-800  p-6 backdrop-blur-xs"
               >
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/20 text-blue-400">
                   <Icon className="h-6 w-6" />

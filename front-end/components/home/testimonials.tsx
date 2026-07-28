@@ -29,7 +29,7 @@ const TESTIMONIALS: Testimonial[] = [
 
 export function Testimonials() {
   return (
-    <section className="bg-slate-50 py-20">
+    <section className=" py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto">
           <h2 className="font-bold text-slate-900 text-3xl tracking-tight sm:text-4xl">
