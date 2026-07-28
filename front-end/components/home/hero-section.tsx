@@ -75,7 +75,7 @@ export function HeroSection() {
               transition={{ duration: 0.6 }}
               className="relative w-full max-w-lg"
             >
-              <div className="relative h-[420px] w-full overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-tr from-slate-100 to-blue-50/50 p-4 shadow-xl">
+              <div className="relative h-105 w-full overflow-hidden rounded-3xl border border-slate-200 bg-linear-to-tr from-slate-100 to-blue-50/50 p-4 shadow-xl">
                 <Image
                   src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800&auto=format&fit=crop"
                   alt="Technician servicing home equipment"

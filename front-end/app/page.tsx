@@ -1,7 +1,7 @@
-import { HeroSection } from '@/components/home/hero-section';
-// import { SearchBookingCard } from '@/components/home/search-booking-card';
-// import { PopularCategories } from '@/components/home/popular-categories';
-// import { FeaturedServices } from '@/components/home/featured-services';
+import { HeroSection } from "@/components/home/hero-section";
+import { SearchBookingCard } from "@/components/home/search-booking-card";
+import { PopularCategories } from "@/components/home/popular-categories";
+import { FeaturedServices } from "@/components/home/featured-services";
 // import { TopRatedTechnicians } from '@/components/home/top-rated-technicians';
 // import { WhyChooseUs } from '@/components/home/why-choose-us';
 // import { HowItWorks } from '@/components/home/how-it-works';
@@ -16,10 +16,10 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      {/* <SearchBookingCard />
+      <SearchBookingCard />
       <PopularCategories />
       <FeaturedServices />
-      <TopRatedTechnicians />
+      {/* <TopRatedTechnicians />
       <WhyChooseUs />
       <HowItWorks />
       <Testimonials />
