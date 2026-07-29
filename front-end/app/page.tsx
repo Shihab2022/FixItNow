@@ -10,6 +10,8 @@ import { StatsSection } from "@/components/home/stats-section";
 import { TechnicianCTA } from "@/components/home/technician-cta";
 import { FAQSection } from "@/components/home/faq-section";
 import { Newsletter } from "@/components/home/newsletter";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 export default function HomePage() {
   return (
@@ -26,7 +28,7 @@ export default function HomePage() {
         <div className="pointer-events-none absolute top-1/6 right-0 -z-10 h-150 w-150 rounded-full bg-blue-500/55 blur-3xl" />
         <div className="pointer-events-none absolute top-1/2 left-0 -z-10 h-96 w-96 rounded-full bg-teal-400/55 blur-3xl" />
         <div className="pointer-events-none absolute top-1/10 -left-5 -z-10 h-150 w-200 rounded-full bg-teal-400/55 blur-3xl" />
-
+        <Header />
         <HeroSection />
         <SearchBookingCard />
         <PopularCategories />
@@ -39,6 +41,7 @@ export default function HomePage() {
         <TechnicianCTA />
         <FAQSection />
         <Newsletter />
+        <Footer />
       </div>
     </>
   );
