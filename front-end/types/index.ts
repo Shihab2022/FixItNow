@@ -1,3 +1,5 @@
+import { toastTypes } from "@/app/constant";
+
 export interface Service {
   id: string;
   name: string;
@@ -129,3 +131,4 @@ export interface StatMetric {
   isPositive: boolean;
   icon: string;
 }
+export type ToastTypes = (typeof toastTypes)[keyof typeof toastTypes];

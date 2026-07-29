@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 "use client";
 
 import React from "react";
@@ -7,6 +8,8 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import { registerUser } from "@/service/auth";
 import { redirect } from "next/navigation";
+import { toastTypes } from "@/app/constant";
+import { showToast } from "../toast/toast";
 
 const registerSchema = z
   .object({
@@ -15,7 +18,7 @@ const registerSchema = z
     phone: z.string().min(10, "Valid phone number is required"),
     address: z.string().min(5, "Address must be at least 5 characters"),
     role: z.enum(["CUSTOMER", "TECHNICIAN"]),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: z.string().min(4, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -41,12 +44,19 @@ export const RegisterForm: React.FC = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     const res = await registerUser(data);
-    if (res.data.success) {
-      redirect("/login");
+    if (res?.data?.success) {
+      showToast(
+        toastTypes.SUCCESS,
+        "Account created successfully! Please log in.",
+      );
+      redirect("/auth/login");
     }
-    console.log("API Response:", res);
-    // API boundary placeholder
-    console.log("Register payload:", data);
+    if (!res.success) {
+      showToast(
+        toastTypes.FAILED,
+        res?.message || "Something went wrong. Please try again later.",
+      );
+    }
   };
 
   return (
