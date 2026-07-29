@@ -18,7 +18,7 @@ const registerSchema = z
     phone: z.string().min(10, "Valid phone number is required"),
     address: z.string().min(5, "Address must be at least 5 characters"),
     role: z.enum(["CUSTOMER", "TECHNICIAN"]),
-    password: z.string().min(4, "Password must be at least 8 characters"),
+    password: z.string().min(4, "Password must be at least 4 characters"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {

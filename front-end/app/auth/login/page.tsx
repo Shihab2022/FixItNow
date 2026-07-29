@@ -4,10 +4,13 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-
+import { loginUser } from "@/service/auth";
+import { redirect } from "next/navigation";
+import { toastTypes } from "@/app/constant";
+import { showToast } from "@/components/toast/toast";
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(4, "Password must be at least 4 characters"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -22,7 +25,18 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    console.log("Logging in:", data);
+    const res = await loginUser(data);
+    if (res?.data?.success) {
+      const accessToken = res.data.data.accessToken;
+      localStorage.setItem("accessToken", accessToken);
+      showToast(toastTypes.SUCCESS, "Login successful!");
+      redirect("/dashboard");
+    } else {
+      showToast(
+        toastTypes.FAILED,
+        res?.message || "Something went wrong. Please try again later.",
+      );
+    }
   };
 
   return (
@@ -75,7 +89,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md active:scale-95 disabled:opacity-50"
+            className="w-full py-3 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md active:scale-95 disabled:opacity-50"
           >
             {isSubmitting ? "Signing in..." : "Sign In"}
           </button>
@@ -84,7 +98,7 @@ export default function LoginPage() {
         <p className="text-center text-xs text-slate-500">
           {`Don't have an account?`}{" "}
           <Link
-            href="/register"
+            href="/auth/register"
             className="text-blue-600 font-bold hover:underline"
           >
             Sign up
