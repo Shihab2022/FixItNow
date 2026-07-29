@@ -31,7 +31,6 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* User Moderation Table */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
         <h2 className="text-lg font-bold text-slate-900">
           Recent Registrations
