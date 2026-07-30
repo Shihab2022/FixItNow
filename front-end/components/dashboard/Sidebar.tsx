@@ -13,14 +13,14 @@ import {
 } from "react-icons/fi";
 
 interface SidebarProps {
-  role: "customer" | "technician" | "admin";
+  role: "CUSTOMER" | "TECHNICIAN" | "ADMIN";
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
   const pathname = usePathname();
 
   const navMap = {
-    customer: [
+    CUSTOMER: [
       { name: "Overview", href: "/customer", icon: FiHome },
       { name: "Bookings", href: "/customer/bookings", icon: FiCalendar },
       {
@@ -29,14 +29,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
         icon: FiDollarSign,
       },
     ],
-    technician: [
+    TECHNICIAN: [
       { name: "Dashboard", href: "/technician", icon: FiHome },
       { name: "Schedule", href: "/technician/calendar", icon: FiCalendar },
       { name: "Services", href: "/technician/services", icon: FiBriefcase },
       { name: "Earnings", href: "/technician/earnings", icon: FiDollarSign },
       { name: "Profile", href: "/technician/profile", icon: FiUser },
     ],
-    admin: [
+    ADMIN: [
       { name: "Overview", href: "/admin", icon: FiHome },
       { name: "Technicians", href: "/admin/technicians", icon: FiUser },
       { name: "Categories", href: "/admin/categories", icon: FiSettings },
