@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiMethods } from "@/app/constant";
-import { apiHandler } from "@/lib/apiHandler";
+import { apiClient, apiHandler } from "@/lib/apiHandler";
 
 export const registerUser = async (params: any) => {
   const res = await apiHandler({
@@ -13,15 +13,23 @@ export const registerUser = async (params: any) => {
   return res;
 };
 export const loginUser = async (params: any) => {
-  const res = await apiHandler({
-    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
-    path: `auth/login`,
+  const res = await apiClient({
+    endpoint: `auth/login`,
     method: apiMethods.POST as keyof typeof apiMethods,
-    formData: false,
     params: params,
   });
   return res;
 };
+// export const loginUser = async (params: any) => {
+//   const res = await apiClient({
+//     // baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+//     path: `auth/login`,
+//     method: apiMethods.POST as keyof typeof apiMethods,
+//     formData: false,
+//     params: params,
+//   });
+//   return res;
+// };
 export const getMe = async () => {
   const res = await apiHandler({
     baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,

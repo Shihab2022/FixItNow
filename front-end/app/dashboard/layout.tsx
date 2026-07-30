@@ -1,8 +1,3 @@
-// import { Navbar } from "@/components/shared/navbar";
-// import { SidebarProvider } from "@/components/ui/sidebar";
-// import { getMe } from "@/service/getMe";
-// import DashboardSidebar from "./_components/DashboardSidebar";
-
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/layout/header";
 import { getMe } from "@/service/auth";
