@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Search, Menu, X, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ProfileDropdown from "./profileDropdown";
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -65,6 +66,7 @@ export function Header() {
           >
             Register
           </Link>
+          <ProfileDropdown />
         </div>
 
         {/* Mobile Toggle */}
