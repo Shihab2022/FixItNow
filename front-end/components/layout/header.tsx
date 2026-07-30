@@ -54,13 +54,13 @@ export function Header() {
             <Search className="h-5 w-5" />
           </button>
           <Link
-            href="/auth/login"
+            href="/login"
             className="rounded-xl px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200/60"
           >
             Log in
           </Link>
           <Link
-            href="/auth/register"
+            href="/register"
             className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-xs transition hover:bg-slate-800"
           >
             Register

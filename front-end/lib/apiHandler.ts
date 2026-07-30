@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
+"use server";
 import { apiMethods } from "@/app/constant";
-import { jwtUtils } from "@/utils/jwt";
+import { cookies } from "next/headers";
 
 // import { SOMETHING_WENT_WRONG } from "constants/messages";
 const SOMETHING_WENT_WRONG = "Something went wrong. Please try again later.";
@@ -34,12 +34,14 @@ export const apiHandler = async <
 }: ApiHandlerOptions<TParams>): Promise<ApiResponse<TData, TParams>> => {
   try {
     let url = `${baseURL}${path}`;
-    const token = jwtUtils.getToken();
+    const cookieStore = await cookies();
+    const token = cookieStore.get("accessToken")?.value;
 
     const headers: Record<string, string> = {};
 
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
+      headers["Cookie"] = `accessToken=${token}`;
     }
 
     const options: RequestInit = {

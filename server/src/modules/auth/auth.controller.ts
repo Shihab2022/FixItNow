@@ -4,6 +4,7 @@ import catchAsync from "../../helpars/catchAsync";
 import sendResponse from "../../helpars/sendResponse";
 import { AuthServices } from "./auth.service";
 import { IAuthUser } from "../../types";
+import config from "../../config";
 
 const register = catchAsync(async (req: Request, res: Response) => {
   const user = await AuthServices.register(req.body);
@@ -19,8 +20,9 @@ const login = catchAsync(async (req: Request, res: Response) => {
   const { accessToken, refreshToken } = await AuthServices.login(req.body);
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: false,
-    sameSite: "none",
+    // "none" requires secure: true. For local http, use "lax".
+    sameSite: config.NODE_ENV === "production" ? "none" : "lax",
+    secure: config.NODE_ENV === "production", // Must be true when sameSite is "none"
     maxAge: 1000 * 60 * 60 * 24, // 24 hour or 1 day
   });
 

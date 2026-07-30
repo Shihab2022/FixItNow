@@ -49,7 +49,7 @@ export const RegisterForm: React.FC = () => {
         toastTypes.SUCCESS,
         "Account created successfully! Please log in.",
       );
-      redirect("/auth/login");
+      redirect("/login");
     }
     if (!res.success) {
       showToast(
