@@ -37,6 +37,8 @@ export default function AdminTechniciansPage() {
                       src={tech.avatar}
                       alt={tech.name}
                       className="w-9 h-9 rounded-full object-cover border border-slate-200"
+                      width={36}
+                      height={35}
                     />
                     <div>
                       <p className="font-bold text-slate-900 text-xs">

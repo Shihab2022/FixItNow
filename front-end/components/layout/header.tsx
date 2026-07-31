@@ -47,7 +47,7 @@ export function Header({ user }: { user?: any }) {
           </Link>
           {user.role && (
             <Link
-              href={`/${user.role.toLowerCase()}`}
+              href={`/dashboard/${user.role.toLowerCase()}`}
               className="transition hover:text-slate-900"
             >
               Dashboard

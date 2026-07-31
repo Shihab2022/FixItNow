@@ -11,6 +11,7 @@ import {
   FiSettings,
   FiBriefcase,
 } from "react-icons/fi";
+import { CgProfile } from "react-icons/cg";
 
 interface SidebarProps {
   role: "CUSTOMER" | "TECHNICIAN" | "ADMIN";
@@ -21,6 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
 
   const navMap = {
     CUSTOMER: [
+      { name: "Profile", href: "/", icon: CgProfile },
       { name: "Overview", href: "/customer", icon: FiHome },
       { name: "Bookings", href: "/customer/bookings", icon: FiCalendar },
       {
@@ -30,13 +32,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       },
     ],
     TECHNICIAN: [
+      { name: "Profile", href: "/", icon: CgProfile },
       { name: "Dashboard", href: "/technician", icon: FiHome },
       { name: "Schedule", href: "/technician/calendar", icon: FiCalendar },
       { name: "Services", href: "/technician/services", icon: FiBriefcase },
       { name: "Earnings", href: "/technician/earnings", icon: FiDollarSign },
-      { name: "Profile", href: "/technician/profile", icon: FiUser },
     ],
     ADMIN: [
+      { name: "Profile", href: "/", icon: CgProfile },
       { name: "Overview", href: "/admin", icon: FiHome },
       { name: "Technicians", href: "/admin/technicians", icon: FiUser },
       { name: "Categories", href: "/admin/categories", icon: FiSettings },
@@ -44,18 +47,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
   };
 
   const navItems = navMap[role] || [];
-
   return (
     <aside className="w-64  min-h-screen p-4 flex flex-col justify-between border-r border-slate-800 text-slate-300">
       <div className="space-y-6">
         <nav className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = pathname === `/dashboard${item.href}`;
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={`/dashboard${item.href}`}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all ${
                   isActive
                     ? "bg-blue-600 text-white shadow-sm"

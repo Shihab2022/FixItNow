@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { motion } from "framer-motion";
 import { mockBookings } from "@/mock/data";
 import { FiCalendar, FiClock, FiCheckCircle } from "react-icons/fi";
