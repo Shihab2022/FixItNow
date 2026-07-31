@@ -42,7 +42,7 @@ const ProfileDropdown = ({ user }: { user: any }) => {
       </div>
 
       {isOpen && (
-        <div className="absolute left-0 mt-2  z-50 bg-slate-50 border border-default-medium rounded-2xl shadow-lg w-72">
+        <div className="absolute -left-5 mt-2  z-50 bg-slate-50 border border-default-medium rounded-2xl shadow-lg w-72">
           <div className="p-2">
             <div className="flex items-center px-2.5 p-2 space-x-1.5 text-sm bg-neutral-secondary-strong rounded">
               <Image

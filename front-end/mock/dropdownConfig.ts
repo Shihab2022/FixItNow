@@ -2,14 +2,15 @@
 import { IconType } from "react-icons";
 import {
   HiOutlineUser,
-  HiOutlineAdjustmentsHorizontal,
-  HiOutlineLockClosed,
-  HiOutlineBell,
-  HiOutlineQuestionMarkCircle,
-  HiOutlineMoon,
+  // HiOutlineAdjustmentsHorizontal,
+  // HiOutlineLockClosed,
+  // HiOutlineBell,
+  // HiOutlineQuestionMarkCircle,
+  // HiOutlineMoon,
   HiOutlineRocketLaunch,
   HiOutlineArrowRightOnRectangle,
 } from "react-icons/hi2";
+import { MdSpaceDashboard } from "react-icons/md";
 
 export interface MenuItem {
   id: string;
@@ -38,42 +39,48 @@ export const USER_PROFILE: UserProfile = {
 
 export const DROPDOWN_MENU_ITEMS: MenuItem[] = [
   {
+    id: "dashboard",
+    label: "Dashboard",
+    path: "/dashboard",
+    icon: MdSpaceDashboard,
+  },
+  {
     id: "account",
     label: "Account",
-    path: "/account",
+    path: "/dashboard",
     icon: HiOutlineUser,
   },
-  {
-    id: "settings",
-    label: "Settings",
-    path: "/settings",
-    icon: HiOutlineAdjustmentsHorizontal,
-  },
-  {
-    id: "privacy",
-    label: "Privacy",
-    path: "/privacy",
-    icon: HiOutlineLockClosed,
-  },
-  {
-    id: "notifications",
-    label: "Notifications",
-    path: "/notifications",
-    icon: HiOutlineBell,
-  },
-  {
-    id: "help",
-    label: "Help center",
-    path: "/help",
-    icon: HiOutlineQuestionMarkCircle,
-  },
-  {
-    id: "dark-mode",
-    label: "Dark mode",
-    path: "#",
-    icon: HiOutlineMoon,
-    hasToggle: true,
-  },
+  // {
+  //   id: "settings",
+  //   label: "Settings",
+  //   path: "/settings",
+  //   icon: HiOutlineAdjustmentsHorizontal,
+  // },
+  // {
+  //   id: "privacy",
+  //   label: "Privacy",
+  //   path: "/privacy",
+  //   icon: HiOutlineLockClosed,
+  // },
+  // {
+  //   id: "notifications",
+  //   label: "Notifications",
+  //   path: "/notifications",
+  //   icon: HiOutlineBell,
+  // },
+  // {
+  //   id: "help",
+  //   label: "Help center",
+  //   path: "/help",
+  //   icon: HiOutlineQuestionMarkCircle,
+  // },
+  // {
+  //   id: "dark-mode",
+  //   label: "Dark mode",
+  //   path: "#",
+  //   icon: HiOutlineMoon,
+  //   hasToggle: true,
+  // },
   {
     id: "upgrade",
     label: "Upgrade to PRO",
