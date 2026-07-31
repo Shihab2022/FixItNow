@@ -60,6 +60,17 @@ const UpdateCategory = async (payload: {
   });
   return category;
 };
+const updateCategoryStatus = async (payload: {
+  id: string;
+  status: boolean;
+}) => {
+  const { id, status } = payload;
+  const category = await prisma.category.update({
+    where: { id },
+    data: { status },
+  });
+  return category;
+};
 
 export const AdminService = {
   GetAllUsers,
@@ -68,4 +79,5 @@ export const AdminService = {
   GetAllCategories,
   CreateCategory,
   UpdateCategory,
+  updateCategoryStatus,
 };

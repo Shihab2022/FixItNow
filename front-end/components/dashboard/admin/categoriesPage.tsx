@@ -5,7 +5,12 @@ import { useEffect, useState } from "react";
 import { FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { mockCategories } from "@/mock/data";
 import { CreateCategoryModal } from "./createCategory";
-import { createCategory, getCategory, updateCategory } from "@/service/admin";
+import {
+  createCategory,
+  getCategory,
+  updateCategory,
+  updateCategoryStatus,
+} from "@/service/admin";
 import { showToast } from "@/components/toast/toast";
 import { toastTypes } from "@/app/constant";
 
@@ -33,6 +38,7 @@ export default function CategoriesPage() {
       setCategories(res.data.data);
     }
   };
+  console.log({ categories });
   useEffect(() => {
     getC();
   }, []);
@@ -62,8 +68,8 @@ export default function CategoriesPage() {
               <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <th className="py-4 px-6">Category</th>
                 <th className="py-4 px-6">Description</th>
-                <th className="py-4 px-6">Active Pros</th>
-                <th className="py-4 px-6 text-right">Actions</th>
+                <th className="py-4 px-6">Active Status</th>
+                <th className="py-4 px-6 text-right">Edit</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -81,8 +87,21 @@ export default function CategoriesPage() {
                     {cat.description}
                   </td>
                   <td className="py-4 px-6 text-xs font-bold text-slate-700">
-                    Services Listed
+                    {/* Services Listed */}
                     {/* {cat.serviceCount} Services Listed */}
+                    <span
+                      onClick={async () => {
+                        const res = await updateCategoryStatus(cat.id, {
+                          status: !cat.status,
+                        });
+                        if (res?.data?.success) {
+                          getC();
+                        }
+                      }}
+                      className={`inline-flex items-center cursor-pointer rounded-md ${cat.status ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"} px-2 py-1 text-xs font-medium inset-ring inset-ring-green-600/20`}
+                    >
+                      {cat.status ? "Active" : "Inactive"}
+                    </span>
                   </td>
                   <td className="py-4 px-6 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -95,12 +114,12 @@ export default function CategoriesPage() {
                       >
                         <FiEdit2 />
                       </button>
-                      <button
+                      {/* <button
                         onClick={() => handleDelete(cat.id)}
                         className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                       >
                         <FiTrash2 />
-                      </button>
+                      </button> */}
                     </div>
                   </td>
                 </tr>

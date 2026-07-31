@@ -23,6 +23,16 @@ export const updateCategory = async (id: string, params: any) => {
   });
   return res;
 };
+export const updateCategoryStatus = async (id: string, params: any) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `admin/update/category/${id}`,
+    method: apiMethods.PUT as keyof typeof apiMethods,
+    formData: false,
+    params: params,
+  });
+  return res;
+};
 export const getCategory = async () => {
   const res = await apiHandler({
     baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,

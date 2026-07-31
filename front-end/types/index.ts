@@ -29,6 +29,7 @@ export interface Category {
   title: string;
   iconName: string;
   technicianCount: number;
+  status?: boolean;
 }
 
 export interface Testimonial {

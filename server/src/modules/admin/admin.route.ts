@@ -11,5 +11,10 @@ router.get("/bookings", auth(Role.ADMIN), AdminController.GetAllBookings);
 router.get("/categories", auth(Role.ADMIN), AdminController.GetAllCategories);
 router.post("/categories", auth(Role.ADMIN), AdminController.CreateCategory);
 router.put("/categories/:id", auth(Role.ADMIN), AdminController.UpdateCategory);
+router.put(
+  "/update/category/:id",
+  auth(Role.ADMIN),
+  AdminController.updateCategoryStatus,
+);
 
 export const AdminRouter = router;
