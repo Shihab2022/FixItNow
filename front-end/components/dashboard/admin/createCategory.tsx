@@ -1,44 +1,44 @@
-import React, { useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import React, { useEffect, useState } from "react";
 import { FiX, FiFolderPlus } from "react-icons/fi";
 
 interface CreateCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
+  selectedCat: CategoryFormData | null;
   onSubmit: (data: CategoryFormData) => void;
 }
 
 export interface CategoryFormData {
+  id?: string;
   name: string;
   description: string;
-  status: boolean;
 }
 
 export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  selectedCat,
 }) => {
   const [formData, setFormData] = useState<CategoryFormData>({
+    id: undefined,
     name: "",
     description: "",
-    status: true,
   });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen && selectedCat?.id) {
+      setFormData({
+        id: selectedCat?.id || undefined,
+        name: selectedCat?.name || "",
+        description: selectedCat?.description || "",
+      });
+    }
+  }, [selectedCat, isOpen]);
 
-  //   const handleChange = (
-  //     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  //   ) => {
-  //     const { name, value, type } = e.target;
-  //     if (type === "checkbox") {
-  //       const checked = (e.target as HTMLInputElement).checked;
-  //       setFormData((prev) => ({ ...prev, [name]: checked }));
-  //     } else {
-  //       setFormData((prev) => ({ ...prev, [value]: value, [name]: value }));
-  //     }
-  //   };
+  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +46,7 @@ export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
 
     try {
       await onSubmit(formData);
-      // Reset form on success
-      setFormData({ name: "", description: "", status: true });
+      setFormData({ name: "", description: "" });
       onClose();
     } catch (error) {
       console.error("Failed to create category:", error);
@@ -55,7 +54,7 @@ export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
       setIsSubmitting(false);
     }
   };
-
+  console.log({ formData });
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div
@@ -70,10 +69,12 @@ export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
-                Add New Category
+                {selectedCat?.id ? "Edit Category" : "Add New Category"}
               </h2>
               <p className="text-xs text-gray-500">
-                Create a new service category for your platform
+                {selectedCat?.id
+                  ? " Edit the details of your service category"
+                  : "Create a new service category for your platform"}
               </p>
             </div>
           </div>
@@ -169,7 +170,11 @@ export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
               disabled={isSubmitting}
               className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 transition-colors"
             >
-              {isSubmitting ? "Creating..." : "Create Category"}
+              {isSubmitting
+                ? "Creating..."
+                : selectedCat?.id
+                  ? "Update Category"
+                  : "Create Category"}
             </button>
           </div>
         </form>

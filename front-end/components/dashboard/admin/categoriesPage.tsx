@@ -1,23 +1,41 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
 import { mockCategories } from "@/mock/data";
 import { CreateCategoryModal } from "./createCategory";
-import { createCategory } from "@/service/admin";
+import { createCategory, getCategory, updateCategory } from "@/service/admin";
 import { showToast } from "@/components/toast/toast";
 import { toastTypes } from "@/app/constant";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState(mockCategories);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedCat, setSelectedCat] = useState<{
+    id?: string;
+    name: string;
+    description: string;
+  }>({
+    id: undefined,
+    name: "",
+    description: "",
+  });
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this service category?")) {
       setCategories((prev) => prev.filter((c) => c.id !== id));
     }
   };
-
+  const getC = async () => {
+    const res = await getCategory();
+    if (res.data.success) {
+      setCategories(res.data.data);
+    }
+  };
+  useEffect(() => {
+    getC();
+  }, []);
   return (
     <>
       <div className="space-y-8 max-w-7xl mx-auto pb-12">
@@ -69,7 +87,10 @@ export default function CategoriesPage() {
                   <td className="py-4 px-6 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => alert(`Edit ${cat.name}`)}
+                        onClick={() => {
+                          setSelectedCat(cat);
+                          setIsOpen(true);
+                        }}
                         className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       >
                         <FiEdit2 />
@@ -91,10 +112,25 @@ export default function CategoriesPage() {
       <CreateCategoryModal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
+        selectedCat={selectedCat}
         onSubmit={async (v) => {
-          const res = await createCategory(v);
+          let res;
+          if (selectedCat?.id) {
+            res = await updateCategory(selectedCat.id, v);
+          } else {
+            res = await createCategory(v);
+          }
+
           if (res?.data?.success) {
-            showToast(toastTypes.SUCCESS, "Category created successfully!");
+            getC();
+            setIsOpen(false);
+            setSelectedCat({ id: undefined, name: "", description: "" });
+            showToast(
+              toastTypes.SUCCESS,
+              selectedCat?.id
+                ? "Category updated successfully!"
+                : "Category created successfully!",
+            );
           }
         }}
       />
