@@ -10,7 +10,7 @@ import { registerUser } from "@/service/auth";
 import { redirect } from "next/navigation";
 import { toastTypes } from "@/app/constant";
 import { showToast } from "../toast/toast";
-
+import Link from "next/link";
 const registerSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -64,8 +64,16 @@ export const RegisterForm: React.FC = () => {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       onSubmit={handleSubmit(onSubmit)}
-      className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full space-y-5"
+      className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-xl w-full space-y-5"
     >
+      <div className="text-center space-y-2">
+        <Link
+          href="/"
+          className="inline-block text-2xl font-black text-slate-900"
+        >
+          FixIt<span className="text-blue-600">Now</span>
+        </Link>
+      </div>
       <div>
         <h2 className="text-2xl font-bold text-slate-900">
           Create your account
@@ -197,6 +205,12 @@ export const RegisterForm: React.FC = () => {
       >
         {isSubmitting ? "Creating Account..." : "Get Started"}
       </button>
+      <p className="text-center text-xs text-slate-500">
+        {`Already have an account?`}{" "}
+        <Link href="/login" className="text-blue-600 font-bold hover:underline">
+          Sign in
+        </Link>
+      </p>
     </motion.form>
   );
 };
