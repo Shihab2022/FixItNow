@@ -1,264 +1,116 @@
-import Image from "next/image";
-import React from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 
-const ProfileDropdown = () => {
+import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { USER_PROFILE, DROPDOWN_MENU_ITEMS } from "@/mock/dropdownConfig";
+
+const ProfileDropdown = ({ user }: { user: any }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
-    <>
-      <button
-        id="dropdownInformationButton"
-        data-dropdown-toggle="dropdownInformation"
-        className="inline-flex items-center justify-center text-white bg-red-500 box-border border border-transparent hover:bg-brand-strong focus:ring-4 focus:ring-brand-medium shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none"
-        type="button"
-      >
-        Dropdown button
-        <svg
-          className="w-4 h-4 ms-1.5 -me-0.5"
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="m19 9-7 7-7-7"
-          />
-        </svg>
-      </button>
+    <div className="relative inline-block text-left" ref={dropdownRef}>
       <div
-        id="dropdownInformation"
-        className="z-10 hidden bg-neutral-primary-medium border border-default-medium rounded-base shadow-lg w-72"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="cursor-pointer h-12 w-12 rounded-full overflow-hidden border border-slate-200"
       >
-        <div className="p-2">
-          <div className="flex items-center px-2.5 p-2 space-x-1.5 text-sm bg-neutral-secondary-strong rounded">
-            <Image
-              className="w-8 h-8 rounded-full"
-              src="/docs/images/people/profile-picture-5.jpg"
-              alt="Rounded avatar"
-              width={32}
-              height={32}
-            />
-            <div className="text-sm">
-              <div className="font-medium text-heading">Bonnie Green</div>
-              <div className="truncate text-body">name@flowbite.com</div>
-            </div>
-            <span className="bg-brand-softer border border-brand-subtle text-fg-brand-strong text-xs font-medium px-1.5 py-0.5 rounded ms-auto">
-              PRO
-            </span>
-          </div>
-        </div>
-        <ul
-          className="px-2 pb-2 text-sm text-body font-medium"
-          aria-labelledby="dropdownInformationButton"
-        >
-          <li>
-            <a
-              href="#"
-              className="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded"
-            >
-              <svg
-                className="w-4 h-4 me-1.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-width="2"
-                  d="M7 17v1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-4a3 3 0 0 0-3 3Zm8-9a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                />
-              </svg>
-              Account
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              className="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded"
-            >
-              <svg
-                className="w-4 h-4 me-1.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-width="2"
-                  d="M20 6H10m0 0a2 2 0 1 0-4 0m4 0a2 2 0 1 1-4 0m0 0H4m16 6h-2m0 0a2 2 0 1 0-4 0m4 0a2 2 0 1 1-4 0m0 0H4m16 6H10m0 0a2 2 0 1 0-4 0m4 0a2 2 0 1 1-4 0m0 0H4"
-                />
-              </svg>
-              Settings
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              className="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded"
-            >
-              <svg
-                className="w-4 h-4 me-1.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 14v3m-3-6V7a3 3 0 1 1 6 0v4m-8 0h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z"
-                />
-              </svg>
-              Privacy
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              className="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded"
-            >
-              <svg
-                className="w-4 h-4 me-1.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 5.365V3m0 2.365a5.338 5.338 0 0 1 5.133 5.368v1.8c0 2.386 1.867 2.982 1.867 4.175 0 .593 0 1.292-.538 1.292H5.538C5 18 5 17.301 5 16.708c0-1.193 1.867-1.789 1.867-4.175v-1.8A5.338 5.338 0 0 1 12 5.365ZM8.733 18c.094.852.306 1.54.944 2.112a3.48 3.48 0 0 0 4.646 0c.638-.572 1.236-1.26 1.33-2.112h-6.92Z"
-                />
-              </svg>
-              Notifications
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              className="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded"
-            >
-              <svg
-                className="w-4 h-4 me-1.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9.529 9.988a2.502 2.502 0 1 1 5 .191A2.441 2.441 0 0 1 12 12.582V14m-.01 3.008H12M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                />
-              </svg>
-              Help center
-            </a>
-          </li>
-          <li className="flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded mb-1.5">
-            <a href="#" className="inline-flex items-center">
-              <svg
-                className="w-4 h-4 me-1.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 21a9 9 0 0 1-.5-17.986V3c-.354.966-.5 1.911-.5 3a9 9 0 0 0 9 9c.239 0 .254.018.488 0A9.004 9.004 0 0 1 12 21Z"
-                />
-              </svg>
-              Dark mode
-            </a>
-            <label className="inline-flex items-center cursor-pointer ms-auto">
-              <input type="checkbox" value="" className="sr-only peer" />
-              <div className="relative w-9 h-5 bg-neutral-quaternary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-soft dark:peer-focus:ring-brand-soft rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-buffer after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand"></div>
-              <span className="ms-3 text-sm font-medium text-heading sr-only">
-                Toggle me
-              </span>
-            </label>
-          </li>
-          <li className="border-t border-default-medium pt-1.5">
-            <a
-              href="#"
-              className="inline-flex items-center w-full p-2 hover:bg-neutral-tertiary-medium hover:text-heading rounded"
-            >
-              <svg
-                className="w-4 h-4 me-1.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="m10.051 8.102-3.778.322-1.994 1.994a.94.94 0 0 0 .533 1.6l2.698.316m8.39 1.617-.322 3.78-1.994 1.994a.94.94 0 0 1-1.595-.533l-.4-2.652m8.166-11.174a1.366 1.366 0 0 0-1.12-1.12c-1.616-.279-4.906-.623-6.38.853-1.671 1.672-5.211 8.015-6.31 10.023a.932.932 0 0 0 .162 1.111l.828.835.833.832a.932.932 0 0 0 1.111.163c2.008-1.102 8.35-4.642 10.021-6.312 1.475-1.478 1.133-4.77.855-6.385Zm-2.961 3.722a1.88 1.88 0 1 1-3.76 0 1.88 1.88 0 0 1 3.76 0Z"
-                />
-              </svg>
-              Upgrade to PRO
-            </a>
-          </li>
-          <li>
-            <a
-              href="#"
-              className="inline-flex items-center w-full p-2 text-fg-danger hover:bg-neutral-tertiary-medium rounded"
-            >
-              <svg
-                className="w-4 h-4 me-1.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"
-                />
-              </svg>
-              Sign out
-            </a>
-          </li>
-        </ul>
+        <Image
+          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop"
+          alt="Avatar"
+          fill
+          className="object-cover rounded-full"
+        />
       </div>
-    </>
+
+      {isOpen && (
+        <div className="absolute left-0 mt-2  z-50 bg-slate-50 border border-default-medium rounded-2xl shadow-lg w-72">
+          <div className="p-2">
+            <div className="flex items-center px-2.5 p-2 space-x-1.5 text-sm bg-neutral-secondary-strong rounded">
+              <Image
+                className="w-8 h-8 rounded-full"
+                src={USER_PROFILE.avatarUrl}
+                alt={user.name}
+                width={32}
+                height={32}
+              />
+              <div className="text-sm">
+                <div className="font-medium text-heading">{user.name}</div>
+                <div className="truncate text-body">
+                  {user.email.slice(0, 15)}...
+                </div>
+              </div>
+              <span className="bg-brand-softer border border-brand-subtle text-fg-brand-strong text-xs font-medium px-1.5 py-0.5 rounded ms-auto">
+                {user.role}
+              </span>
+            </div>
+          </div>
+
+          <ul className="px-2 pb-2 text-sm text-body font-medium">
+            {DROPDOWN_MENU_ITEMS.map((item) => {
+              const IconComponent = item.icon;
+
+              return (
+                <li
+                  key={item.id}
+                  className={`${
+                    item.hasDividerTop
+                      ? "border-t border-default-medium pt-1.5 mt-1.5"
+                      : ""
+                  }`}
+                >
+                  <div
+                    className={`flex items-center justify-between w-full p-2 rounded hover:bg-neutral-tertiary-medium ${
+                      item.isDanger
+                        ? "text-fg-danger"
+                        : "hover:text-heading text-body"
+                    }`}
+                  >
+                    <Link
+                      href={item.path}
+                      className="inline-flex items-center w-full"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <IconComponent className="w-4 h-4 me-1.5 flex-shrink-0" />
+                      <span>{item.label}</span>
+                    </Link>
+                    {item.hasToggle && (
+                      <label className="inline-flex items-center cursor-pointer ms-auto">
+                        <input
+                          type="checkbox"
+                          checked={isDarkMode}
+                          onChange={() => setIsDarkMode((prev) => !prev)}
+                          className="sr-only peer"
+                        />
+                        <div className="relative w-9 h-5 bg-neutral-quaternary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-soft rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-buffer after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand" />
+                        <span className="sr-only">Toggle dark mode</span>
+                      </label>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 };
 

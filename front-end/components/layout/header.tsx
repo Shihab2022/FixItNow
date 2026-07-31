@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -6,9 +7,9 @@ import { Search, Menu, X, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ProfileDropdown from "./profileDropdown";
 
-export function Header() {
+export function Header({ user }: { user?: any }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  console.log("User in Header:", user);
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-slate-50/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
@@ -54,19 +55,25 @@ export function Header() {
           >
             <Search className="h-5 w-5" />
           </button>
-          <Link
-            href="/login"
-            className="rounded-xl px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200/60"
-          >
-            Log in
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-xs transition hover:bg-slate-800"
-          >
-            Register
-          </Link>
-          <ProfileDropdown />
+          {user?.role ? (
+            <ProfileDropdown user={user} />
+          ) : (
+            <>
+              {" "}
+              <Link
+                href="/login"
+                className="rounded-xl px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200/60"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-xs transition hover:bg-slate-800"
+              >
+                Register
+              </Link>{" "}
+            </>
+          )}
         </div>
 
         {/* Mobile Toggle */}

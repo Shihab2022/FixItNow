@@ -116,7 +116,6 @@ export function HeroSection() {
                 </div>
               </motion.div>
 
-              {/* Floating Card 2 */}
               <motion.div
                 animate={{ y: [0, 8, 0] }}
                 transition={{

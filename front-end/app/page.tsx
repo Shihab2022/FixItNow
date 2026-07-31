@@ -12,8 +12,10 @@ import { FAQSection } from "@/components/home/faq-section";
 import { Newsletter } from "@/components/home/newsletter";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { getMe } from "@/service/auth";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await getMe();
   return (
     <>
       <div className="relative min-h-screen overflow-hidden ">
@@ -28,7 +30,7 @@ export default function HomePage() {
         <div className="pointer-events-none absolute top-1/6 right-0 -z-10 h-150 w-150 rounded-full bg-blue-500/55 blur-3xl" />
         <div className="pointer-events-none absolute top-1/2 left-0 -z-10 h-96 w-96 rounded-full bg-teal-400/55 blur-3xl" />
         <div className="pointer-events-none absolute top-1/10 -left-5 -z-10 h-150 w-200 rounded-full bg-teal-400/55 blur-3xl" />
-        <Header />
+        <Header user={user?.data?.data} />
         <HeroSection />
         <SearchBookingCard />
         <PopularCategories />
