@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { USER_PROFILE, DROPDOWN_MENU_ITEMS } from "@/mock/dropdownConfig";
+import { logout } from "@/service/auth";
 
 const ProfileDropdown = ({ user }: { user: any }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -86,9 +87,15 @@ const ProfileDropdown = ({ user }: { user: any }) => {
                     <Link
                       href={item.path}
                       className="inline-flex items-center w-full"
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        if (item.id === "signout") {
+                          logout();
+                        }
+
+                        setIsOpen(false);
+                      }}
                     >
-                      <IconComponent className="w-4 h-4 me-1.5 flex-shrink-0" />
+                      <IconComponent className="w-4 h-4 me-1.5 shrink-0" />
                       <span>{item.label}</span>
                     </Link>
                     {item.hasToggle && (
@@ -99,7 +106,7 @@ const ProfileDropdown = ({ user }: { user: any }) => {
                           onChange={() => setIsDarkMode((prev) => !prev)}
                           className="sr-only peer"
                         />
-                        <div className="relative w-9 h-5 bg-neutral-quaternary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-soft rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-buffer after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand" />
+                        <div className="relative w-9 h-5 bg-neutral-quaternary peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-soft rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-buffer after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand" />
                         <span className="sr-only">Toggle dark mode</span>
                       </label>
                     )}

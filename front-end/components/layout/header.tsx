@@ -45,6 +45,14 @@ export function Header({ user }: { user?: any }) {
           <Link href="#contact" className="transition hover:text-slate-900">
             Contact
           </Link>
+          {user.role && (
+            <Link
+              href={`/${user.role.toLowerCase()}`}
+              className="transition hover:text-slate-900"
+            >
+              Dashboard
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Actions */}

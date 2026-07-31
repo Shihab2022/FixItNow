@@ -2,6 +2,7 @@
 "use server";
 import { apiMethods } from "@/app/constant";
 import { apiHandler } from "@/lib/apiHandler";
+import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 
 export const registerUser = async (params: any) => {
@@ -50,4 +51,14 @@ export const getMe = async () => {
     params: {},
   });
   return res;
+};
+
+export const logout = async () => {
+  const cookieStore = await cookies();
+
+  cookieStore.delete("accessToken");
+  cookieStore.delete("refreshToken");
+
+  revalidateTag("my-profile", "max");
+  // redirect("/login");
 };

@@ -84,7 +84,7 @@ export const DROPDOWN_MENU_ITEMS: MenuItem[] = [
   {
     id: "signout",
     label: "Sign out",
-    path: "/logout",
+    path: "/login",
     icon: HiOutlineArrowRightOnRectangle,
     isDanger: true,
   },
