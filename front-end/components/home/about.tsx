@@ -78,11 +78,11 @@ export default function AboutSection() {
                 const Icon = item.icon;
                 return (
                   <div key={idx} className="flex gap-4 items-start">
-                    <div className="p-3  border border-slate-700/80 text-blue-400 rounded-xl shrink-0 mt-7">
+                    <div className="p-3  border border-slate-700/80 text-blue-400 rounded-xl shrink-0 mt-1">
                       <Icon className="text-xl" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-white text-base">
+                      <h3 className="font-bold text-black text-base">
                         {item.title}
                       </h3>
                       <p className="text-slate-400 text-xs sm:text-sm mt-0.5 leading-relaxed">
