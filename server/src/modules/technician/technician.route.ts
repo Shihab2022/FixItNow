@@ -16,6 +16,11 @@ router.put(
   TechnicianController.UpdateAvailability,
 );
 router.get(
+  "/availability",
+  auth(Role.TECHNICIAN),
+  TechnicianController.GetAvailability,
+);
+router.get(
   "/bookings",
   auth(Role.TECHNICIAN),
   TechnicianController.GetBookingHistory,

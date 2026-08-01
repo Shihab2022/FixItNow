@@ -81,6 +81,15 @@ const GetBookingHistory = async (userId: string) => {
 
   return bookings;
 };
+const GetAvailability = async (userId: string) => {
+  const bookings = await prisma.technicianProfile.findUnique({
+    where: {
+      userId: userId,
+    },
+  });
+
+  return bookings?.availability;
+};
 const UpdateBookingStatus = async (
   userId: string,
   bookingId: string,
@@ -109,5 +118,6 @@ export const TechnicianService = {
   UpdateProfile,
   UpdateAvailability,
   GetBookingHistory,
+  GetAvailability,
   UpdateBookingStatus,
 };
