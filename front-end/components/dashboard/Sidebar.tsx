@@ -42,6 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       { name: "Profile", href: "/", icon: CgProfile },
       { name: "Overview", href: "/admin", icon: FiHome },
       { name: "Technicians", href: "/admin/technicians", icon: FiUser },
+      { name: "Users", href: "/admin/users", icon: FiUser },
       { name: "Categories", href: "/admin/categories", icon: FiSettings },
     ],
   };

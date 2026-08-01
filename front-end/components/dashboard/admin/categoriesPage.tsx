@@ -1,8 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useEffect, useState } from "react";
-import { FiPlus, FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FiPlus, FiEdit2} from "react-icons/fi";
 import { mockCategories } from "@/mock/data";
 import { CreateCategoryModal } from "./createCategory";
 import {
@@ -26,12 +25,6 @@ export default function CategoriesPage() {
     name: "",
     description: "",
   });
-
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this service category?")) {
-      setCategories((prev) => prev.filter((c) => c.id !== id));
-    }
-  };
   const getC = async () => {
     const res = await getCategory();
     if (res.data.success) {

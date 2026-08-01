@@ -43,3 +43,23 @@ export const getCategory = async () => {
   });
   return res;
 };
+export const getAllUsers = async () => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `admin/users`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+  return res;
+};
+export const updateUsersStatus = async (params: any) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `admin/users/${params.id}`,
+    method: apiMethods.PATCH as keyof typeof apiMethods,
+    formData: false,
+    params: params,
+  });
+  return res;
+};
