@@ -12,7 +12,6 @@ import {
   FiSearch,
   FiChevronLeft,
   FiChevronRight,
-  FiUserCheck,
   FiBriefcase,
   FiUser,
 } from "react-icons/fi";
@@ -250,14 +249,7 @@ export const UserTable: React.FC = () => {
                         className="w-full px-4 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                       >
                         <FiEdit2 className="w-4 h-4 text-slate-400" />
-                        Edit User
-                      </button>
-                      <button
-                        onClick={() => setOpenDropdownId(null)}
-                        className="w-full px-4 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                      >
-                        <FiUserCheck className="w-4 h-4 text-slate-400" />
-                        Change Role
+                        Edit User Details
                       </button>
                       <div className="my-1 border-t border-slate-100"></div>
                       <button
