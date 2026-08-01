@@ -29,7 +29,7 @@ export const UpdateUserStatusSchema = z.object({
 // --- SERVICE VALIDATION ---
 export const CreateServiceSchema = z.object({
   title: z.string().min(3, "Title is too short"),
-  description: z.string().min(10, "Description must be thorough"),
+  description: z.string().min(5, "Description must be thorough"),
   price: z.number().positive("Price must be greater than 0"),
   location: z.string().min(2, "Location area is required"),
   categoryId: z.string().uuid("Invalid Category ID"),

@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/users", auth(Role.ADMIN), AdminController.GetAllUsers);
 router.patch("/users/:id", auth(Role.ADMIN), AdminController.UpdateUserStatus);
 router.get("/bookings", auth(Role.ADMIN), AdminController.GetAllBookings);
-router.get("/categories", auth(Role.ADMIN), AdminController.GetAllCategories);
+router.get("/categories", AdminController.GetAllCategories);
 router.post("/categories", auth(Role.ADMIN), AdminController.CreateCategory);
 router.put("/categories/:id", auth(Role.ADMIN), AdminController.UpdateCategory);
 router.put(

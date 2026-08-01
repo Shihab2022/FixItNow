@@ -42,9 +42,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
         icon: MdCoPresent,
       },
       { name: "Bookings", href: "/technician/bookings", icon: TbBrandBooking },
-      { name: "Calendar", href: "/technician/calendar", icon: FiCalendar },
+      // { name: "Calendar", href: "/technician/calendar", icon: FiCalendar },
       { name: "Services", href: "/technician/services", icon: FiBriefcase },
-      { name: "Earnings", href: "/technician/earnings", icon: FiDollarSign },
+      // { name: "Earnings", href: "/technician/earnings", icon: FiDollarSign },
     ],
     ADMIN: [
       { name: "Profile", href: "/", icon: CgProfile },

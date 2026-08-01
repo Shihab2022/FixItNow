@@ -23,3 +23,23 @@ export const getSlot = async (params: any) => {
   });
   return res;
 };
+export const getServices = async (params: any) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `services`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: params,
+  });
+  return res;
+};
+export const createService = async (params: any) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `services`,
+    method: apiMethods.POST as keyof typeof apiMethods,
+    formData: false,
+    params: params,
+  });
+  return res;
+};
