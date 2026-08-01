@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 import { CgProfile } from "react-icons/cg";
 import { TbBrandBooking } from "react-icons/tb";
+import { MdCoPresent } from "react-icons/md";
 
 interface SidebarProps {
   role: "CUSTOMER" | "TECHNICIAN" | "ADMIN";
@@ -35,7 +36,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     TECHNICIAN: [
       { name: "Profile", href: "/", icon: CgProfile },
       { name: "Dashboard", href: "/technician", icon: FiHome },
-      { name: "Schedule", href: "/technician/calendar", icon: FiCalendar },
+      {
+        name: "Availability",
+        href: "/technician/availability",
+        icon: MdCoPresent,
+      },
+      { name: "Bookings", href: "/technician/bookings", icon: TbBrandBooking },
+      { name: "Calendar", href: "/technician/calendar", icon: FiCalendar },
       { name: "Services", href: "/technician/services", icon: FiBriefcase },
       { name: "Earnings", href: "/technician/earnings", icon: FiDollarSign },
     ],
