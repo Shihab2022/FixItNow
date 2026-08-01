@@ -12,6 +12,7 @@ import {
   FiBriefcase,
 } from "react-icons/fi";
 import { CgProfile } from "react-icons/cg";
+import { TbBrandBooking } from "react-icons/tb";
 
 interface SidebarProps {
   role: "CUSTOMER" | "TECHNICIAN" | "ADMIN";
@@ -41,6 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     ADMIN: [
       { name: "Profile", href: "/", icon: CgProfile },
       { name: "Overview", href: "/admin", icon: FiHome },
+      { name: "Bookings", href: "/admin/bookings", icon: TbBrandBooking },
       { name: "Technicians", href: "/admin/technicians", icon: FiUser },
       { name: "Users", href: "/admin/users", icon: FiUser },
       { name: "Categories", href: "/admin/categories", icon: FiSettings },
