@@ -8,11 +8,12 @@ import { HowItWorks } from "@/components/home/how-it-works";
 import { Testimonials } from "@/components/home/testimonials";
 import { StatsSection } from "@/components/home/stats-section";
 import { TechnicianCTA } from "@/components/home/technician-cta";
-import { FAQSection } from "@/components/home/faq-section";
-import { Newsletter } from "@/components/home/newsletter";
+// import { FAQSection } from "@/components/home/faq-section";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { getMe } from "@/service/auth";
+import AboutSection from "@/components/home/about";
+import ContactSection from "@/components/home/ContactSection";
 
 export default async function HomePage() {
   const user = await getMe();
@@ -35,14 +36,15 @@ export default async function HomePage() {
         <SearchBookingCard />
         <PopularCategories />
         <FeaturedServices />
+        <AboutSection />
         <TopRatedTechnicians />
         <WhyChooseUs />
         <HowItWorks />
         <Testimonials />
         <StatsSection />
         <TechnicianCTA />
-        <FAQSection />
-        <Newsletter />
+        {/* <FAQSection /> */}
+        <ContactSection />
         <Footer />
       </div>
     </>

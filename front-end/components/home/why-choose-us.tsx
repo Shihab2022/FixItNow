@@ -81,10 +81,10 @@ export function WhyChooseUs() {
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/20 text-blue-400">
                   <Icon className="h-6 w-6" />
                 </div>
-                <h3 className="font-semibold text-lg text-white">
+                <h3 className="font-semibold text-lg text-black">
                   {item.title}
                 </h3>
-                <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+                <p className="mt-2 text-xs text-black leading-relaxed">
                   {item.desc}
                 </p>
               </motion.div>

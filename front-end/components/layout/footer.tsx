@@ -9,13 +9,13 @@ import { ShieldCheck } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-slate-200 bg-slate-900 text-slate-400">
+    <footer className="  text-black">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <Link
               href="/"
-              className="flex items-center gap-2 font-bold text-white text-xl"
+              className="flex items-center gap-2 font-bold text-xl"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white">
                 <ShieldCheck className="h-5 w-5" />
