@@ -10,7 +10,7 @@ import ProfileDropdown from "./profileDropdown";
 export function Header({ user }: { user?: any }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-slate-50/80 backdrop-blur-md">
+    <header className="fixed top-0 z-50 w-full border-b border-slate-200/80 bg-slate-50/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
         <Link
           href="/"
