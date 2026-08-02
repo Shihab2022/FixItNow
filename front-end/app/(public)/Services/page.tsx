@@ -271,9 +271,11 @@ export default function ServicesPage() {
                           Profile
                         </button>
                       </Link>
-                      <button className="rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 cursor-pointer">
-                        Book
-                      </button>
+                      <Link href={`/booking/${service.id}`}>
+                        <button className="rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 cursor-pointer">
+                          Book
+                        </button>
+                      </Link>
                     </div>
                   </div>
                 </div>

@@ -270,6 +270,7 @@ const getTechnicianProfile = async (technicianId: string) => {
   const user = await prisma.technicianProfile.findUnique({
     where: { id: technicianId },
     include: {
+      services: true,
       user: {
         select: {
           id: true,
