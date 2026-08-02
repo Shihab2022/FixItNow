@@ -43,3 +43,13 @@ export const getAllServicesApi = async () => {
   });
   return res;
 };
+export const getSingleServiceApi = async (id: string) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `services/${id}`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+  return res;
+};

@@ -152,9 +152,11 @@ export function FeaturedServices() {
                           Profile
                         </button>
                       </Link>
-                      <button className="rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 cursor-pointer">
-                        Book
-                      </button>
+                      <Link href={`/booking/${service.id}`}>
+                        <button className="rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 cursor-pointer">
+                          Book
+                        </button>
+                      </Link>
                     </div>
                     {/* <button className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-600 cursor-pointer">
                       Book Now

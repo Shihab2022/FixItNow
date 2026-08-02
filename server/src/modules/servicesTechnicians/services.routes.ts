@@ -3,7 +3,8 @@ import { ServicesTechniciansController } from "./servicesTechnicians.controller"
 import auth from "../../middlewares/auth";
 import { Role } from "../../../generated/prisma/client";
 const router = express.Router();
-router.get("/", auth(), ServicesTechniciansController.getAllServices);
+router.get("/", ServicesTechniciansController.getAllServices);
+router.get("/:id", ServicesTechniciansController.getSingleServices);
 router.post(
   "/",
   auth(Role.TECHNICIAN),

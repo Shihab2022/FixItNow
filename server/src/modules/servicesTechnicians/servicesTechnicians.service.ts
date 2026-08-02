@@ -288,6 +288,48 @@ const getTechnicianProfile = async (technicianId: string) => {
   });
   return user;
 };
+const getSingleServices = async (serviceId: string) => {
+  const service = await prisma.service.findUnique({
+    where: { id: serviceId },
+    include: {
+      category: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      technician: {
+        select: {
+          id: true,
+          bio: true,
+          experience: true,
+          completedJobs: true,
+          hourlyRate: true,
+          isAvailable: true,
+          availability: true,
+          skills: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              address: true,
+              role: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          bookings: true,
+        },
+      },
+    },
+  });
+  return service;
+};
+
 const createService = async (req: any) => {
   const user = req.user;
   const payload = req.body;
@@ -315,4 +357,5 @@ export const ServicesTechniciansService = {
   getAllServices,
   getTechnicianProfile,
   createService,
+  getSingleServices,
 };

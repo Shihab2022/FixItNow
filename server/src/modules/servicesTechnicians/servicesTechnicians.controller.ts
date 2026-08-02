@@ -47,6 +47,18 @@ const getTechnicianProfile = catchAsync(async (req: Request, res: Response) => {
     data,
   });
 });
+const getSingleServices = catchAsync(async (req: Request, res: Response) => {
+  const data = await ServicesTechniciansService.getSingleServices(
+    req.params.id as string,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Single Service retrieved successfully!",
+    data,
+  });
+});
 const createService = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
     const data = await ServicesTechniciansService.createService(req);
@@ -65,4 +77,5 @@ export const ServicesTechniciansController = {
   getAllServices,
   getTechnicianProfile,
   createService,
+  getSingleServices,
 };
