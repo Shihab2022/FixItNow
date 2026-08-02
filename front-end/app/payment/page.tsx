@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -12,6 +13,7 @@ import {
   RefreshCcw,
   Loader2,
 } from "lucide-react";
+import { confirmPayment, getSinglePaymentHistory } from "@/service/payment";
 
 // 1. Define the UI configuration for each status
 const STATUS_CONFIG = {
@@ -66,6 +68,25 @@ type StatusType = keyof typeof STATUS_CONFIG;
 function PaymentStatusContent() {
   const searchParams = useSearchParams();
   const statusQuery = searchParams.get("status");
+  const bookingId = localStorage.getItem("bookingId");
+  const getPaymentDetails = async () => {
+    const res = await getSinglePaymentHistory(bookingId!);
+    if (res?.data?.success) {
+      const transactionId = res.data.data.transactionId;
+      if (transactionId) {
+        const confirmRes = await confirmPayment({ transactionId });
+
+        if (confirmRes?.data?.success) {
+          localStorage.removeItem("bookingId");
+        }
+      }
+    }
+  };
+  useEffect(() => {
+    if (bookingId && statusQuery === "success") {
+      getPaymentDetails();
+    }
+  }, [bookingId, statusQuery]);
   const currentStatus: StatusType =
     statusQuery && Object.keys(STATUS_CONFIG).includes(statusQuery)
       ? (statusQuery as StatusType)

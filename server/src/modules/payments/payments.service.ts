@@ -92,10 +92,10 @@ const GetPaymentHistory = async (id: string) => {
   });
   return paymentHistory;
 };
-const GetPaymentDetails = async (paymentId: string) => {
+const GetPaymentDetails = async (bookingId: string) => {
   const paymentDetails = await prisma.payment.findUniqueOrThrow({
     where: {
-      id: paymentId,
+      bookingId,
     },
     include: {
       booking: true,

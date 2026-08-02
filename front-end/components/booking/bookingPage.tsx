@@ -182,6 +182,7 @@ export function CreateBookingForm({
           const bookingRes = await createPayment({ bookingId });
 
           if (bookingRes?.data?.success) {
+            localStorage.setItem("bookingId", bookingId);
             const paymentUrl = bookingRes.data.data.paymentUrl;
             window.open(paymentUrl, "_blank", "noopener,noreferrer");
             setIsSuccess(true);
