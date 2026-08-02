@@ -12,6 +12,7 @@ model TechnicianProfile {
   availability  Json? // e.g., { "monday": ["09:00-12:00", "14:00-18:00"] }
   status        Boolean @default(true)
   services Service[]
+  technicianBookings Booking[] @relation("TechnicianBookings")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

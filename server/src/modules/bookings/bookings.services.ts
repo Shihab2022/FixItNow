@@ -12,12 +12,12 @@ const CreateNewBooking = async (req: any) => {
       "Only customers can create bookings",
     );
   }
-  const validatedData = CreateBookingSchema.parse(payload);
-
+  // const validatedData = CreateBookingSchema.parse(payload);
+  console.log("Booking Payload:", payload);
   const result = await prisma.$transaction(async (tx) => {
     const booking = await tx.booking.create({
       data: {
-        ...validatedData,
+        ...payload,
         customerId: user.id,
         status: "REQUESTED",
       },

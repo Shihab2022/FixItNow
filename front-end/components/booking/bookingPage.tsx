@@ -27,6 +27,7 @@ import {
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { createBookingApi } from "@/service/publicApi";
 
 // 1. Interfaces
 export interface ApiResponse {
@@ -177,12 +178,16 @@ export function CreateBookingForm({
       const payload = {
         serviceId: formData.serviceId,
         technicianId: formData.technicianId,
-        scheduledDate: formData.scheduledDate,
-        scheduledTime: formData.scheduledTime, // e.g. "08:00 AM - 04:00 PM"
+        scheduledDate: new Date(formData.scheduledDate).toISOString(),
+
+        scheduledTime: formData.scheduledTime,
         totalPrice: formData.totalPrice,
         customerAddress: formData.customerAddress,
         notes: formData.notes,
       };
+      const res = await createBookingApi(payload);
+      console.log("Booking API Response:", res);
+      console.log("Booking Payload:", payload);
 
       //   if (onSubmitBooking) {
       //     await onSubmitBooking(payload);
@@ -191,7 +196,7 @@ export function CreateBookingForm({
       //     await new Promise((res) => setTimeout(res, 1200));
       //   }
 
-      setIsSuccess(true);
+      // setIsSuccess(true);
     } catch (error) {
       console.error("Booking Error:", error);
     } finally {
@@ -319,7 +324,6 @@ export function CreateBookingForm({
             </div>
 
             <div className="flex items-start gap-4">
-        
               <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-blue-50 shrink-0">
                 <Image
                   src={`https://randomuser.me/api/portraits/men/${Math.floor(Math.random() * 90) + 10}.jpg`}

@@ -39,9 +39,7 @@ export const CreateServiceSchema = z.object({
 export const CreateBookingSchema = z.object({
   serviceId: z.string().uuid("Invalid Service ID"),
   technicianId: z.string().uuid("Invalid Technician ID"),
-  scheduledDate: z
-    .string()
-    .datetime({ message: "Must be a valid ISO 8601 date string" }),
+  scheduledDate: z.string().optional(),
   totalPrice: z.number().positive(),
 });
 

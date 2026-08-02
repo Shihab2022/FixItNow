@@ -17,7 +17,7 @@ model User {
   technicianProfile TechnicianProfile?
   // A user can be involved in bookings/payments/reviews as either a customer or a tech
   customerBookings   Booking[] @relation("CustomerBookings")
-  technicianBookings Booking[] @relation("TechnicianBookings")
+
 
   payments Payment[]
 
