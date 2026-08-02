@@ -22,7 +22,6 @@ export default function TopRatedTechnicians() {
   useEffect(() => {
     fetchTopRatedTechnicians();
   }, []);
-  console.log("Top Rated Technicians:", technicians);
   return (
     <section id="technicians" className="py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -99,9 +98,11 @@ export default function TopRatedTechnicians() {
                         Profile
                       </button>
                     </Link>
+                     <Link href={`/technicians/${tech.id}`}>
                     <button className="rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 cursor-pointer">
                       Book
                     </button>
+                    </Link>
                   </div>
                 </div>
               </div>

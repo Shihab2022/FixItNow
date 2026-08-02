@@ -33,7 +33,7 @@ const STATUS_CONFIG = {
     title: "Payment Failed",
     description:
       "We couldn't process your payment. Please check your payment details and try again.",
-    primaryAction: { label: "Try Again", href: "/checkout", icon: RefreshCcw },
+    primaryAction: { label: "Try Again", href: "/dashboard/customer/payments/history", icon: RefreshCcw },
     secondaryAction: { label: "Back to Home", href: "/", icon: ArrowLeft },
   },
   cancel: {
