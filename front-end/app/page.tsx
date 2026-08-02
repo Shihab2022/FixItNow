@@ -1,5 +1,5 @@
 import { HeroSection } from "@/components/home/hero-section";
-import { SearchBookingCard } from "@/components/home/search-booking-card";
+// import { SearchBookingCard } from "@/components/home/search-booking-card";
 import { PopularCategories } from "@/components/home/popular-categories";
 import { FeaturedServices } from "@/components/home/featured-services";
 import { WhyChooseUs } from "@/components/home/why-choose-us";
@@ -24,7 +24,7 @@ export default async function HomePage() {
         <Background />
         <Header user={user?.data?.data || {}} />
         <HeroSection />
-        <SearchBookingCard />
+        {/* <SearchBookingCard /> */}
         <PopularCategories />
         <FeaturedServices />
         <AboutSection />
