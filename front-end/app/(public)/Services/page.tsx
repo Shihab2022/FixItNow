@@ -265,9 +265,16 @@ export default function ServicesPage() {
                       </span>
                     </div>
 
-                    <button className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-blue-600 cursor-pointer">
-                      Book Now
-                    </button>
+                    <div className="flex gap-2">
+                      <Link href={`/technicians/${service.technicianId}`}>
+                        <button className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 cursor-pointer">
+                          Profile
+                        </button>
+                      </Link>
+                      <button className="rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 cursor-pointer">
+                        Book
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

@@ -169,7 +169,6 @@ export default function TechProfile({
   const currentDayName = new Date()
     .toLocaleDateString("en-US", { weekday: "long" })
     .toLowerCase();
-
   // Handle cases where availability might be string or null
   const isObjectAvailability =
     availability &&
