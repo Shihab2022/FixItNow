@@ -87,7 +87,16 @@ const GetPaymentHistory = async (id: string) => {
       customerId: id,
     },
     include: {
-      booking: true,
+      booking: {
+        select: {
+          id: true,
+          totalPrice: true,
+          status: true,
+          serviceId: true,
+          service: true,
+          technician: true,
+        },
+      },
     },
   });
   return paymentHistory;

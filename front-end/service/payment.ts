@@ -23,6 +23,16 @@ export const getSinglePaymentHistory = async (id: string) => {
   });
   return res;
 };
+export const getPaymentHistory = async () => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `payments`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+  return res;
+};
 export const confirmPayment = async (params: any) => {
   const res = await apiHandler({
     baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,

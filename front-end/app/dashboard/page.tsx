@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/purity */
+/* eslint-disable react-hooks/incompatible-library */
 "use client";
 
 import React, { useState } from "react";
@@ -12,7 +12,6 @@ import {
   FiPhone,
   FiMapPin,
   FiCamera,
-  FiLock,
   FiCheck,
   FiBell,
   FiSave,
