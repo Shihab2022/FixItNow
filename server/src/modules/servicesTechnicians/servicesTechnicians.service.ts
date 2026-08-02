@@ -8,7 +8,7 @@ import { prisma } from "../../lib/prisma";
 const getAllTechnicians = async (query: any) => {
   const {
     page = 1,
-    limit = 10,
+    limit = 100,
     searchTerm,
     minRate,
     maxRate,

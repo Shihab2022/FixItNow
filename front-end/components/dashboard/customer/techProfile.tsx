@@ -8,6 +8,7 @@ import {
   Star,
   Briefcase,
   Clock,
+  CalendarCheck,
   DollarSign,
   Phone,
   Mail,
@@ -17,6 +18,46 @@ import {
   Wrench,
 } from "lucide-react";
 import { getSingleTechnician } from "@/service/publicApi";
+
+type TimeSlot = {
+  start: string;
+  end: string;
+};
+
+type AvailabilityMap = Record<string, TimeSlot[] | null | undefined>;
+
+const DAYS_ORDER = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
+
+// Helper to convert 24-hour time "17:00" -> "5:00 PM"
+const formatTime = (timeStr: string) => {
+  if (!timeStr) return "";
+  const [hoursStr, minutes] = timeStr.split(":");
+  let hours = parseInt(hoursStr, 10);
+  if (isNaN(hours)) return timeStr;
+
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes} ${ampm}`;
+};
+
+// Helper to filter out duplicate time slots in an array
+const getUniqueSlots = (slots: TimeSlot[]) => {
+  const seen = new Set<string>();
+  return slots.filter((slot) => {
+    const key = `${slot.start}-${slot.end}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
 
 // Helper to generate unique avatar URL based on ID
 const getAvatarUrl = (id: string) => {
@@ -117,15 +158,24 @@ export default function TechProfile({
       </div>
     );
   }
-
+  console.log("Technician Data:", technician);
   const name = technician.user?.name ?? "Technician";
   const avatar = technician.avatarUrl ?? getAvatarUrl(technician.id);
   const rate = technician.hourlyRate ?? 45;
   const experienceYears = technician.experience ?? 0;
   const rating = technician.rating ?? 4.9;
+  const availability = technician.availability ?? null;
   const hasSkills =
     Array.isArray(technician.skills) && technician.skills.length > 0;
+  const currentDayName = new Date()
+    .toLocaleDateString("en-US", { weekday: "long" })
+    .toLowerCase();
 
+  // Handle cases where availability might be string or null
+  const isObjectAvailability =
+    availability &&
+    typeof availability === "object" &&
+    !Array.isArray(availability);
   return (
     <div className="min-h-screen bg-slate-50/50 py-8">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
@@ -295,15 +345,73 @@ export default function TechProfile({
 
             {/* Working Hours */}
             <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs sm:p-8">
-              <h2 className="text-lg font-bold text-slate-900">
-                Working Hours
-              </h2>
-              <div className="mt-4 flex items-center gap-3 text-sm text-slate-600">
-                <Clock className="h-5 w-5 text-slate-400 shrink-0" />
-                <span>
-                  {technician.availability || "Mon - Sat: 8:00 AM - 6:00 PM"}
-                </span>
+              <div className="flex items-center gap-2.5">
+                <Clock className="h-5 w-5 text-blue-600" />
+                <h2 className="text-lg font-bold text-slate-900">
+                  Working Hours
+                </h2>
               </div>
+
+              {isObjectAvailability ? (
+                <div className="mt-5 divide-y divide-slate-100 rounded-2xl border border-slate-100 bg-slate-50/50 p-2 sm:p-4">
+                  {DAYS_ORDER.map((day) => {
+                    const rawSlots = (availability as AvailabilityMap)[day];
+                    const slots = Array.isArray(rawSlots)
+                      ? getUniqueSlots(rawSlots)
+                      : [];
+                    const isToday = currentDayName === day;
+                    const hasSlots = slots.length > 0;
+
+                    return (
+                      <div
+                        key={day}
+                        className={`flex flex-col gap-1.5 rounded-xl px-3 py-3 transition-colors sm:flex-row sm:items-center sm:justify-between ${
+                          isToday ? "border border-blue-100 bg-blue-50/70" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold capitalize text-slate-800">
+                            {day}
+                          </span>
+                          {isToday && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                              Today
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5 sm:justify-end">
+                          {hasSlots ? (
+                            slots.map((slot, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-2xs"
+                              >
+                                <CalendarCheck className="h-3 w-3 shrink-0 text-emerald-600" />
+                                {formatTime(slot.start)} –{" "}
+                                {formatTime(slot.end)}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-xs font-medium text-slate-400">
+                              Unavailable / Off
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-4 flex items-center gap-3 text-sm text-slate-600">
+                  <Clock className="h-5 w-5 shrink-0 text-slate-400" />
+                  <span>
+                    {typeof availability === "string" && availability
+                      ? availability
+                      : "Mon - Sat: 8:00 AM - 6:00 PM"}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

@@ -65,7 +65,6 @@ export default function ServicesPage() {
     try {
       const res = await getServices({});
       if (res.data.success) {
-        console.log("Fetched services:", res, res.data.data);
         setServices(res.data.data.data);
       }
     } catch (error) {

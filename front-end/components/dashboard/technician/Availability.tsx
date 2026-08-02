@@ -171,7 +171,7 @@ export default function AvailabilityPage() {
     try {
       const res = await getSlot({});
       if (res.data.success) {
-        setAvailabilityData(res.data.data);
+        setAvailabilityData(res.data.data || {});
       }
     } catch (error) {
       console.error("Error fetching availability data:", error);
