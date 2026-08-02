@@ -12,3 +12,14 @@ export const getAllTechnicians = async () => {
   });
   return res;
 };
+
+export const getAllCategories = async () => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `categories`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+  return res;
+};

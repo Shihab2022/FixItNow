@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
       },
       {
-        hostname: "images.unsplash.com",
+        hostname: "randomuser.me",
       },
     ],
   },

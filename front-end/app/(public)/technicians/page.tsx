@@ -2,13 +2,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import Image from "next/image";
-import { ShieldCheck, Star, Briefcase } from "lucide-react";
+import { ShieldCheck, Star, Briefcase, Search, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getAllTechnicians } from "@/service/publicApi";
 import Link from "next/link";
-import { FaArrowRight } from "react-icons/fa";
-export default function TopRatedTechnicians() {
+import { getAllTechnicians } from "@/service/publicApi";
+
+export default function AllTechniciansSection() {
   const [technicians, setTechnicians] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const fetchTopRatedTechnicians = async () => {
     try {
       const response = await getAllTechnicians();
@@ -22,25 +23,50 @@ export default function TopRatedTechnicians() {
   useEffect(() => {
     fetchTopRatedTechnicians();
   }, []);
+  const filteredCategories = technicians.filter((cat) =>
+    cat?.user?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase()),
+  );
   return (
     <section id="technicians" className="py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div>
-          <h2 className="font-bold text-slate-900 text-3xl tracking-tight sm:text-4xl">
-            Top-Rated Technicians
-          </h2>
-          <p className="mt-2 text-slate-600">
-            Vetted experts ready to help you today.
-          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-600 transition mb-4"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Home
+          </Link>
+
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                Top-Rated Technicians
+              </h1>
+              <p className="text-slate-500 text-sm mt-1">
+                Vetted experts ready to help you today.
+              </p>
+            </div>
+
+            {/* Search Input */}
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search technicians..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 transition"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {technicians.slice(0, 6).map((tech, i) => {
+          {filteredCategories.map((tech, i) => {
             const name = tech.user?.name || "Technician";
             const avatarUrl =
               tech.avatarUrl ||
               `https://randomuser.me/api/portraits/men/${i + 10}.jpg`;
-
             return (
               <div
                 key={tech.id}
@@ -106,19 +132,6 @@ export default function TopRatedTechnicians() {
           })}
         </div>
       </div>
-
-      {technicians.length > 6 && (
-        <div className="mt-10 text-center">
-          <Link href="/technicians">
-            <button className="inline-flex cursor-pointer items-center gap-2 rounded-2xl text-sm font-bold text-blue-700 ">
-              <>
-                Show All Technicians ({technicians.length}){" "}
-                <FaArrowRight className="h-4 w-4" />
-              </>
-            </button>
-          </Link>
-        </div>
-      )}
     </section>
   );
 }
