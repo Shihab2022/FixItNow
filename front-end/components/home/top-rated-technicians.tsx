@@ -93,9 +93,11 @@ export default function TopRatedTechnicians() {
                     </span>
                   </div>
                   <div className="flex gap-2">
-                    <button className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 cursor-pointer">
-                      Profile
-                    </button>
+                    <Link href={`/technicians/${tech.id}`}>
+                      <button className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 cursor-pointer">
+                        Profile
+                      </button>
+                    </Link>
                     <button className="rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 cursor-pointer">
                       Book
                     </button>

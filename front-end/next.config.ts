@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
       {
         hostname: "randomuser.me",
       },
+      {
+        hostname: "i.pravatar.cc",
+      },
     ],
   },
 };
