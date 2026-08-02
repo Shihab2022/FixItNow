@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/purity */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useMemo } from "react";
@@ -28,8 +27,8 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { createBookingApi } from "@/service/publicApi";
+import { createPayment } from "@/service/payment";
 
-// 1. Interfaces
 export interface ApiResponse {
   id: string;
   title: string;
@@ -68,7 +67,6 @@ export interface ApiResponse {
   };
 }
 
-// 2. Validation Schema
 const bookingSchema = z.object({
   serviceId: z.string().min(1, "Service ID is required"),
   technicianId: z.string().min(1, "Technician ID is required"),
@@ -83,17 +81,8 @@ type BookingFormValues = z.infer<typeof bookingSchema>;
 
 interface CreateBookingProps {
   response: ApiResponse;
-  //   onSubmitBooking?: (payload: {
-  //     serviceId: string;
-  //     technicianId: string;
-  //     scheduledDate: string;
-  //     totalPrice: number;
-  //     customerAddress: string;
-  //     notes?: string;
-  //   }) => Promise<void>;
 }
 
-// Helper: Convert "16:00" -> "04:00 PM"
 const formatTo12Hr = (time24: string) => {
   const [h, m] = time24.split(":").map(Number);
   const period = h >= 12 ? "PM" : "AM";
@@ -186,17 +175,19 @@ export function CreateBookingForm({
         notes: formData.notes,
       };
       const res = await createBookingApi(payload);
-      console.log("Booking API Response:", res);
-      console.log("Booking Payload:", payload);
 
-      //   if (onSubmitBooking) {
-      //     await onSubmitBooking(payload);
-      //   } else {
-      //     console.log("Submitted Booking Payload:", payload);
-      //     await new Promise((res) => setTimeout(res, 1200));
-      //   }
+      if (res.data.success) {
+        const bookingId = res.data.data.id;
+        if (bookingId) {
+          const bookingRes = await createPayment({ bookingId });
 
-      // setIsSuccess(true);
+          if (bookingRes?.data?.success) {
+            const paymentUrl = bookingRes.data.data.paymentUrl;
+            window.open(paymentUrl, "_blank", "noopener,noreferrer");
+            setIsSuccess(true);
+          }
+        }
+      }
     } catch (error) {
       console.error("Booking Error:", error);
     } finally {
@@ -218,8 +209,8 @@ export function CreateBookingForm({
           Booking Confirmed!
         </h2>
         <p className="mt-2 text-sm text-slate-600">
-          Your booking for <strong className="text-slate-900">{title}</strong>{" "}
-          has been created.
+          Please confirm your payment in the new tab to complete the booking
+          process.
         </p>
 
         <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-left text-xs text-slate-600 space-y-2 border border-slate-100">
@@ -244,7 +235,8 @@ export function CreateBookingForm({
           href="/"
           className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white transition hover:bg-blue-700"
         >
-          <ArrowLeft className="h-4 w-4" /> Go to Home
+          <ArrowLeft className="h-4 w-4" />
+          Make another booking
         </Link>
       </motion.div>
     );
