@@ -102,9 +102,30 @@ const getMe = async (user: IAuthUser) => {
   const { password: _, ...userWithoutPassword } = reUser;
   return userWithoutPassword;
 };
+const updateMe = async (user: IAuthUser, payload: Partial<IAuthUser>) => {
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const updateData: any = Object.fromEntries(
+    Object.entries(payload as Record<string, any>).filter(
+      ([, value]) => value !== undefined && value !== null,
+    ),
+  ) as any;
+  console.log({ updateData });
+  console.log({ "user.id": user.id });
+  const reUser = await prisma.user.update({
+    where: { id: user.id },
+    data: updateData,
+  });
+
+  const { password: _, ...userWithoutPassword } = reUser;
+  return userWithoutPassword;
+};
 
 export const AuthServices = {
   register,
   login,
   getMe,
+  updateMe,
 };

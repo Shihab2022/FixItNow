@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/purity */
 "use client";
 
 import React, { useState } from "react";
@@ -17,30 +18,30 @@ import {
   FiSave,
 } from "react-icons/fi";
 import Image from "next/image";
+import { getMe, updateMe } from "@/service/auth";
+import { showToast } from "@/components/toast/toast";
+import { toastTypes } from "../constant";
 
 // Validation Schema
 const profileSchema = z.object({
-  fullName: z.string().min(2, "Full name must be at least 2 characters"),
+  name: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   phone: z.string().min(10, "Please enter a valid phone number"),
   address: z.string().min(5, "Address must be at least 5 characters"),
   city: z.string().min(2, "City is required"),
   zipCode: z.string().min(4, "ZIP code is required"),
-  currentPassword: z.string().optional(),
-  newPassword: z
-    .string()
-    .optional()
-    .refine((val) => !val || val.length >= 8, {
-      message: "New password must be at least 8 characters",
-    }),
+  // currentPassword: z.string().optional(),
+  // newPassword: z
+  //   .string()
+  //   .optional()
+  //   .refine((val) => !val || val.length >= 8, {
+  //     message: "New password must be at least 8 characters",
+  //   }),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function CustomerProfileEditPage() {
-  const [avatarPreview, setAvatarPreview] = useState<string>(
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300",
-  );
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(true);
@@ -48,44 +49,40 @@ export default function CustomerProfileEditPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    defaultValues: {
-      fullName: "Jane Doe",
-      email: "jane.doe@example.com",
-      phone: "+1 (555) 019-2834",
-      address: "742 Evergreen Terrace",
-      city: "Springfield",
-      zipCode: "97477",
-      currentPassword: "",
-      newPassword: "",
+    defaultValues: async () => {
+      const response = await getMe();
+      const data = response?.data?.data;
+      return {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address?.split(" ")[0] || "",
+        city: data.address?.split(" ")[1] || "",
+        zipCode: data.address?.split(" ")[2] || "",
+      };
     },
   });
-
-  // Handle image upload preview
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setAvatarPreview(url);
-    }
-  };
-
   const onSubmit = async (data: ProfileFormData) => {
-    // Simulate API update request
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log("Updated Profile Data:", {
-      ...data,
-      notifications: { emailNotifications, smsNotifications },
+
+    const res = await updateMe({
+      name: data.name,
+      phone: data.phone,
+      address: `#${data.address} ${data.city} ${data.zipCode}`,
     });
-    setSaveSuccess(true);
+    if (res?.data?.success) {
+      setSaveSuccess(true);
+      showToast(toastTypes.SUCCESS, "Profile updated successfully!");
+    }
     setTimeout(() => setSaveSuccess(false), 4000);
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-16">
-      {/* Page Header */}
       <div>
         <h1 className="text-2xl font-black text-slate-900">Account Settings</h1>
         <p className="text-sm text-slate-500 mt-1">
@@ -93,7 +90,6 @@ export default function CustomerProfileEditPage() {
         </p>
       </div>
 
-      {/* Success Banner */}
       {saveSuccess && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -106,11 +102,10 @@ export default function CustomerProfileEditPage() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        {/* Profile Avatar & Header Card */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center gap-6">
           <div className="relative group">
             <Image
-              src={avatarPreview}
+              src={`https://randomuser.me/api/portraits/men/${Math.floor(Math.random() * 90) + 10}.jpg`}
               height={96}
               width={96}
               alt="Profile"
@@ -121,18 +116,20 @@ export default function CustomerProfileEditPage() {
               className="absolute -bottom-2 -right-2 p-2.5 bg-blue-600 text-white rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition-all active:scale-95"
             >
               <FiCamera className="text-sm" />
-              <input
+              {/* <input
                 id="avatar-upload"
                 type="file"
                 accept="image/*"
                 onChange={handleAvatarChange}
                 className="hidden"
-              />
+              /> */}
             </label>
           </div>
 
           <div className="text-center sm:text-left space-y-1">
-            <h2 className="text-xl font-bold text-slate-900">Jane Doe</h2>
+            <h2 className="text-xl font-bold text-slate-900">
+              {watch("name")}
+            </h2>
             <p className="text-xs font-medium text-slate-500">
               Customer Account
             </p>
@@ -156,14 +153,14 @@ export default function CustomerProfileEditPage() {
               <div className="relative">
                 <FiUser className="absolute left-3.5 top-3 text-slate-400 text-sm" />
                 <input
-                  {...register("fullName")}
+                  {...register("name")}
                   type="text"
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
                 />
               </div>
-              {errors.fullName && (
+              {errors.name && (
                 <p className="text-[11px] text-rose-500 mt-1">
-                  {errors.fullName.message}
+                  {errors.name.message}
                 </p>
               )}
             </div>
@@ -175,9 +172,10 @@ export default function CustomerProfileEditPage() {
               <div className="relative">
                 <FiMail className="absolute left-3.5 top-3 text-slate-400 text-sm" />
                 <input
+                  disabled
                   {...register("email")}
                   type="email"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
+                  className="w-full pl-10 pr-4  py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
                 />
               </div>
               {errors.email && (
@@ -266,7 +264,7 @@ export default function CustomerProfileEditPage() {
         </div>
 
         {/* Change Password Section */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        {/* <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
             <FiLock className="text-amber-500" /> Change Security Password
           </h2>
@@ -301,7 +299,7 @@ export default function CustomerProfileEditPage() {
               )}
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Preferences Section */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">

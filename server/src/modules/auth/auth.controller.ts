@@ -51,9 +51,22 @@ const getMe = catchAsync(
     });
   },
 );
+const updateMe = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const result = await AuthServices.updateMe(req.user!, req.body);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "User details updated successfully!",
+      data: result,
+    });
+  },
+);
 
 export const AuthController = {
   register,
   login,
   getMe,
+  updateMe,
 };

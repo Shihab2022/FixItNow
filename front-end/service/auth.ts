@@ -52,6 +52,16 @@ export const getMe = async () => {
   });
   return res;
 };
+export const updateMe = async (params: any) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `auth/me`,
+    method: apiMethods.PUT as keyof typeof apiMethods,
+    formData: false,
+    params: params,
+  });
+  return res;
+};
 
 export const logout = async () => {
   const cookieStore = await cookies();
