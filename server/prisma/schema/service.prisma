@@ -7,7 +7,7 @@ model Service {
   status      Boolean @default(true)
 
   technicianId String
-  technician   User   @relation("TechnicianServices", fields: [technicianId], references: [id])
+  technician    TechnicianProfile @relation(fields: [technicianId], references: [id])
 
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])

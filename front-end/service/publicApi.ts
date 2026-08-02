@@ -33,3 +33,13 @@ export const getAllCategories = async () => {
   });
   return res;
 };
+export const getAllServicesApi = async () => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `services`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+  return res;
+};

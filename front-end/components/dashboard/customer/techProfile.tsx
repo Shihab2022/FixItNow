@@ -158,7 +158,6 @@ export default function TechProfile({
       </div>
     );
   }
-  console.log("Technician Data:", technician);
   const name = technician.user?.name ?? "Technician";
   const avatar = technician.avatarUrl ?? getAvatarUrl(technician.id);
   const rate = technician.hourlyRate ?? 45;

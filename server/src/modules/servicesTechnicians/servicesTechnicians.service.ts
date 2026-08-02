@@ -123,7 +123,7 @@ const getAllCategories = async () => {
 const getAllServices = async (query: any) => {
   const {
     page = 1,
-    limit = 10,
+    limit = 100,
     searchTerm,
     categoryId,
     technicianId,
@@ -209,10 +209,22 @@ const getAllServices = async (query: any) => {
       },
       technician: {
         select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
+          id: true, // TechnicianProfile ID
+          bio: true,
+          experience: true,
+          completedJobs: true,
+          hourlyRate: true,
+          isAvailable: true,
+          user: {
+            select: {
+              id: true, // User ID
+              name: true,
+              email: true,
+              phone: true,
+              address: true,
+              role: true,
+            },
+          },
         },
       },
       _count: {
@@ -222,7 +234,20 @@ const getAllServices = async (query: any) => {
       },
     },
   });
+  const result = await Promise.all(
+    services.map(async (service) => {
+      const technicianProfile = await prisma.technicianProfile.findUnique({
+        where: {
+          userId: service.technicianId,
+        },
+      });
 
+      return {
+        ...service,
+        technicianProfile,
+      };
+    }),
+  );
   const total = await prisma.service.count({
     where,
   });
@@ -235,6 +260,7 @@ const getAllServices = async (query: any) => {
       totalPage: Math.ceil(total / Number(limit)),
     },
     data: services,
+    result,
   };
 
   // const services = await prisma.service.findMany();
