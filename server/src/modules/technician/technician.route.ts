@@ -5,10 +5,20 @@ import { Role } from "../../../generated/prisma/client";
 
 const router = express.Router();
 
+router.get(
+  "/",
+  auth(Role.TECHNICIAN),
+  TechnicianController.getTechnicianProfile,
+);
 router.put(
   "/profile",
   auth(Role.TECHNICIAN),
   TechnicianController.UpdateProfile,
+);
+router.patch(
+  "/tech-profile",
+  auth(Role.TECHNICIAN),
+  TechnicianController.UpdateTechnicianProfile,
 );
 router.put(
   "/availability",

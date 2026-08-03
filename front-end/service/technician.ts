@@ -74,6 +74,16 @@ export const updateBookingStatus = async (params: any) => {
   });
   return res;
 };
+export const updateTechnicianProfile = async (params: any) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `technician/tech-profile`,
+    method: apiMethods.PATCH as keyof typeof apiMethods,
+    formData: false,
+    params: params,
+  });
+  return res;
+};
 
 export const getTechnicianOverview = async (params: any) => {
   const res = await apiHandler({
@@ -82,6 +92,16 @@ export const getTechnicianOverview = async (params: any) => {
     method: apiMethods.GET as keyof typeof apiMethods,
     formData: false,
     params: params,
+  });
+  return res;
+};
+export const getTechProfile = async () => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `technician`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
   });
   return res;
 };

@@ -283,6 +283,61 @@ export const GetOverview = async (userId: string) => {
     })),
   };
 };
+
+const UpdateTechnicianProfile = async (userId: string, payload: any) => {
+  if (!userId) {
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED,
+      "Unauthorized: Missing user ID",
+    );
+  }
+
+  const { bio, skills, experience, hourlyRate, isAvailable, status } = payload;
+
+  // 2. Validate technician profile existence
+  const existingProfile = await prisma.technicianProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!existingProfile) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Technician profile not found");
+  }
+
+  // 3. Update Technician Profile (excluding availability updates)
+  const updatedProfile = await prisma.technicianProfile.update({
+    where: { userId },
+    data: {
+      ...(bio !== undefined && { bio }),
+      ...(skills !== undefined && { skills }), // Accepts string[] array or Json
+      ...(experience !== undefined && { experience: Number(experience) }),
+      ...(hourlyRate !== undefined && {
+        hourlyRate: hourlyRate !== null ? Number(hourlyRate) : null,
+      }),
+      ...(isAvailable !== undefined && { isAvailable: Boolean(isAvailable) }),
+      ...(status !== undefined && { status: Boolean(status) }),
+    },
+  });
+
+  return updatedProfile;
+};
+const getTechnicianProfile = async (userId: string) => {
+  if (!userId) {
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED,
+      "Unauthorized: Missing user ID",
+    );
+  }
+
+  const techProfile = await prisma.technicianProfile.findUniqueOrThrow({
+    where: { userId },
+    include: {
+      user: true,
+    },
+  });
+
+  return techProfile;
+};
+
 export const TechnicianService = {
   UpdateProfile,
   UpdateAvailability,
@@ -290,4 +345,6 @@ export const TechnicianService = {
   GetOverview,
   GetAvailability,
   UpdateBookingStatus,
+  UpdateTechnicianProfile,
+  getTechnicianProfile,
 };

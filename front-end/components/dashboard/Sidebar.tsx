@@ -38,6 +38,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
     ],
     TECHNICIAN: [
       { name: "Profile", href: "/", icon: CgProfile },
+      {
+        name: "Technician Profile",
+        href: "/technician/profile",
+        icon: CgProfile,
+      },
       { name: "Dashboard", href: "/technician", icon: FiHome },
       {
         name: "Availability",

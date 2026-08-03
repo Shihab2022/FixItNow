@@ -111,6 +111,41 @@ const UpdateBookingStatus = catchAsync(
     });
   },
 );
+const UpdateTechnicianProfile = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    if (!req.user) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized");
+    }
+
+    const data = await TechnicianService.UpdateTechnicianProfile(
+      req.user.id,
+      req.body,
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Technician profile updated successfully!",
+      data,
+    });
+  },
+);
+const getTechnicianProfile = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    if (!req.user) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized");
+    }
+
+    const data = await TechnicianService.getTechnicianProfile(req.user.id);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Technician profile get successfully!",
+      data,
+    });
+  },
+);
 
 export const TechnicianController = {
   UpdateProfile,
@@ -119,4 +154,6 @@ export const TechnicianController = {
   UpdateBookingStatus,
   GetAvailability,
   GetOverview,
+  UpdateTechnicianProfile,
+  getTechnicianProfile,
 };
