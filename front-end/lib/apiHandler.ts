@@ -3,8 +3,8 @@
 import { apiMethods } from "@/app/constant";
 import { cookies } from "next/headers";
 
-// import { SOMETHING_WENT_WRONG } from "constants/messages";
 const SOMETHING_WENT_WRONG = "Something went wrong. Please try again later.";
+
 export interface ApiHandlerOptions<TParams = Record<string, any>> {
   baseURL?: string;
   path: string;
@@ -75,9 +75,6 @@ export const apiHandler = async <
     const response = await fetch(url, options);
 
     if (response.status === 401) {
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      }
       return {
         status: 401,
         success: false,
@@ -104,6 +101,11 @@ export const apiHandler = async <
       params,
     };
   } catch (err: any) {
+    // 💡 FIX 2: Check if this is Next.js's internal dynamic server error and re-throw it so Next.js handles it properly
+    if (err?.digest === "DYNAMIC_SERVER_USAGE") {
+      throw err;
+    }
+
     console.error("API Call Error:", err);
     return {
       status: 500,
@@ -112,4 +114,15 @@ export const apiHandler = async <
       params,
     };
   }
+};
+
+export const getMe = async () => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `auth/me`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+  return res;
 };

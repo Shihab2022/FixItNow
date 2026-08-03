@@ -28,6 +28,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { createBookingApi } from "@/service/publicApi";
 import { createPayment } from "@/service/payment";
+import { showToast } from "../toast/toast";
+import { toastTypes } from "@/app/constant";
 
 export interface ApiResponse {
   id: string;
@@ -176,11 +178,10 @@ export function CreateBookingForm({
       };
       const res = await createBookingApi(payload);
 
-      if (res.data.success) {
-        const bookingId = res.data.data.id;
+      if (res?.data?.success) {
+        const bookingId = res?.data?.data?.id;
         if (bookingId) {
           const bookingRes = await createPayment({ bookingId });
-
           if (bookingRes?.data?.success) {
             localStorage.setItem("bookingId", bookingId);
             const paymentUrl = bookingRes.data.data.paymentUrl;
@@ -190,6 +191,7 @@ export function CreateBookingForm({
         }
       }
     } catch (error) {
+      showToast(toastTypes.FAILED, "Booking failed. Please try again.");
       console.error("Booking Error:", error);
     } finally {
       setIsSubmitting(false);

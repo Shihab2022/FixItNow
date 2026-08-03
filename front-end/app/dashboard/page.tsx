@@ -115,13 +115,6 @@ export default function CustomerProfileEditPage() {
               className="absolute -bottom-2 -right-2 p-2.5 bg-blue-600 text-white rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition-all active:scale-95"
             >
               <FiCamera className="text-sm" />
-              {/* <input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="hidden"
-              /> */}
             </label>
           </div>
 
