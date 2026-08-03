@@ -340,16 +340,35 @@ const createService = async (req: any) => {
       "Only technicians can create services",
     );
   }
-
+  const tech = await prisma.technicianProfile.findUniqueOrThrow({
+    where: { userId: user.id },
+  });
   const validatedData = CreateServiceSchema.parse(payload);
   const service = await prisma.service.create({
     data: {
       ...validatedData,
-      technicianId: user.id, // Set automatically from JWT payload authentication
+      technicianId: tech.id,
     },
   });
 
   return service;
+};
+const getTechnicianServices = async (req: any) => {
+  const user = req.user;
+  if (user?.role !== Role.TECHNICIAN) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "Only technicians can access their services",
+    );
+  }
+
+  const services = await prisma.service.findMany({
+    where: {
+      technicianId: user.id,
+    },
+  });
+
+  return services;
 };
 
 export const ServicesTechniciansService = {
@@ -359,4 +378,5 @@ export const ServicesTechniciansService = {
   getTechnicianProfile,
   createService,
   getSingleServices,
+  getTechnicianServices,
 };

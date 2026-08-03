@@ -5,7 +5,11 @@
 import { toastTypes } from "@/app/constant";
 import { showToast } from "@/components/toast/toast";
 import { getCategory } from "@/service/admin";
-import { createService, getServices } from "@/service/technician";
+import {
+  createService,
+  getServices,
+  getTechnicianServices,
+} from "@/service/technician";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -63,9 +67,9 @@ export default function ServicesPage() {
 
   const getAllServices = async () => {
     try {
-      const res = await getServices({});
+      const res = await getTechnicianServices({});
       if (res.data.success) {
-        setServices(res.data.data.data);
+        setServices(res.data.data || []);
       }
     } catch (error) {
       console.error("Error fetching services:", error);
@@ -91,13 +95,10 @@ export default function ServicesPage() {
     },
   });
 
-  // Handle Create Service Submit
   const onSubmit = async (data: CreateServiceInput) => {
     setIsSubmitting(true);
 
     try {
-      // Find category name for UI display
-
       const newService: any = {
         title: data.title,
         description: data.description,
@@ -107,14 +108,13 @@ export default function ServicesPage() {
       };
 
       const res = await createService(newService);
-      if (!res.data.success) {
-        console.error("Failed to create service:", res.data.message);
+
+      if (!res?.data?.success) {
         showToast(toastTypes.FAILED, `Failed to create service`);
         return;
       } else {
         showToast(toastTypes.SUCCESS, `Service created successfully`);
         await new Promise((resolve) => setTimeout(resolve, 600));
-
         setServices((prev) => [newService, ...prev]);
         reset();
         setIsCreating(false);
