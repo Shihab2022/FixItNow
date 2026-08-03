@@ -1,0 +1,801 @@
+{
+  "info": {
+    "_postman_id": "86473648-e0a6-4ddf-9e01-ecaa67bd573b",
+    "name": "FixItNow",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "21086915"
+  },
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "test url",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}",
+              "host": [
+                "{{base-url}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register new user",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Jane Smith\",\r\n  \"email\": \"jane9.smith@example.com\",\r\n  \"password\": \"securePassword123\",\r\n  \"role\": \"CUSTOMER\",\r\n  \"phone\": \"+1234567890\",\r\n  \"address\": \"789 Maple Drive, Austin, TX\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/auth/register",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login user",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "  {\"email\": \"robert.spark@example.com\",\r\n  \"password\": \"sparkyPassword456\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/auth/login",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get current  user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/auth/me",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "servicesTechnicians",
+      "item": [
+        {
+          "name": "Get all services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/services?page=1&limit=100&minPrice=10&maxPrice=80&sortBy=createdAt&sortOrder=asc",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "services"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "type": "text"
+                },
+                {
+                  "key": "minPrice",
+                  "value": "10",
+                  "type": "text"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "80",
+                  "type": "text"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt",
+                  "type": "text"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "asc",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all technicians",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/technicians?experience=6&skills=Electrical Wiring&sortBy=experience&page=1&limit=100&minPrice=10&maxPrice=80&sortOrder=asc",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "technicians"
+              ],
+              "query": [
+                {
+                  "key": "experience",
+                  "value": "6"
+                },
+                {
+                  "key": "skills",
+                  "value": "Electrical Wiring"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "experience",
+                  "type": "text"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "limit",
+                  "value": "100",
+                  "type": "text"
+                },
+                {
+                  "key": "minPrice",
+                  "value": "10",
+                  "type": "text"
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "80",
+                  "type": "text"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "asc",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "technician profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/technicians/b407ecb2-9a3c-43e8-b913-c2d8cf9e3143",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "technicians",
+                "b407ecb2-9a3c-43e8-b913-c2d8cf9e3143"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/categories",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create service",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Emergency Electrical Wiring Repair\",\r\n  \"description\": \"Comprehensive troubleshooting for residential power failures and socket overloads.\",\r\n  \"price\": 50,\r\n  \"location\": \"Austin Central Area\",\r\n  \"categoryId\": \"7dbcf8ba-3425-43b6-9ee0-572347419863\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/services",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "services"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "payments",
+      "item": [
+        {
+          "name": "Create a payment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\r\n\r\n    \"bookingId\":\"002ee3c9-b4c1-47dd-b915-9a2025b9b07f\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/payments/create",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "create"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "Create a payment",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n\r\n\r\n    \"bookingId\":\"2bd5ae72-f1d5-4708-a34f-ca8585905fc2\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base-url}}/api/payments/create",
+                  "host": [
+                    "{{base-url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "payments",
+                    "create"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "vary",
+                  "value": "Origin"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "content-length",
+                  "value": "92"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 08 Jul 2026 06:54:33 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=72"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Route POST:/api/payments/create not found\",\n    \"error\": \"Not Found\",\n    \"statusCode\": 404\n}"
+            }
+          ]
+        },
+        {
+          "name": "Confirm/verify payment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"transactionId\":\"Fix-It-Now-2026-6-3-15-3\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/payments/confirm",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "confirm"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "payment history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/payments",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get payment details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/payments/0c8e5735-2968-421c-9aec-5970ab00ab72",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "0c8e5735-2968-421c-9aec-5970ab00ab72"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create new booking",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"serviceId\": \"3728988d-e769-4277-bf85-adbe356255f0\",\r\n  \"technicianId\": \"7bce1d58-95b6-4c83-a8a2-07c3a9c42f88\",\r\n  \"scheduledDate\": \"2026-08-15T14:30:00.000Z\",\r\n  \"totalPrice\": 500\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/bookings",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get user's bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/bookings",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get booking details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/bookings/002ee3c9-b4c1-47dd-b915-9a2025b9b07f",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "002ee3c9-b4c1-47dd-b915-9a2025b9b07f"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Technician",
+      "item": [
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\r\n      \"completedJobs\": 100,\r\n        \"bio\": \"Professional electrician with over 6 years of experience in residential and commercial electrical services.\",\r\n  \"skills\": [\r\n    \"Electrical Wiring\",\r\n    \"Circuit Repair\",\r\n    \"Ceiling Fan Installation\",\r\n    \"Lighting Installation\",\r\n    \"Power Backup Systems\"\r\n  ],\r\n  \"experience\": 6,\r\n\r\n  \"isAvailable\": true,\r\n  \"hourlyRate\": 25,\r\n  \"availability\": {\r\n    \"monday\": [\"09:00-12:00\", \"14:00-18:00\"],\r\n    \"tuesday\": [\"09:00-17:00\"],\r\n    \"wednesday\": [\"10:00-16:00\"],\r\n    \"thursday\": [\"09:00-17:00\"],\r\n    \"friday\": [\"09:00-15:00\"],\r\n    \"saturday\": [\"10:00-14:00\"],\r\n    \"sunday\": []\r\n  },\r\n  \"status\": true\r\n\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/technician/profile",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "technician",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update availability slots",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"day\": \"monday\",\r\n  \"slots\": [\r\n    {\r\n      \"start\": \"09:00\",\r\n      \"end\": \"12:00\"\r\n    },\r\n    {\r\n      \"start\": \"14:00\",\r\n      \"end\": \"18:00\"\r\n    }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/technician/availability",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "technician",
+                "availability"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/technician/bookings",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "technician",
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update booking status",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"status\": \"ACCEPTED\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/technician/bookings/002ee3c9-b4c1-47dd-b915-9a2025b9b07f",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "technician",
+                "bookings",
+                "002ee3c9-b4c1-47dd-b915-9a2025b9b07f"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Create review",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"bookingId\": \"002ee3c9-b4c1-47dd-b915-9a2025b9b07f\",\r\n  \"rating\": 4.5,\r\n  \"comment\": \"Excellent service. Highly recommended!\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/reviews",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "reviews"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get all users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}\t/api/admin/users",
+              "host": [
+                "{{base-url}}\t"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update user status",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"status\":\"ACTIVE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/admin/users/aed43669-4aed-41ce-970c-2d876da9116b",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "aed43669-4aed-41ce-970c-2d876da9116b"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/admin/bookings",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "bookings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base-url}}/api/admin/categories",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create category",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \" Wiring Repair\",\r\n  \"description\": \"Comprehensive troubleshooting for residential power failures and socket overloads.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base-url}}/api/admin/categories",
+              "host": [
+                "{{base-url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "categories"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base-url",
+      "value": "http://localhost:5000"
+    }
+  ]
+}
