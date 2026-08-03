@@ -213,7 +213,7 @@ export default function CustomerBookingsPage() {
         {booking.status?.toUpperCase() !== "CANCELLED" && (
           <button
             onClick={() => confirmPayment(booking.id)}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 hover:underline mt-0.5"
+            className="inline-flex  cursor-pointer items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 hover:underline mt-0.5"
           >
             <FiCreditCard className="text-xs" /> Make Payment
           </button>

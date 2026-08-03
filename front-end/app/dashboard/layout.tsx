@@ -8,7 +8,7 @@ const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
     <div className="min-h-screen flex flex-col">
       <DashboardHeader user={user?.data?.data || {}} />
       <div className="flex flex-1 mt-20">
-        <Sidebar role={user?.data?.data?.role || "customer"} />
+        <Sidebar role={user?.data?.data?.role} />
         <main className="flex-1 min-w-0 p-20">{children}</main>
       </div>
     </div>
