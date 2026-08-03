@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
       {
         hostname: "i.pravatar.cc",
       },
+      {
+        hostname: "api.dicebear.com",
+      },
     ],
   },
 };

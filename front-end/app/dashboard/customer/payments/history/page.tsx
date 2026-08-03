@@ -143,7 +143,7 @@ export default function PaymentHistoryPage() {
             .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2563eb; padding-bottom: 20px; }
             .logo-container { display: flex; align-items: center; gap: 10px; }
             .logo-img { height: 40px; width: auto; object-fit: contain; }
-            .brand-name1 { font-size: 20px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: -0.5px; }
+            .brand-name1 { font-size: 20px; font-weight: 800; color: #0f172a;  letter-spacing: -0.5px; }
             .brand-name2 { font-size: 20px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: -0.5px; }
             .receipt-title { font-size: 22px; font-weight: 800; color: #2563eb; text-align: right; }
             .receipt-id { font-size: 12px; font-mono: true; color: #64748b; margin-top: 4px; }
@@ -371,7 +371,7 @@ export default function PaymentHistoryPage() {
                     >
                       <td className="py-4 px-6 font-mono font-bold text-slate-800 text-xs">
                         <div
-                          className="truncate max-w-[160px]"
+                          className="truncate max-w-40"
                           title={item.transactionId}
                         >
                           {item.transactionId}

@@ -46,9 +46,42 @@ const CreateNewBooking = async (req: any) => {
 
 const GetUserBookings = async (id: string) => {
   const bookings = await prisma.booking.findMany({
-    where: { customerId: id },
+    where: {
+      customerId: id,
+    },
     include: {
-      service: true,
+      service: {
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          price: true,
+          location: true,
+          status: true,
+
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+
+          technician: {
+            select: {
+              id: true,
+              experience: true,
+              isAvailable: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
   return bookings;
