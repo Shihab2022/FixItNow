@@ -74,7 +74,6 @@ export default function BookingsPage({ bookingsData }: any) {
 
   const updateStatus = async (id: string, newStatus: BookingStatus) => {
     const res = await updateBookingStatus({ id, status: newStatus });
-    console.log("Update Status Response: ", res);
     if (res.data.success) {
       showToast(toastTypes.SUCCESS, `Booking status updated to ${newStatus}`);
       setBookings((prev) =>
@@ -85,7 +84,7 @@ export default function BookingsPage({ bookingsData }: any) {
 
   const handleConfirmDecline = () => {
     if (declineBookingId) {
-      updateStatus(declineBookingId, "DECLINED");
+      updateStatus(declineBookingId, "CANCELLED");
       setDeclineBookingId(null);
     }
   };
