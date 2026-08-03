@@ -61,9 +61,9 @@ export default function ServicesPage() {
     }
   };
 
-  const getAllServices = async () => {
+  const getAllTechnicianServices = async () => {
     try {
-      const res = await getTechnicianServices({});
+      const res = await getTechnicianServices();
       if (res.data.success) {
         setServices(res.data.data || []);
       }
@@ -73,7 +73,7 @@ export default function ServicesPage() {
   };
   useEffect(() => {
     getCategoryName();
-    getAllServices();
+    getAllTechnicianServices();
   }, []);
   const {
     register,

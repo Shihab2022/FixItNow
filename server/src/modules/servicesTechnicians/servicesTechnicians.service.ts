@@ -361,10 +361,13 @@ const getTechnicianServices = async (req: any) => {
       "Only technicians can access their services",
     );
   }
+  const technician = await prisma.technicianProfile.findUniqueOrThrow({
+    where: { userId: user.id },
+  });
 
   const services = await prisma.service.findMany({
     where: {
-      technicianId: user.id,
+      technicianId: technician.id,
     },
   });
 

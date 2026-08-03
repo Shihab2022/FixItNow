@@ -33,13 +33,13 @@ export const getServices = async (params: any) => {
   });
   return res;
 };
-export const getTechnicianServices = async (params: any) => {
+export const getTechnicianServices = async () => {
   const res = await apiHandler({
     baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
     path: `services/technician`,
     method: apiMethods.GET as keyof typeof apiMethods,
     formData: false,
-    params: params,
+    params: {},
   });
   return res;
 };

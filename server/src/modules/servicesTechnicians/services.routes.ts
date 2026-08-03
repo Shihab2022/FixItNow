@@ -5,7 +5,6 @@ import { Role } from "../../../generated/prisma/client";
 const router = express.Router();
 router.get("/", ServicesTechniciansController.getAllServices);
 
-router.get("/:id", ServicesTechniciansController.getSingleServices);
 router.post(
   "/",
   auth(Role.TECHNICIAN),
@@ -16,5 +15,6 @@ router.get(
   auth(Role.TECHNICIAN),
   ServicesTechniciansController.getTechnicianServices,
 );
+router.get("/:id", ServicesTechniciansController.getSingleServices);
 
 export const ServicesTechniciansRouter = router;
