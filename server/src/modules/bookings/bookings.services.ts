@@ -91,7 +91,47 @@ const GetBookingDetails = async (id: string) => {
   const booking = await prisma.booking.findUnique({
     where: { id },
     include: {
-      service: true,
+      service: {
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          price: true,
+          location: true,
+          status: true,
+
+          category: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              status: true,
+            },
+          },
+
+          technician: {
+            select: {
+              id: true,
+              experience: true,
+              isAvailable: true,
+              bio: true,
+              skills: true,
+              hourlyRate: true,
+              completedJobs: true,
+              availability: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  phone: true,
+                  address: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
   return booking;

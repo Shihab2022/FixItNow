@@ -74,3 +74,13 @@ export const getAllBookingsApi = async () => {
   });
   return res;
 };
+export const getSingleBookingApi = async (id: string) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `bookings/${id}`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+  return res;
+};
