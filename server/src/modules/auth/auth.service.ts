@@ -112,8 +112,6 @@ const updateMe = async (user: IAuthUser, payload: Partial<IAuthUser>) => {
       ([, value]) => value !== undefined && value !== null,
     ),
   ) as any;
-  console.log({ updateData });
-  console.log({ "user.id": user.id });
   const reUser = await prisma.user.update({
     where: { id: user.id },
     data: updateData,
@@ -122,10 +120,27 @@ const updateMe = async (user: IAuthUser, payload: Partial<IAuthUser>) => {
   const { password: _, ...userWithoutPassword } = reUser;
   return userWithoutPassword;
 };
+const forgetPassword = async (payload: { email: string; password: string }) => {
+  const { email, password } = payload;
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { email },
+  });
+  const hashedPassword = await bcrypt.hash(
+    password,
+    Number(config.bcrypt_salt_rounds),
+  );
+  const updatedUser = await prisma.user.update({
+    where: { email },
+    data: { password: hashedPassword },
+  });
+  return updatedUser;
+};
 
 export const AuthServices = {
   register,
   login,
   getMe,
   updateMe,
+  forgetPassword,
 };

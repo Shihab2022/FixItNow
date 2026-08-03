@@ -5,11 +5,7 @@
 import { toastTypes } from "@/app/constant";
 import { showToast } from "@/components/toast/toast";
 import { getCategory } from "@/service/admin";
-import {
-  createService,
-  getServices,
-  getTechnicianServices,
-} from "@/service/technician";
+import { createService, getTechnicianServices } from "@/service/technician";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {

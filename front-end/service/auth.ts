@@ -15,6 +15,16 @@ export const registerUser = async (params: any) => {
   });
   return res;
 };
+export const forgetPassword = async (params: any) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `auth/forget-password`,
+    method: apiMethods.POST as keyof typeof apiMethods,
+    formData: false,
+    params: params,
+  });
+  return res;
+};
 export const loginUser = async (params: any) => {
   const res = await apiHandler({
     baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
