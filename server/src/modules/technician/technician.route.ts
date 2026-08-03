@@ -21,6 +21,11 @@ router.get(
   TechnicianController.GetAvailability,
 );
 router.get(
+  "/overview",
+  auth(Role.TECHNICIAN),
+  TechnicianController.GetOverview,
+);
+router.get(
   "/bookings",
   auth(Role.TECHNICIAN),
   TechnicianController.GetBookingHistory,

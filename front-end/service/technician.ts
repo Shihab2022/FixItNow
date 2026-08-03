@@ -74,3 +74,14 @@ export const updateBookingStatus = async (params: any) => {
   });
   return res;
 };
+
+export const getTechnicianOverview = async (params: any) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `technician/overview`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: params,
+  });
+  return res;
+};

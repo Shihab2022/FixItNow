@@ -75,6 +75,22 @@ const GetAvailability = catchAsync(
     });
   },
 );
+const GetOverview = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    if (!req.user) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized");
+    }
+
+    const data = await TechnicianService.GetOverview(req.user.id as string);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Overview retrieved successfully!",
+      data,
+    });
+  },
+);
 const UpdateBookingStatus = catchAsync(
   async (req: Request & { user?: IAuthUser }, res: Response) => {
     if (!req.user) {
@@ -102,4 +118,5 @@ export const TechnicianController = {
   GetBookingHistory,
   UpdateBookingStatus,
   GetAvailability,
+  GetOverview,
 };

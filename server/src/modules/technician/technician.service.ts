@@ -1,6 +1,8 @@
-import { BookingStatus } from "../../../generated/prisma/enums";
+import { BookingStatus, PaymentStatus } from "../../../generated/prisma/enums";
+import ApiError from "../../helpars/ApiError";
 import { prisma } from "../../lib/prisma";
 import { TimeSlot, UpdateAvailabilityPayload } from "../../types";
+import httpStatus from "http-status";
 
 const UpdateProfile = async (id: string, payload: any) => {
   const updateData = Object.fromEntries(
@@ -124,11 +126,168 @@ const UpdateBookingStatus = async (
 
   return result;
 };
+export const GetOverview = async (userId: string) => {
+  console.log("Fetching overview for userId:", userId);
 
+  if (!userId) {
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED,
+      "Unauthorized: Missing user ID",
+    );
+  }
+
+  // 1. Fetch technician profile
+  const technician = await prisma.technicianProfile.findUnique({
+    where: { userId },
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    },
+  });
+
+  if (!technician) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Technician profile not found");
+  }
+
+  const technicianId = technician.id;
+
+  // 2. Parallel Queries (Fixed Aggregation Query)
+  const [
+    earningsAggregate,
+    completedJobsCount,
+    pendingRequestsCount,
+    servicesCount,
+    recentBookings,
+  ] = await Promise.all([
+    // FIX: Aggregate earnings directly from Bookings with COMPLETED payment status
+    prisma.booking.aggregate({
+      _sum: {
+        totalPrice: true,
+      },
+      where: {
+        technicianId: technicianId,
+        paymentStatus: PaymentStatus.COMPLETED,
+      },
+    }),
+
+    // Count Completed Jobs
+    prisma.booking.count({
+      where: {
+        technicianId: technicianId,
+        status: BookingStatus.COMPLETED,
+      },
+    }),
+
+    // Count Pending/Requested Bookings
+    prisma.booking.count({
+      where: {
+        technicianId: technicianId,
+        status: BookingStatus.REQUESTED,
+      },
+    }),
+
+    // Count Active Services
+    prisma.service.count({
+      where: {
+        technicianId: technicianId,
+        status: true,
+      },
+    }),
+
+    // Fetch top 5 recent service bookings
+    prisma.booking.findMany({
+      where: {
+        technicianId: technicianId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 5,
+      select: {
+        id: true,
+        status: true,
+        scheduledDate: true,
+        scheduledTime: true,
+        totalPrice: true,
+        customerAddress: true,
+        notes: true,
+        customer: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        service: {
+          select: {
+            title: true,
+            price: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  // 3. Safe JSON Parsing for Skills
+  let skillsCount = 0;
+  if (Array.isArray(technician.skills)) {
+    skillsCount = technician.skills.length;
+  } else if (
+    typeof technician.skills === "object" &&
+    technician.skills !== null
+  ) {
+    skillsCount = Object.keys(technician.skills).length;
+  }
+
+  // 4. Calculations & Fallbacks
+  const totalEarnings = earningsAggregate._sum.totalPrice ?? 0;
+  const effectiveCompletedJobs = Math.max(
+    completedJobsCount,
+    technician.completedJobs ?? 0,
+  );
+  const estimatedHours = effectiveCompletedJobs * 2;
+
+  // 5. Clean Return Payload
+  return {
+    stats: {
+      totalEarnings: Number(totalEarnings),
+      completedJobs: Number(effectiveCompletedJobs),
+      pendingRequests: Number(pendingRequestsCount),
+      hoursWorked: Number(estimatedHours),
+      activeServices: Number(servicesCount),
+    },
+    technician: {
+      id: technician.id,
+      name: technician.user?.name || "Technician",
+      experienceYears: technician.experience ?? 0,
+      skillsCount: skillsCount,
+      isAvailable: Boolean(technician.isAvailable),
+      status: Boolean(technician.status),
+      hourlyRate: technician.hourlyRate ? Number(technician.hourlyRate) : null,
+    },
+    recentBookings: recentBookings.map((b) => ({
+      id: b.id,
+      serviceTitle: b.service?.title || "Service",
+      scheduledDate: b.scheduledDate
+        ? b.scheduledDate.toISOString()
+        : new Date().toISOString(),
+      scheduledTime: b.scheduledTime || "",
+      totalPrice: Number(b.totalPrice || 0),
+      status: b.status,
+      customerName: b.customer?.name || "Customer",
+      customerAddress: b.customerAddress || "",
+    })),
+  };
+};
 export const TechnicianService = {
   UpdateProfile,
   UpdateAvailability,
   GetBookingHistory,
+  GetOverview,
   GetAvailability,
   UpdateBookingStatus,
 };
