@@ -50,9 +50,14 @@ const UpdateAvailability = async (
 };
 
 const GetBookingHistory = async (userId: string) => {
+  const tech = await prisma.technicianProfile.findUniqueOrThrow({
+    where: {
+      userId,
+    },
+  });
   const bookings = await prisma.booking.findMany({
     where: {
-      technicianId: userId,
+      technicianId: tech.id,
     },
     include: {
       customer: {
@@ -61,6 +66,7 @@ const GetBookingHistory = async (userId: string) => {
           name: true,
           email: true,
           phone: true,
+          address: true,
         },
       },
       service: {
