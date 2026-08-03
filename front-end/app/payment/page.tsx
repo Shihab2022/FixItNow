@@ -1,8 +1,9 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -33,7 +34,11 @@ const STATUS_CONFIG = {
     title: "Payment Failed",
     description:
       "We couldn't process your payment. Please check your payment details and try again.",
-    primaryAction: { label: "Try Again", href: "/dashboard/customer/payments/history", icon: RefreshCcw },
+    primaryAction: {
+      label: "Try Again",
+      href: "/dashboard/customer/payments/history",
+      icon: RefreshCcw,
+    },
     secondaryAction: { label: "Back to Home", href: "/", icon: ArrowLeft },
   },
   cancel: {
@@ -45,7 +50,7 @@ const STATUS_CONFIG = {
       "You have cancelled the checkout process. No charges were made to your account.",
     primaryAction: {
       label: "Return to Checkout",
-      href: "/checkout",
+      href: "/dashboard/customer/payments/history",
       icon: RefreshCcw,
     },
     secondaryAction: { label: "Back to Home", href: "/", icon: ArrowLeft },
@@ -68,9 +73,14 @@ type StatusType = keyof typeof STATUS_CONFIG;
 function PaymentStatusContent() {
   const searchParams = useSearchParams();
   const statusQuery = searchParams.get("status");
-  const bookingId = localStorage.getItem("bookingId");
+  const [bookingId, setBookingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const id = localStorage.getItem("bookingId");
+    setBookingId(id);
+  }, []);
   const getPaymentDetails = async () => {
-    const res = await getSinglePaymentHistory(bookingId!);
+    const res = await getSinglePaymentHistory(bookingId as string);
     if (res?.data?.success) {
       const transactionId = res.data.data.transactionId;
       if (transactionId) {

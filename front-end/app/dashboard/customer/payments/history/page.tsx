@@ -2,9 +2,8 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { getPaymentHistory } from "@/service/payment";
+import { createPayment, getPaymentHistory } from "@/service/payment";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   FiSearch,
   FiDollarSign,
@@ -14,7 +13,6 @@ import {
   FiLoader,
   FiUser,
 } from "react-icons/fi";
-import Link from "next/link";
 
 interface PaymentItem {
   id: string;
@@ -61,7 +59,6 @@ interface PaymentItem {
 }
 
 export default function PaymentHistoryPage() {
-  const router = useRouter();
   const [payments, setPayments] = useState<PaymentItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,8 +80,15 @@ export default function PaymentHistoryPage() {
   useEffect(() => {
     getHistory();
   }, []);
+  const confirmPayment = async (bookingId: string) => {
+    const bookingRes = await createPayment({ bookingId });
 
-  // Summary Metrics
+    if (bookingRes?.data?.success) {
+      localStorage.setItem("bookingId", bookingId);
+      const paymentUrl = bookingRes.data.data.paymentUrl;
+      window.open(paymentUrl, "_blank", "noopener,noreferrer");
+    }
+  };
   const totalLifetimeSpent = payments.reduce((acc, p) => {
     const isPaidStatus = ["PAID", "COMPLETED"].includes(
       p.status?.toUpperCase(),
@@ -111,12 +115,6 @@ export default function PaymentHistoryPage() {
       status.toLowerCase().includes(query)
     );
   });
-
-  const handleMakePayment = (bookingId: string) => {
-    // Redirect customer to complete booking payment
-    router.push(`/checkout?bookingId=${bookingId}`);
-  };
-
   const handleDownloadReceipt = (item: PaymentItem) => {
     const isPaid = ["PAID", "COMPLETED"].includes(item.status?.toUpperCase());
     if (!isPaid) return;
@@ -436,14 +434,12 @@ export default function PaymentHistoryPage() {
                             <FiDownload /> PDF
                           </button>
                         ) : isPending ? (
-                          <Link href={`/booking/${item?.booking?.serviceId}`}>
-                            <button
-                              onClick={() => handleMakePayment(item.bookingId)}
-                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
-                            >
-                              Make Payment
-                            </button>
-                          </Link>
+                          <button
+                            onClick={() => confirmPayment(item.bookingId)}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
+                          >
+                            Make Payment
+                          </button>
                         ) : (
                           <span className="text-xs text-slate-400 font-medium">
                             N/A
