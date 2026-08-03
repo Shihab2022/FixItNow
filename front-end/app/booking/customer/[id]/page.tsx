@@ -25,6 +25,7 @@ import {
 import { getSingleBookingApi } from "@/service/publicApi";
 import { createPayment } from "@/service/payment";
 import { handleDownloadReceipt } from "@/utils/downPaymentReceipt";
+import { formatBookingDataForPdf } from "@/utils/formatData";
 
 // Interface reflecting your JSON structure
 interface BookingDetails {
@@ -457,7 +458,9 @@ export default function BookingDetailPage() {
               <div className="pt-2 border-t border-slate-200/60">
                 {isPaymentComplete ? (
                   <button
-                    onClick={() => handleDownloadReceipt(booking)}
+                    onClick={() =>
+                      handleDownloadReceipt(formatBookingDataForPdf(booking))
+                    }
                     className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl transition-all shadow-sm active:scale-98 cursor-pointer"
                   >
                     <FiFileText className="text-sm" /> Download Receipt

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export const handleDownloadReceipt = (item: any) => {
-  console.log("handleDownloadReceipt called with item:", item); // Debugging line
   const isPaid = ["PAID", "COMPLETED"].includes(item.status?.toUpperCase());
   if (!isPaid) return;
 

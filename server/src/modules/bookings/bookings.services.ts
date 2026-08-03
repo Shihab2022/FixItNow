@@ -99,7 +99,7 @@ const GetBookingDetails = async (id: string) => {
           price: true,
           location: true,
           status: true,
-
+          technicianId: true,
           category: {
             select: {
               id: true,
@@ -108,7 +108,6 @@ const GetBookingDetails = async (id: string) => {
               status: true,
             },
           },
-
           technician: {
             select: {
               id: true,
