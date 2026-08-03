@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { toastTypes } from "@/app/constant";
+import { showToast } from "@/components/toast/toast";
+import { updateBookingStatus } from "@/service/technician";
 import { useState } from "react";
 import {
   FiCheck,
@@ -67,13 +70,17 @@ export default function BookingsPage({ bookingsData }: any) {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // State for Decline Confirmation Modal
   const [declineBookingId, setDeclineBookingId] = useState<string | null>(null);
 
-  const updateStatus = (id: string, newStatus: BookingStatus) => {
-    setBookings((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b)),
-    );
+  const updateStatus = async (id: string, newStatus: BookingStatus) => {
+    const res = await updateBookingStatus({ id, status: newStatus });
+    console.log("Update Status Response: ", res);
+    if (res.data.success) {
+      showToast(toastTypes.SUCCESS, `Booking status updated to ${newStatus}`);
+      setBookings((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b)),
+      );
+    }
   };
 
   const handleConfirmDecline = () => {

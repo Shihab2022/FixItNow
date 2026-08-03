@@ -101,10 +101,15 @@ const UpdateBookingStatus = async (
   bookingId: string,
   status: BookingStatus,
 ) => {
+  const technician = await prisma.technicianProfile.findUniqueOrThrow({
+    where: {
+      userId: userId,
+    },
+  });
   const booking = await prisma.booking.findFirstOrThrow({
     where: {
       id: bookingId,
-      technicianId: userId,
+      technicianId: technician.id,
     },
   });
 

@@ -63,3 +63,14 @@ export const getTechnicianBookings = async (params: any) => {
   });
   return res;
 };
+export const updateBookingStatus = async (params: any) => {
+  const { id, ...payload } = params;
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `technician/bookings/${id}`,
+    method: apiMethods.PATCH as keyof typeof apiMethods,
+    formData: false,
+    params: payload,
+  });
+  return res;
+};
