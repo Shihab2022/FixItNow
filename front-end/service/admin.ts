@@ -53,6 +53,16 @@ export const getAllUsers = async () => {
   });
   return res;
 };
+export const getDashboardOverview = async () => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `admin/overview`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+  return res;
+};
 export const getAllBookings = async () => {
   const res = await apiHandler({
     baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,

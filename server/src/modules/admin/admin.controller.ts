@@ -37,6 +37,16 @@ const GetAllBookings = catchAsync(async (req: Request, res: Response) => {
     data,
   });
 });
+const GetOverview = catchAsync(async (req: Request, res: Response) => {
+  const data = await AdminService.GetOverview();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Overview retrieved successfully!",
+    data,
+  });
+});
 const GetAllCategories = catchAsync(async (req: Request, res: Response) => {
   const data = await AdminService.GetAllCategories();
 
@@ -89,4 +99,5 @@ export const AdminController = {
   CreateCategory,
   UpdateCategory,
   updateCategoryStatus,
+  GetOverview,
 };

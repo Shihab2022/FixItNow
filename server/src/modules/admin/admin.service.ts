@@ -39,6 +39,118 @@ const GetAllCategories = async () => {
   const categories = await prisma.category.findMany({});
   return categories;
 };
+const GetOverview = async () => {
+  const now = new Date();
+  const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfLastMonth = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    0,
+    23,
+    59,
+    59,
+    999,
+  );
+
+  // 1. Total Marketplace Volume (Successful Payments)
+  const totalVolumeResult = await prisma.payment.aggregate({
+    _sum: { amount: true },
+    where: { status: "COMPLETED" },
+  });
+  const totalVolume = totalVolumeResult._sum.amount || 0;
+
+  // Current Month Volume vs Last Month Volume for Growth Rate
+  const currentMonthVolume = await prisma.payment.aggregate({
+    _sum: { amount: true },
+    where: {
+      status: "COMPLETED",
+      paidAt: { gte: startOfCurrentMonth },
+    },
+  });
+
+  const lastMonthVolume = await prisma.payment.aggregate({
+    _sum: { amount: true },
+    where: {
+      status: "COMPLETED",
+      paidAt: { gte: startOfLastMonth, lte: endOfLastMonth },
+    },
+  });
+
+  const currentVol = currentMonthVolume._sum.amount || 0;
+  const lastVol = lastMonthVolume._sum.amount || 0;
+  const volumeGrowth =
+    lastVol > 0
+      ? (((currentVol - lastVol) / lastVol) * 100).toFixed(1)
+      : currentVol > 0
+        ? "100"
+        : "0";
+
+  // 2. Active & Pending Technicians
+  const activeTechnicians = await prisma.technicianProfile.count({
+    where: { status: true, isAvailable: true },
+  });
+
+  const pendingTechnicians = await prisma.technicianProfile.count({
+    where: { status: false },
+  });
+
+  // 3. Total Bookings & Success Rate
+  const totalBookings = await prisma.booking.count();
+  const completedBookings = await prisma.booking.count({
+    where: { status: "COMPLETED" },
+  });
+  const successRate =
+    totalBookings > 0
+      ? ((completedBookings / totalBookings) * 100).toFixed(1)
+      : "0.0";
+
+  // 4. Platform Commission (e.g., 15% platform take rate)
+  const platformCommission = totalVolume * 0.15;
+
+  // 5. Chart Data: Monthly Revenue Trend for the last 6 months
+  const monthlyTrends = [];
+  for (let i = 5; i >= 0; i--) {
+    const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthEnd = new Date(
+      now.getFullYear(),
+      now.getMonth() - i + 1,
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+    const monthName = monthStart.toLocaleString("default", { month: "short" });
+
+    const monthRevenue = await prisma.payment.aggregate({
+      _sum: { amount: true },
+      where: {
+        status: "COMPLETED",
+        paidAt: { gte: monthStart, lte: monthEnd },
+      },
+    });
+
+    monthlyTrends.push({
+      month: monthName,
+      revenue: monthRevenue._sum.amount || 0,
+      commission: (monthRevenue._sum.amount || 0) * 0.15,
+    });
+  }
+
+  return {
+    metrics: {
+      totalVolume,
+      volumeGrowth: Number(volumeGrowth),
+      activeTechnicians,
+      pendingTechnicians,
+      totalBookings,
+      successRate: Number(successRate),
+      platformCommission,
+    },
+    chartData: monthlyTrends,
+  };
+};
 const CreateCategory = async (payload: {
   name: string;
   description?: string;
@@ -80,4 +192,5 @@ export const AdminService = {
   CreateCategory,
   UpdateCategory,
   updateCategoryStatus,
+  GetOverview,
 };
