@@ -28,4 +28,8 @@ export default {
     cancel_url: process.env.CANCEL_URL,
     sslValidationApi: process.env.SSL_VALIDATION_API,
   },
+    smtp: {
+    user_name: process.env.SMTP_USERNAME,
+    password: process.env.SMTP_PASSWORD,
+  },
 };
