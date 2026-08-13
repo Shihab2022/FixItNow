@@ -15,6 +15,7 @@ export default {
   reset_pass_access_expire_in: process.env.RESET_PASS_ACCESS_EXPIRES_IN,
   jwt_refresh_expire_in: process.env.JWT_REFRESH_EXPIRES_IN,
   reset_pass_base_link: process.env.RESET_PASS_BASE_LINK,
+  front_end_base_url: process.env.FRONT_END_BASE_URL,
   admin: {
     email: process.env.ADMIN_EMAIL,
     password: process.env.ADMIN_PASSWORD,
@@ -28,7 +29,7 @@ export default {
     cancel_url: process.env.CANCEL_URL,
     sslValidationApi: process.env.SSL_VALIDATION_API,
   },
-    smtp: {
+  smtp: {
     user_name: process.env.SMTP_USERNAME,
     password: process.env.SMTP_PASSWORD,
   },

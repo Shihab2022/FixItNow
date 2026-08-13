@@ -7,7 +7,17 @@ import { SignOptions } from "jsonwebtoken";
 import { generateJwtToken } from "../../helpars/jwtHelpers";
 import ApiError from "../../helpars/ApiError";
 import httpStatus from "http-status";
-
+import transporter from "../../utils/nodemailer";
+import { createToken } from "../../utils/auth";
+import { emailSenderMessages } from "../../constant";
+import { ConfirmAccountTemplate } from "../../templates/confirmAccount";
+// const attachments = [
+//   {
+//     filename: "logo-light.png",
+//     path: imagePath,
+//     cid: "logoImage",
+//   },
+// ];
 const register = async (payload: RegisterUserPayload) => {
   const { email, password, name, role, phone, address } = payload;
 
@@ -23,27 +33,52 @@ const register = async (payload: RegisterUserPayload) => {
   );
 
   // Dynamic database payload construction based on role choice
-  const user = await prisma.user.create({
-    data: {
-      email,
-      name,
-      password: hashedPassword,
-      role,
-      phone,
-      address,
-      technicianProfile:
-        role === "TECHNICIAN"
-          ? { create: { experience: 0, skills: [] } }
-          : undefined,
-    },
-    include: {
-      technicianProfile: true,
-    },
-  });
+  // const user = await prisma.user.create({
+  //   data: {
+  //     email,
+  //     name,
+  //     password: hashedPassword,
+  //     role,
+  //     phone,
+  //     address,
+  //     technicianProfile:
+  //       role === "TECHNICIAN"
+  //         ? { create: { experience: 0, skills: [] } }
+  //         : undefined,
+  //   },
+  //   include: {
+  //     technicianProfile: true,
+  //   },
+  // });
+  const jwtPayload = {
+    id: 1,
+    role: "user.role",
+    name: "user.name",
+  };
+  const token = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    config.jwt_access_expire_in as number | undefined,
+  );
 
-  // Strip sensitive password out before responding
-  const { password: _, ...userWithoutPassword } = user;
-  return userWithoutPassword;
+  // 🔹 Email
+  const notifyMsg = {
+    to: [email],
+    from: `"FixItNow" <${config.smtp.user_name}>`,
+    subject: emailSenderMessages.WELCOME_EMAIL_SUBJECT,
+    replyTo: config.smtp.user_name,
+    text: emailSenderMessages.CONFIRM_EMAIL_MESSAGE,
+    html: ConfirmAccountTemplate(
+      name,
+      `${config?.front_end_base_url}/confirm?token=${token}`,
+      config?.front_end_base_url as string,
+    ),
+    // attachments,
+  };
+
+  await transporter.sendMail(notifyMsg);
+  // const { password: _, ...userWithoutPassword } = user;
+  return null;
 };
 
 const login = async (payload: { email: string; password: string }) => {
