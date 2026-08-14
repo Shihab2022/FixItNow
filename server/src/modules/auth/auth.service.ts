@@ -10,15 +10,8 @@ import httpStatus from "http-status";
 import transporter from "../../utils/nodemailer";
 import { createToken } from "../../utils/auth";
 import { emailSenderMessages } from "../../constant";
-import ejs from 'ejs';
-import path from 'path';
-// const attachments = [
-//   {
-//     filename: "logo-light.png",
-//     path: imagePath,
-//     cid: "logoImage",
-//   },
-// ];
+import { formatHtml } from "../../utils/formatHtml";
+import crypto from "crypto";
 const register = async (payload: RegisterUserPayload) => {
   const { email, password, name, role, phone, address } = payload;
 
@@ -34,42 +27,39 @@ const register = async (payload: RegisterUserPayload) => {
   );
 
   // Dynamic database payload construction based on role choice
-  // const user = await prisma.user.create({
-  //   data: {
-  //     email,
-  //     name,
-  //     password: hashedPassword,
-  //     role,
-  //     phone,
-  //     address,
-  //     technicianProfile:
-  //       role === "TECHNICIAN"
-  //         ? { create: { experience: 0, skills: [] } }
-  //         : undefined,
-  //   },
-  //   include: {
-  //     technicianProfile: true,
-  //   },
-  // });
+  const user = await prisma.user.create({
+    data: {
+      email,
+      name,
+      password: hashedPassword,
+      role,
+      phone,
+      address,
+      technicianProfile:
+        role === "TECHNICIAN"
+          ? { create: { experience: 0, skills: [] } }
+          : undefined,
+    },
+    include: {
+      technicianProfile: true,
+    },
+  });
   const jwtPayload = {
-    id: 1,
-    role: "user.role",
-    name: "user.name",
+    id: user.id,
+    role: user.role,
+    name: user.name,
   };
   const token = createToken(
     jwtPayload,
     config.jwt_access_secret as string,
     config.jwt_access_expire_in as number | undefined,
   );
-  const html = await ejs.renderFile(
-    path.join(__dirname, '../../templates/confirmAccount.ejs'),
-    {
-      name: name,
-      url: `${config?.front_end_base_url}/confirm?token=${token}`,
-      baseUrl: config?.front_end_base_url as string,
-      year: new Date().getFullYear(),
-    }
-  );
+  const html = await formatHtml('src/templates/confirmAccount.ejs', {
+    name: name,
+    url: `${config?.front_end_base_url}/confirm?token=${token}`,
+    baseUrl: config?.front_end_base_url as string,
+    year: new Date().getFullYear(),
+  })
   // 🔹 Email
   const notifyMsg = {
     to: [email],
@@ -82,8 +72,8 @@ const register = async (payload: RegisterUserPayload) => {
   };
 
   await transporter.sendMail(notifyMsg);
-  // const { password: _, ...userWithoutPassword } = user;
-  return null;
+  const { password: _, ...userWithoutPassword } = user;
+  return userWithoutPassword;
 };
 
 const login = async (payload: { email: string; password: string }) => {
@@ -160,21 +150,50 @@ const updateMe = async (user: IAuthUser, payload: Partial<IAuthUser>) => {
   const { password: _, ...userWithoutPassword } = reUser;
   return userWithoutPassword;
 };
-const forgetPassword = async (payload: { email: string; password: string }) => {
-  const { email, password } = payload;
+const forgetPassword = async (payload: { email: string }) => {
+  const { email } = payload;
 
   const user = await prisma.user.findUniqueOrThrow({
     where: { email },
   });
-  const hashedPassword = await bcrypt.hash(
-    password,
-    Number(config.bcrypt_salt_rounds),
+  // const hashedPassword = await bcrypt.hash(
+  //   password,
+  //   Number(config.bcrypt_salt_rounds),
+  // );
+  // const updatedUser = await prisma.user.update({
+  //   where: { email },
+  //   data: { password: hashedPassword },
+  // });
+  const jwtPayload = {
+    id: user.id,
+    role: user.role,
+  };
+  const token = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    config.jwt_access_expire_in as number | undefined,
   );
-  const updatedUser = await prisma.user.update({
-    where: { email },
-    data: { password: hashedPassword },
+  const pin = crypto.randomInt(100000, 999999).toString();
+  const html = await formatHtml('src/templates/forgotPassword.ejs', {
+    name: user.name,
+    url: `${config?.front_end_base_url}/reset-password?token=${token}`,
+    baseUrl: config?.front_end_base_url as string,
+    pin: pin,
+    year: new Date().getFullYear(),
   });
-  return updatedUser;
+
+  // 🔹 Email
+  const notifyMsg = {
+    to: [email],
+    from: `"FixItNow" <${config.smtp.user_name}>`,
+    subject: emailSenderMessages.FORGET_PASSWORD_SUBJECT,
+    replyTo: config.smtp.user_name,
+    text: emailSenderMessages.FORGET_PASSWORD_MESSAGE,
+    html,
+  };
+
+  await transporter.sendMail(notifyMsg);
+  return null;
 };
 
 export const AuthServices = {
