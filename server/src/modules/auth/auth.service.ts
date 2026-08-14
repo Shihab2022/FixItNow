@@ -195,6 +195,72 @@ const forgetPassword = async (payload: { email: string }) => {
   await transporter.sendMail(notifyMsg);
   return null;
 };
+const updatePassword = async (payload: { email: string }) => {
+  const { email } = payload;
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { email },
+  });
+  // const hashedPassword = await bcrypt.hash(
+  //   password,
+  //   Number(config.bcrypt_salt_rounds),
+  // );
+  // const updatedUser = await prisma.user.update({
+  //   where: { email },
+  //   data: { password: hashedPassword },
+  // });
+  const html = await formatHtml('src/templates/passwordResetSuccess.ejs', {
+    name: user.name,
+    loginUrl: `${config?.front_end_base_url}/login`,
+    baseUrl: config?.front_end_base_url as string,
+  });
+
+  // 🔹 Email
+  const notifyMsg = {
+    to: [email],
+    from: `"FixItNow" <${config.smtp.user_name}>`,
+    subject: emailSenderMessages.PASSWORD_RESET_SUCCESS_SUBJECT,
+    replyTo: config.smtp.user_name,
+    text: emailSenderMessages.PASSWORD_RESET_SUCCESS_MESSAGE,
+    html,
+  };
+
+  await transporter.sendMail(notifyMsg);
+  return null;
+};
+const resetPassword = async (payload: { email: string }) => {
+  const { email } = payload;
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { email },
+  });
+  // const hashedPassword = await bcrypt.hash(
+  //   password,
+  //   Number(config.bcrypt_salt_rounds),
+  // );
+  // const updatedUser = await prisma.user.update({
+  //   where: { email },
+  //   data: { password: hashedPassword },
+  // });
+  const html = await formatHtml('src/templates/passwordResetSuccess.ejs', {
+    name: user.name,
+    loginUrl: `${config?.front_end_base_url}/login`,
+    baseUrl: config?.front_end_base_url as string,
+  });
+
+  // 🔹 Email
+  const notifyMsg = {
+    to: [email],
+    from: `"FixItNow" <${config.smtp.user_name}>`,
+    subject: emailSenderMessages.PASSWORD_RESET_SUCCESS_SUBJECT,
+    replyTo: config.smtp.user_name,
+    text: emailSenderMessages.PASSWORD_RESET_SUCCESS_MESSAGE,
+    html,
+  };
+
+  await transporter.sendMail(notifyMsg);
+  return null;
+};
 
 export const AuthServices = {
   register,
@@ -202,4 +268,6 @@ export const AuthServices = {
   getMe,
   updateMe,
   forgetPassword,
+  updatePassword,
+  resetPassword
 };

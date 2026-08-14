@@ -68,10 +68,13 @@ export const emailSenderMessages = {
   FROM_JOIN_EMAIL: "shihab@gmail.com",
   WELCOME_EMAIL_SUBJECT: "Welcome to FixItNow ! Confirm your email address",
   FORGET_PASSWORD_SUBJECT: "Forget Your Password",
+  PASSWORD_RESET_SUCCESS_SUBJECT: "Password Reset Successful",
   INVITE_JOIN_SUBJECT: "Invite to join FixItNow",
   INVITE_JOIN_MESSAGE: "Join FixItNow and start chatting with your friends!",
   CONFIRM_EMAIL_MESSAGE:
     "Please confirm your FixItNow account. Please click on the confirm button and then login to app.",
+  PASSWORD_RESET_SUCCESS_MESSAGE:
+    "Your password has been reset successfully. You can now login with your new password.",
   FORGET_PASSWORD_MESSAGE:
     "Use this link and code to reset your password. This link and code will expire in 5 minutes",
 };
