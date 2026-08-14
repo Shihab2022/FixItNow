@@ -1,6 +1,6 @@
 import ejs from 'ejs';
 import path from 'path';
-import { env } from '../config/env.config';
+import config from '../config';
 
 export class EmailRenderer {
     private static templatesDir = path.join(process.cwd(), 'src', 'templates');
@@ -9,7 +9,7 @@ export class EmailRenderer {
         const filePath = path.join(this.templatesDir, `${templateName}.ejs`);
         const payload = {
             ...data,
-            baseUrl: env.FRONTEND_URL,
+            baseUrl: config.front_end_base_url,
         };
 
         return new Promise((resolve, reject) => {
@@ -23,16 +23,16 @@ export class EmailRenderer {
     }
 
     public static formatCurrency(amount: number): string {
-        return new Intl.NumberFormat(env.CURRENCY_LOCALE, {
+        return new Intl.NumberFormat(config.smtp.currency_locale, {
             style: 'currency',
-            currency: env.CURRENCY_CODE,
+            currency: config.smtp.currency_code,
         }).format(amount);
     }
 
     public static formatDate(date: Date): string {
-        return new Intl.DateTimeFormat(env.CURRENCY_LOCALE, {
+        return new Intl.DateTimeFormat(config.smtp.currency_locale, {
             dateStyle: 'full',
-            timeZone: env.TIMEZONE,
+            timeZone: config.smtp.timezone,
         }).format(new Date(date));
     }
 }

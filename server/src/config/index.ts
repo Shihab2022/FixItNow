@@ -20,6 +20,10 @@ export default {
     email: process.env.ADMIN_EMAIL,
     password: process.env.ADMIN_PASSWORD,
   },
+  redis: {
+    host: process.env.REDIS_HOST,
+    port: Number(process.env.REDIS_PORT),
+  },
   ssl: {
     store_id: process.env.STORE_ID,
     store_passwd: process.env.STORE_PASS,
@@ -32,5 +36,11 @@ export default {
   smtp: {
     user_name: process.env.SMTP_USERNAME,
     password: process.env.SMTP_PASSWORD,
+    port: Number(process.env.SMTP_PORT) || 2525,
+    host: process.env.SMTP_HOST || 'smtp.mailtrap.io',
+    email_from: process.env.EMAIL_FROM,
+    currency_locale: process.env.CURRENCY_LOCALE,
+    currency_code: process.env.CURRENCY_CODE,
+    timezone: process.env.TIMEZONE || 'UTC',
   },
 };

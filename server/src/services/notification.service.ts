@@ -1,6 +1,7 @@
+import config from '../config';
 import { emailQueue } from '../queues/emailQueue';
 import { EmailRenderer } from '../utils/emailRenderer';
-import { env } from '../config/env.config';
+
 
 export enum NotificationEvent {
     BOOKING_CREATED = 'BOOKING_CREATED',
@@ -81,7 +82,7 @@ export class NotificationService {
             customerAddress: booking.customerAddress,
             totalPrice: formattedPrice,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_created_cust_${booking.id}`,
@@ -100,7 +101,7 @@ export class NotificationService {
             customerAddress: booking.customerAddress,
             totalPrice: formattedPrice,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/technician/bookings/${booking.id}/manage`,
+            ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}/manage`,
         });
         await this.dispatch(
             `evt_created_tech_${booking.id}`,
@@ -121,7 +122,7 @@ export class NotificationService {
             customerAddress: booking.customerAddress,
             totalPrice: EmailRenderer.formatCurrency(booking.totalPrice),
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_accepted_${booking.id}`,
@@ -141,8 +142,8 @@ export class NotificationService {
             scheduledTime: booking.scheduledTime,
             bookingId: booking.id,
             declineReason: reason || booking.declineReason,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}`,
-            browseUrl: `${env.FRONTEND_URL}/customer/bookings`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
+            browseUrl: `${config.front_end_base_url}/customer/bookings`,
         });
         await this.dispatch(
             `evt_declined_${booking.id}`,
@@ -168,7 +169,7 @@ export class NotificationService {
             scheduledTime: payment.booking.scheduledTime,
             customerAddress: payment.booking.customerAddress,
             bookingId: payment.booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${payment.booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${payment.booking.id}`,
         });
         await this.dispatch(
             `evt_pay_success_cust_${payment.transactionId}`,
@@ -187,7 +188,7 @@ export class NotificationService {
             scheduledDate: formattedDate,
             scheduledTime: payment.booking.scheduledTime,
             bookingId: payment.booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/technician/bookings/${payment.booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/technician/bookings/${payment.booking.id}`,
         });
         await this.dispatch(
             `evt_pay_success_tech_${payment.transactionId}`,
@@ -205,7 +206,7 @@ export class NotificationService {
             technicianName: booking.technician.user.name,
             amount: EmailRenderer.formatCurrency(amount),
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}/payment`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}/payment`,
         });
         await this.dispatch(
             `evt_pay_failed_${booking.id}_${Date.now()}`, // Retries can send distinct emails
@@ -228,7 +229,7 @@ export class NotificationService {
             scheduledTime: booking.scheduledTime,
             bookingId: booking.id,
             cancellationReason: reason || booking.cancellationReason,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_cancel_cust_${booking.id}`,
@@ -246,7 +247,7 @@ export class NotificationService {
             scheduledTime: booking.scheduledTime,
             bookingId: booking.id,
             cancellationReason: reason || booking.cancellationReason,
-            ctaUrl: `${env.FRONTEND_URL}/technician/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_cancel_tech_${booking.id}`,
@@ -275,7 +276,7 @@ export class NotificationService {
             newDate: formattedNewDate,
             newTime: booking.scheduledTime,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_resched_cust_${booking.id}_${booking.scheduledDate.getTime()}`,
@@ -294,7 +295,7 @@ export class NotificationService {
             newDate: formattedNewDate,
             newTime: booking.scheduledTime,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/technician/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_resched_tech_${booking.id}_${booking.scheduledDate.getTime()}`,
@@ -317,7 +318,7 @@ export class NotificationService {
             scheduledTime: booking.scheduledTime,
             customerAddress: booking.customerAddress,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_rem_24h_cust_${booking.id}`,
@@ -335,7 +336,7 @@ export class NotificationService {
             scheduledTime: booking.scheduledTime,
             customerAddress: booking.customerAddress,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/technician/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_rem_24h_tech_${booking.id}`,
@@ -358,7 +359,7 @@ export class NotificationService {
             scheduledTime: booking.scheduledTime,
             customerAddress: booking.customerAddress,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_rem_2h_cust_${booking.id}`,
@@ -376,7 +377,7 @@ export class NotificationService {
             scheduledTime: booking.scheduledTime,
             customerAddress: booking.customerAddress,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/technician/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_rem_2h_tech_${booking.id}`,
@@ -393,7 +394,7 @@ export class NotificationService {
             serviceTitle: booking.service.title,
             technicianName: booking.technician.user.name,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_started_${booking.id}`,
@@ -414,7 +415,7 @@ export class NotificationService {
             technicianName: booking.technician.user.name,
             scheduledDate: formattedDate,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}/review`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}/review`,
         });
         await this.dispatch(
             `evt_completed_cust_${booking.id}`,
@@ -430,7 +431,7 @@ export class NotificationService {
             serviceTitle: booking.service.title,
             scheduledDate: formattedDate,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/technician/bookings/${booking.id}`,
+            ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}`,
         });
         await this.dispatch(
             `evt_completed_tech_${booking.id}`,
@@ -447,7 +448,7 @@ export class NotificationService {
             serviceTitle: booking.service.title,
             technicianName: booking.technician.user.name,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}/review`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}/review`,
         });
         await this.dispatch(
             `evt_rev_req_${booking.id}`,
@@ -464,7 +465,7 @@ export class NotificationService {
             serviceTitle: booking.service.title,
             technicianName: booking.technician.user.name,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/customer/bookings/${booking.id}/review`,
+            ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}/review`,
         });
         await this.dispatch(
             `evt_rev_rem_${booking.id}`,
@@ -484,7 +485,7 @@ export class NotificationService {
             scheduledTime: booking.scheduledTime,
             customerAddress: booking.customerAddress,
             bookingId: booking.id,
-            ctaUrl: `${env.FRONTEND_URL}/technician/bookings/${booking.id}/manage`,
+            ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}/manage`,
         });
         await this.dispatch(
             `evt_tech_rem_${booking.id}_${Date.now()}`,

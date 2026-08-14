@@ -4,9 +4,9 @@ let transporter: Transporter;
 
 try {
   transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for port 465
+    host: config?.smtp?.host,
+    port: config?.smtp?.port,
+    secure: config?.smtp?.port === 465,
     auth: {
       user: config?.smtp?.user_name,
       pass: config?.smtp?.password,
