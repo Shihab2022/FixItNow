@@ -1,10 +1,8 @@
-// import { PrismaClient, BookingStatus, PaymentStatus, Role } from '@prisma/client';
-// import { PrismaClient } from '../../generated/prisma/client';
+
 import { BookingStatus, PaymentStatus, Role } from '../../generated/prisma/browser';
 import { prisma } from '../lib/prisma';
 import { NotificationService } from './notification.service';
 
-// const prisma = new PrismaClient();
 
 const defaultIncludes = {
     customer: true,
