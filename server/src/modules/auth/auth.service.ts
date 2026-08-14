@@ -10,7 +10,8 @@ import httpStatus from "http-status";
 import transporter from "../../utils/nodemailer";
 import { createToken } from "../../utils/auth";
 import { emailSenderMessages } from "../../constant";
-import { ConfirmAccountTemplate } from "../../templates/confirmAccount";
+import ejs from 'ejs';
+import path from 'path';
 // const attachments = [
 //   {
 //     filename: "logo-light.png",
@@ -60,7 +61,15 @@ const register = async (payload: RegisterUserPayload) => {
     config.jwt_access_secret as string,
     config.jwt_access_expire_in as number | undefined,
   );
-
+  const html = await ejs.renderFile(
+    path.join(__dirname, '../../templates/confirmAccount.ejs'),
+    {
+      name: name,
+      url: `${config?.front_end_base_url}/confirm?token=${token}`,
+      baseUrl: config?.front_end_base_url as string,
+      year: new Date().getFullYear(),
+    }
+  );
   // 🔹 Email
   const notifyMsg = {
     to: [email],
@@ -68,11 +77,7 @@ const register = async (payload: RegisterUserPayload) => {
     subject: emailSenderMessages.WELCOME_EMAIL_SUBJECT,
     replyTo: config.smtp.user_name,
     text: emailSenderMessages.CONFIRM_EMAIL_MESSAGE,
-    html: ConfirmAccountTemplate(
-      name,
-      `${config?.front_end_base_url}/confirm?token=${token}`,
-      config?.front_end_base_url as string,
-    ),
+    html,
     // attachments,
   };
 

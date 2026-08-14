@@ -66,12 +66,12 @@ export const authorizationError = {
 };
 export const emailSenderMessages = {
   FROM_JOIN_EMAIL: "shihab@gmail.com",
-  WELCOME_EMAIL_SUBJECT: "Welcome to Chatty! Confirm your email address",
+  WELCOME_EMAIL_SUBJECT: "Welcome to FixItNow ! Confirm your email address",
   FORGET_PASSWORD_SUBJECT: "Forget Your Password",
-  INVITE_JOIN_SUBJECT: "Invite to join Chatty",
-  INVITE_JOIN_MESSAGE: "Join Chatty and start chatting with your friends!",
+  INVITE_JOIN_SUBJECT: "Invite to join FixItNow",
+  INVITE_JOIN_MESSAGE: "Join FixItNow and start chatting with your friends!",
   CONFIRM_EMAIL_MESSAGE:
-    "Please confirm your Chatty account. Please click on the confirm button and then login to app.",
+    "Please confirm your FixItNow account. Please click on the confirm button and then login to app.",
   FORGET_PASSWORD_MESSAGE:
     "Use this link and code to reset your password. This link and code will expire in 5 minutes",
 };
