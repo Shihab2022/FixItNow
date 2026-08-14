@@ -1,0 +1,27 @@
+<%- include('layouts/emailHeader', { title: 'New Booking Request', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= technicianName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  You have received a new booking request.
+</p>
+
+<%- include('components/bookingDetails', {
+  customerName: customerName,
+  serviceTitle: serviceTitle,
+  scheduledDate: scheduledDate,
+  scheduledTime: scheduledTime,
+  customerAddress: customerAddress,
+  totalPrice: totalPrice,
+  bookingId: bookingId
+}) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Please review the booking and accept or decline the request.
+</p>
+
+<%- include('components/button', { text: 'Review Booking', url: ctaUrl }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

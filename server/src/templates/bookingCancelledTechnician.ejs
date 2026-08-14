@@ -1,0 +1,27 @@
+<%- include('layouts/emailHeader', { title: 'Booking Cancelled', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= technicianName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  The following booking has been cancelled.
+</p>
+
+<%- include('components/bookingDetails', {
+  customerName: customerName,
+  serviceTitle: serviceTitle,
+  scheduledDate: scheduledDate,
+  scheduledTime: scheduledTime,
+  bookingId: bookingId
+}) %>
+
+<% if (typeof cancellationReason !== 'undefined' && cancellationReason) { %>
+<div style="background-color: #f1f5f9; border-left: 4px solid #64748b; padding: 16px; margin: 20px 0; color: #334155; font-size: 14px;">
+  <strong>Cancellation Reason:</strong> <%= cancellationReason %>
+</div>
+<% } %>
+
+<%- include('components/button', { text: 'View Booking', url: ctaUrl }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

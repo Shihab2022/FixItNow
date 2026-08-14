@@ -1,0 +1,20 @@
+<%- include('layouts/emailHeader', { title: 'Booking Completed', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= technicianName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Great job! The following booking has been marked as completed in the system.
+</p>
+
+<%- include('components/bookingDetails', {
+  customerName: customerName,
+  serviceTitle: serviceTitle,
+  scheduledDate: scheduledDate,
+  bookingId: bookingId
+}) %>
+
+<%- include('components/button', { text: 'View Completed Booking', url: ctaUrl }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

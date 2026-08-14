@@ -1,0 +1,28 @@
+<%- include('layouts/emailHeader', { title: 'Booking Request Received', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= customerName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Your booking request has been successfully submitted.
+</p>
+
+<%- include('components/bookingDetails', {
+  serviceTitle: serviceTitle,
+  technicianName: technicianName,
+  scheduledDate: scheduledDate,
+  scheduledTime: scheduledTime,
+  customerAddress: customerAddress,
+  totalPrice: totalPrice,
+  bookingId: bookingId,
+  status: 'Pending Technician Approval'
+}) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  The technician will review your booking request and you will receive another email when your booking is accepted or declined.
+</p>
+
+<%- include('components/button', { text: 'View Booking', url: ctaUrl }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

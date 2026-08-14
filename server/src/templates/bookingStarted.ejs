@@ -1,0 +1,19 @@
+<%- include('layouts/emailHeader', { title: 'Your Service Has Started', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= customerName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Your technician has arrived and started working on your service.
+</p>
+
+<%- include('components/bookingDetails', {
+  serviceTitle: serviceTitle,
+  technicianName: technicianName,
+  bookingId: bookingId
+}) %>
+
+<%- include('components/button', { text: 'Track Progress on Dashboard', url: ctaUrl }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

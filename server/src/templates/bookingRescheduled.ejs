@@ -1,0 +1,31 @@
+<%- include('layouts/emailHeader', { title: 'Your Booking Has Been Rescheduled', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= recipientName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Your booking schedule has been updated.
+</p>
+
+<div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+  <p style="margin: 0 0 8px 0; font-size: 14px;"><strong>Service:</strong> <%= serviceTitle %></p>
+  <p style="margin: 0 0 8px 0; font-size: 14px;"><strong>Technician:</strong> <%= technicianName %></p>
+  <p style="margin: 0 0 16px 0; font-size: 14px; font-family: monospace;"><strong>Booking ID:</strong> <%= bookingId %></p>
+  
+  <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 12px; margin-bottom: 12px; font-size: 13px; color: #991b1b;">
+    <strike><strong>Previous:</strong> <%= oldDate %> at <%= oldTime %></strike>
+  </div>
+  
+  <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; font-size: 14px; color: #166534; font-weight: 600;">
+    <strong>New Schedule:</strong> <%= newDate %> at <%= newTime %>
+  </div>
+</div>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Please make sure the new date and time work for you.
+</p>
+
+<%- include('components/button', { text: 'View Booking Details', url: ctaUrl }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

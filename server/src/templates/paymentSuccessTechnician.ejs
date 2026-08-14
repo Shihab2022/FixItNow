@@ -1,0 +1,23 @@
+<%- include('layouts/emailHeader', { title: 'Payment Received for Booking', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= technicianName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Payment has been successfully received for a customer booking. The booking is now paid and confirmed.
+</p>
+
+<%- include('components/paymentDetails', { amount: amount, transactionId: transactionId }) %>
+
+<%- include('components/bookingDetails', {
+  customerName: customerName,
+  serviceTitle: serviceTitle,
+  scheduledDate: scheduledDate,
+  scheduledTime: scheduledTime,
+  bookingId: bookingId
+}) %>
+
+<%- include('components/button', { text: 'View Booking', url: ctaUrl }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

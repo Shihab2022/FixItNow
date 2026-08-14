@@ -1,0 +1,22 @@
+<%- include('layouts/emailHeader', { title: 'Your Service Appointment Starts Soon', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= technicianName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Your scheduled job starts in 2 hours. Please arrive promptly.
+</p>
+
+<%- include('components/bookingDetails', {
+  customerName: customerName,
+  serviceTitle: serviceTitle,
+  scheduledDate: scheduledDate,
+  scheduledTime: scheduledTime,
+  customerAddress: customerAddress,
+  bookingId: bookingId
+}) %>
+
+<%- include('components/button', { text: 'View Booking', url: ctaUrl }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

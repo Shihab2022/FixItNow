@@ -1,0 +1,24 @@
+<%- include('layouts/emailHeader', { title: 'Your Service Has Been Completed', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= customerName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Your service has been successfully completed. We hope you are satisfied with the work done!
+</p>
+
+<%- include('components/bookingDetails', {
+  serviceTitle: serviceTitle,
+  technicianName: technicianName,
+  scheduledDate: scheduledDate,
+  bookingId: bookingId
+}) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Please take a moment to share your experience by leaving a review for <%= technicianName %>.
+</p>
+
+<%- include('components/button', { text: 'Leave a Review', url: ctaUrl, color: '#16a34a' }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

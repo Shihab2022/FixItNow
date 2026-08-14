@@ -1,0 +1,17 @@
+<%- include('layouts/emailHeader', { title: 'How Was Your Service?', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= customerName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  We hope you had a great experience with <strong><%= technicianName %></strong> for your service: <strong><%= serviceTitle %></strong>.
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Your feedback helps us maintain high marketplace standards and allows other customers to make informed choices.
+</p>
+
+<%- include('components/button', { text: 'Leave a Review', url: ctaUrl, color: '#16a34a' }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

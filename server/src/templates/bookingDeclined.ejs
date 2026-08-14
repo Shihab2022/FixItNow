@@ -1,0 +1,32 @@
+<%- include('layouts/emailHeader', { title: 'Your Booking Request Was Declined', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= customerName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Unfortunately, your booking request could not be accepted by the technician.
+</p>
+
+<%- include('components/bookingDetails', {
+  serviceTitle: serviceTitle,
+  technicianName: technicianName,
+  scheduledDate: scheduledDate,
+  scheduledTime: scheduledTime,
+  bookingId: bookingId
+}) %>
+
+<% if (typeof declineReason !== 'undefined' && declineReason) { %>
+<div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin: 20px 0; color: #991b1b; font-size: 14px;">
+  <strong>Reason:</strong> <%= declineReason %>
+</div>
+<% } %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  You can browse available services and create another booking. We apologize for the inconvenience.
+</p>
+
+<%- include('components/button', { text: 'View Booking Details', url: ctaUrl }) %>
+<%- include('components/button', { text: 'Find Another Service', url: browseUrl, color: '#475569' }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

@@ -1,0 +1,24 @@
+<%- include('layouts/emailHeader', { title: 'Payment Failed', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= customerName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Unfortunately, we were unable to process your payment for the following booking.
+</p>
+
+<%- include('components/bookingDetails', {
+  serviceTitle: serviceTitle,
+  technicianName: technicianName,
+  totalPrice: amount,
+  bookingId: bookingId
+}) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Please try the payment again. If you believe this is an error, please contact support.
+</p>
+
+<%- include('components/button', { text: 'Try Payment Again', url: ctaUrl, color: '#dc2626' }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

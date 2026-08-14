@@ -1,0 +1,17 @@
+<%- include('layouts/emailHeader', { title: "We'd Love to Hear Your Feedback", baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= customerName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  You recently completed a service with <strong><%= technicianName %></strong> for <strong><%= serviceTitle %></strong> (Booking ID: <code style="font-size:13px;"><%= bookingId %></code>).
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  If you have a moment, please share your experience by leaving a rating and review.
+</p>
+
+<%- include('components/button', { text: 'Leave a Review', url: ctaUrl, color: '#16a34a' }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>
