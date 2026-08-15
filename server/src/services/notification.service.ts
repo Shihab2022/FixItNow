@@ -47,7 +47,7 @@ export class NotificationService {
                 jobId: idempotencyKey,
                 attempts: 3,
                 backoff: { type: 'exponential', delay: 5000 },
-                removeOnComplete: { age: 2 * 3600, count: 5 },
+                removeOnComplete: true,
                 removeOnFail: { age: 24 * 3600, count: 10 },
             }
         );

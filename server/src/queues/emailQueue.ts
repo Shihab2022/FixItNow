@@ -19,8 +19,10 @@ const queueName = 'email-notifications';
 export const emailQueue = new Queue<EmailJobData>(queueName, {
     connection: { url: config.redis.url },
     defaultJobOptions: {
-        removeOnComplete: { age: 2 * 3600, count: 5 }, // Scaled down to conserve free Redis tier limits
+        removeOnComplete: true, // Or use { age: 60, count: 0 } for a 1-minute retention max
         removeOnFail: { age: 24 * 3600, count: 10 },
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
     },
 });
 
@@ -39,7 +41,6 @@ export const emailWorker = new Worker<EmailJobData>(
             html,
         });
 
-        console.log(`[Email Delivered] Job ID: ${job.id} | Key: ${idempotencyKey} | To: ${to}`);
     },
     {
         connection: { url: config.redis.url },
