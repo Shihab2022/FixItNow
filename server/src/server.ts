@@ -1,6 +1,8 @@
 import { Server } from "http";
 import app from "./app";
 import config from "./config";
+// app.ts or server.ts
+import './queues/emailQueue';
 
 async function main() {
   const port = config.port;

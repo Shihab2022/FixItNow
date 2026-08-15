@@ -23,6 +23,7 @@ export default {
   redis: {
     host: process.env.REDIS_HOST,
     port: Number(process.env.REDIS_PORT),
+    url: process.env.REDIS_URL,
   },
   ssl: {
     store_id: process.env.STORE_ID,

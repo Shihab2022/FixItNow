@@ -6,7 +6,7 @@ try {
   transporter = nodemailer.createTransport({
     host: config?.smtp?.host,
     port: config?.smtp?.port,
-    secure: config?.smtp?.port === 465,
+    secure: true, // true for port 465
     auth: {
       user: config?.smtp?.user_name,
       pass: config?.smtp?.password,
@@ -16,5 +16,11 @@ try {
   console.error("Error creating Nodemailer transporter:", err);
   throw err;
 }
-
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('[SMTP Verification Error]:', error);
+  } else {
+    console.log('[SMTP Ready] Transporter can send messages');
+  }
+});
 export default transporter;
