@@ -1,99 +1,165 @@
 {
   "info": {
-    "_postman_id": "86473648-e0a6-4ddf-9e01-ecaa67bd573b",
-    "name": "FixItNow",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "21086915"
+    "_postman_id": "b7e1a2c3-4d5e-6f70-8a9b-0c1d2e3f4a5b",
+    "name": "FixItNow API",
+    "description": "Complete API collection for the FixItNow home-service marketplace.\n\n**Setup:**\n1. Set the `base-url` collection variable (default `http://localhost:5000/api`).\n2. Run **Auth → Login** — the access token is saved automatically into `accessToken`.\n3. All protected requests use Bearer `{{accessToken}}` (cookies also work).\n\nDocs: see `server/api.md`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "base-url", "value": "http://localhost:5000/api" },
+    { "key": "accessToken", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "serviceId", "value": "" },
+    { "key": "technicianId", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "categoryId", "value": "" }
+  ],
   "item": [
     {
-      "name": "auth",
+      "name": "Health",
       "item": [
         {
-          "name": "test url",
+          "name": "Server health check",
           "request": {
             "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base-url}}",
-              "host": [
-                "{{base-url}}"
-              ]
-            }
+            "url": { "raw": "{{base-url}}", "host": ["{{base-url}}"] }
           },
           "response": []
-        },
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
         {
-          "name": "Register new user",
+          "name": "Register customer",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"name\": \"Jane Smith\",\r\n  \"email\": \"jane9.smith@example.com\",\r\n  \"password\": \"securePassword123\",\r\n  \"role\": \"CUSTOMER\",\r\n  \"phone\": \"+1234567890\",\r\n  \"address\": \"789 Maple Drive, Austin, TX\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane.smith@example.com\",\n  \"password\": \"securePassword123\",\n  \"role\": \"CUSTOMER\",\n  \"phone\": \"+1234567890\",\n  \"address\": \"789 Maple Drive, Austin, TX\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "{{base-url}}/api/auth/register",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "register"
-              ]
+              "raw": "{{base-url}}/auth/register",
+              "host": ["{{base-url}}"],
+              "path": ["auth", "register"]
             }
           },
           "response": []
         },
         {
-          "name": "Login user",
+          "name": "Register technician",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "  {\"email\": \"robert.spark@example.com\",\r\n  \"password\": \"sparkyPassword456\"}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"name\": \"David Chen\",\n  \"email\": \"david.chen@example.com\",\n  \"password\": \"securePassword123\",\n  \"role\": \"TECHNICIAN\",\n  \"phone\": \"+1234567891\",\n  \"address\": \"12 Green Road, Dhaka\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "{{base-url}}/api/auth/login",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "login"
-              ]
+              "raw": "{{base-url}}/auth/register",
+              "host": ["{{base-url}}"],
+              "path": ["auth", "register"]
             }
           },
           "response": []
         },
         {
-          "name": "Get current  user",
+          "name": "Login (saves accessToken)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "  pm.test('token saved', function () { pm.expect(json.data.accessToken).to.be.a('string'); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.smith@example.com\",\n  \"password\": \"securePassword123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base-url}}/auth/login",
+              "host": ["{{base-url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base-url}}/auth/logout",
+              "host": ["{{base-url}}"],
+              "path": ["auth", "logout"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get current user",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
-              "raw": "{{base-url}}/api/auth/me",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "me"
-              ]
+              "raw": "{{base-url}}/auth/me",
+              "host": ["{{base-url}}"],
+              "path": ["auth", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update current user",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane S. Smith\",\n  \"phone\": \"+1234567890\",\n  \"address\": \"#12 Dhanmondi Dhaka 1209\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base-url}}/auth/me",
+              "host": ["{{base-url}}"],
+              "path": ["auth", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forget password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane.smith@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base-url}}/auth/forget-password",
+              "host": ["{{base-url}}"],
+              "path": ["auth", "forget-password"]
             }
           },
           "response": []
@@ -101,176 +167,109 @@
       ]
     },
     {
-      "name": "servicesTechnicians",
+      "name": "Categories & Services",
       "item": [
-        {
-          "name": "Get all services",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base-url}}/api/services?page=1&limit=100&minPrice=10&maxPrice=80&sortBy=createdAt&sortOrder=asc",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "services"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1",
-                  "type": "text"
-                },
-                {
-                  "key": "limit",
-                  "value": "100",
-                  "type": "text"
-                },
-                {
-                  "key": "minPrice",
-                  "value": "10",
-                  "type": "text"
-                },
-                {
-                  "key": "maxPrice",
-                  "value": "80",
-                  "type": "text"
-                },
-                {
-                  "key": "sortBy",
-                  "value": "createdAt",
-                  "type": "text"
-                },
-                {
-                  "key": "sortOrder",
-                  "value": "asc",
-                  "type": "text"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get all technicians",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base-url}}/api/technicians?experience=6&skills=Electrical Wiring&sortBy=experience&page=1&limit=100&minPrice=10&maxPrice=80&sortOrder=asc",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "technicians"
-              ],
-              "query": [
-                {
-                  "key": "experience",
-                  "value": "6"
-                },
-                {
-                  "key": "skills",
-                  "value": "Electrical Wiring"
-                },
-                {
-                  "key": "sortBy",
-                  "value": "experience",
-                  "type": "text"
-                },
-                {
-                  "key": "page",
-                  "value": "1",
-                  "type": "text"
-                },
-                {
-                  "key": "limit",
-                  "value": "100",
-                  "type": "text"
-                },
-                {
-                  "key": "minPrice",
-                  "value": "10",
-                  "type": "text"
-                },
-                {
-                  "key": "maxPrice",
-                  "value": "80",
-                  "type": "text"
-                },
-                {
-                  "key": "sortOrder",
-                  "value": "asc",
-                  "type": "text"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "technician profile",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base-url}}/api/technicians/b407ecb2-9a3c-43e8-b913-c2d8cf9e3143",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "technicians",
-                "b407ecb2-9a3c-43e8-b913-c2d8cf9e3143"
-              ]
-            }
-          },
-          "response": []
-        },
         {
           "name": "Get all categories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.length) pm.collectionVariables.set('categoryId', json.data[0].id);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
-              "raw": "{{base-url}}/api/categories",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "categories"
+              "raw": "{{base-url}}/categories",
+              "host": ["{{base-url}}"],
+              "path": ["categories"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all services (filters)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const first = json?.data?.data?.[0] || json?.data?.[0];",
+                  "if (first) {",
+                  "  pm.collectionVariables.set('serviceId', first.id);",
+                  "  if (first.technicianId) pm.collectionVariables.set('technicianId', first.technicianId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base-url}}/services?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{base-url}}"],
+              "path": ["services"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "searchTerm", "value": "", "disabled": true },
+                { "key": "categoryId", "value": "{{categoryId}}", "disabled": true },
+                { "key": "technicianId", "value": "{{technicianId}}", "disabled": true },
+                { "key": "minPrice", "value": "", "disabled": true },
+                { "key": "maxPrice", "value": "", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "desc" }
               ]
             }
           },
           "response": []
         },
         {
-          "name": "create service",
+          "name": "Get single service",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base-url}}/services/{{serviceId}}",
+              "host": ["{{base-url}}"],
+              "path": ["services", "{{serviceId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create service (TECHNICIAN)",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"title\": \"Emergency Electrical Wiring Repair\",\r\n  \"description\": \"Comprehensive troubleshooting for residential power failures and socket overloads.\",\r\n  \"price\": 50,\r\n  \"location\": \"Austin Central Area\",\r\n  \"categoryId\": \"7dbcf8ba-3425-43b6-9ee0-572347419863\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"title\": \"AC Maintenance & Repair\",\n  \"description\": \"Full servicing of split and window AC units.\",\n  \"price\": 2500,\n  \"location\": \"Dhaka\",\n  \"categoryId\": \"{{categoryId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "{{base-url}}/api/services",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "services"
-              ]
+              "raw": "{{base-url}}/services",
+              "host": ["{{base-url}}"],
+              "path": ["services"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "My services (TECHNICIAN)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base-url}}/services/technician",
+              "host": ["{{base-url}}"],
+              "path": ["services", "technician"]
             }
           },
           "response": []
@@ -278,160 +277,52 @@
       ]
     },
     {
-      "name": "payments",
+      "name": "Technicians",
       "item": [
         {
-          "name": "Create a payment",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n\r\n\r\n    \"bookingId\":\"002ee3c9-b4c1-47dd-b915-9a2025b9b07f\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base-url}}/api/payments/create",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                "create"
-              ]
-            }
-          },
-          "response": [
+          "name": "Get all technicians (filters)",
+          "event": [
             {
-              "name": "Create a payment",
-              "originalRequest": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\r\n\r\n\r\n    \"bookingId\":\"2bd5ae72-f1d5-4708-a34f-ca8585905fc2\"\r\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{base-url}}/api/payments/create",
-                  "host": [
-                    "{{base-url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "payments",
-                    "create"
-                  ]
-                }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "_postman_previewlanguage": null,
-              "header": [
-                {
-                  "key": "vary",
-                  "value": "Origin"
-                },
-                {
-                  "key": "access-control-allow-origin",
-                  "value": "*"
-                },
-                {
-                  "key": "content-type",
-                  "value": "application/json; charset=utf-8"
-                },
-                {
-                  "key": "content-length",
-                  "value": "92"
-                },
-                {
-                  "key": "Date",
-                  "value": "Wed, 08 Jul 2026 06:54:33 GMT"
-                },
-                {
-                  "key": "Connection",
-                  "value": "keep-alive"
-                },
-                {
-                  "key": "Keep-Alive",
-                  "value": "timeout=72"
-                }
-              ],
-              "cookie": [],
-              "body": "{\n    \"message\": \"Route POST:/api/payments/create not found\",\n    \"error\": \"Not Found\",\n    \"statusCode\": 404\n}"
-            }
-          ]
-        },
-        {
-          "name": "Confirm/verify payment",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"transactionId\":\"Fix-It-Now-2026-6-3-15-3\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const first = json?.data?.data?.[0];",
+                  "if (first) pm.collectionVariables.set('technicianId', first.id);"
+                ]
               }
-            },
+            }
+          ],
+          "request": {
+            "method": "GET",
             "url": {
-              "raw": "{{base-url}}/api/payments/confirm",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                "confirm"
+              "raw": "{{base-url}}/technicians?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+              "host": ["{{base-url}}"],
+              "path": ["technicians"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "searchTerm", "value": "", "disabled": true },
+                { "key": "minRate", "value": "", "disabled": true },
+                { "key": "maxRate", "value": "", "disabled": true },
+                { "key": "minExperience", "value": "", "disabled": true },
+                { "key": "available", "value": "true", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortOrder", "value": "desc" }
               ]
             }
           },
           "response": []
         },
         {
-          "name": "payment history",
+          "name": "Get technician profile",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
-              "raw": "{{base-url}}/api/payments",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "payments"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get payment details",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base-url}}/api/payments/0c8e5735-2968-421c-9aec-5970ab00ab72",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                "0c8e5735-2968-421c-9aec-5970ab00ab72"
-              ]
+              "raw": "{{base-url}}/technicians/{{technicianId}}",
+              "host": ["{{base-url}}"],
+              "path": ["technicians", "{{technicianId}}"]
             }
           },
           "response": []
@@ -442,65 +333,91 @@
       "name": "Bookings",
       "item": [
         {
-          "name": "Create new booking",
+          "name": "Get available slots (date)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.length) {",
+                  "  const s = json.data[0];",
+                  "  const t12 = (t) => { const [h, m] = t.split(':'); const p = +h >= 12 ? 'PM' : 'AM'; const hh = +h % 12 || 12; return String(hh).padStart(2, '0') + ':' + m + ' ' + p; };",
+                  "  pm.collectionVariables.set('scheduledTime', t12(s.start) + ' - ' + t12(s.end));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base-url}}/bookings/availability?technicianId={{technicianId}}&date=2026-09-07",
+              "host": ["{{base-url}}"],
+              "path": ["bookings", "availability"],
+              "query": [
+                { "key": "technicianId", "value": "{{technicianId}}" },
+                { "key": "date", "value": "2026-09-07", "description": "YYYY-MM-DD" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create booking (saves bookingId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.id) pm.collectionVariables.set('bookingId', json.data.id);",
+                  "pm.test('booking created or conflict', function () {",
+                  "  pm.expect([200, 409]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"serviceId\": \"3728988d-e769-4277-bf85-adbe356255f0\",\r\n  \"technicianId\": \"7bce1d58-95b6-4c83-a8a2-07c3a9c42f88\",\r\n  \"scheduledDate\": \"2026-08-15T14:30:00.000Z\",\r\n  \"totalPrice\": 500\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"technicianId\": \"{{technicianId}}\",\n  \"scheduledDate\": \"2026-09-07T00:00:00.000Z\",\n  \"scheduledTime\": \"{{scheduledTime}}\",\n  \"totalPrice\": 2500,\n  \"customerAddress\": \"House 12, Road 5, Dhanmondi, Dhaka\",\n  \"notes\": \"Please call before arriving\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "{{base-url}}/api/bookings",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "bookings"
-              ]
+              "raw": "{{base-url}}/bookings",
+              "host": ["{{base-url}}"],
+              "path": ["bookings"]
+            },
+            "description": "Creates a REQUESTED booking + PENDING payment. Emails go to customer AND technician. Re-running with the same date/time returns 409 Conflict (slot already booked)."
+          },
+          "response": []
+        },
+        {
+          "name": "My bookings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base-url}}/bookings",
+              "host": ["{{base-url}}"],
+              "path": ["bookings"]
             }
           },
           "response": []
         },
         {
-          "name": "Get user's bookings",
+          "name": "Booking details",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
-              "raw": "{{base-url}}/api/bookings",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "bookings"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get booking details",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base-url}}/api/bookings/002ee3c9-b4c1-47dd-b915-9a2025b9b07f",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "bookings",
-                "002ee3c9-b4c1-47dd-b915-9a2025b9b07f"
-              ]
+              "raw": "{{base-url}}/bookings/{{bookingId}}",
+              "host": ["{{base-url}}"],
+              "path": ["bookings", "{{bookingId}}"]
             }
           },
           "response": []
@@ -508,109 +425,251 @@
       ]
     },
     {
-      "name": "Technician",
+      "name": "Payments",
       "item": [
         {
-          "name": "Update profile",
+          "name": "Create payment session",
           "request": {
-            "method": "PUT",
-            "header": [],
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n\r\n      \"completedJobs\": 100,\r\n        \"bio\": \"Professional electrician with over 6 years of experience in residential and commercial electrical services.\",\r\n  \"skills\": [\r\n    \"Electrical Wiring\",\r\n    \"Circuit Repair\",\r\n    \"Ceiling Fan Installation\",\r\n    \"Lighting Installation\",\r\n    \"Power Backup Systems\"\r\n  ],\r\n  \"experience\": 6,\r\n\r\n  \"isAvailable\": true,\r\n  \"hourlyRate\": 25,\r\n  \"availability\": {\r\n    \"monday\": [\"09:00-12:00\", \"14:00-18:00\"],\r\n    \"tuesday\": [\"09:00-17:00\"],\r\n    \"wednesday\": [\"10:00-16:00\"],\r\n    \"thursday\": [\"09:00-17:00\"],\r\n    \"friday\": [\"09:00-15:00\"],\r\n    \"saturday\": [\"10:00-14:00\"],\r\n    \"sunday\": []\r\n  },\r\n  \"status\": true\r\n\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"bookingId\": \"{{bookingId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "{{base-url}}/api/technician/profile",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "technician",
-                "profile"
-              ]
-            }
+              "raw": "{{base-url}}/payments/create",
+              "host": ["{{base-url}}"],
+              "path": ["payments", "create"]
+            },
+            "description": "Returns an SSLCommerz `paymentUrl` to open in the browser."
           },
           "response": []
         },
         {
-          "name": "Update availability slots",
+          "name": "Confirm payment",
           "request": {
-            "method": "PUT",
-            "header": [],
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"day\": \"monday\",\r\n  \"slots\": [\r\n    {\r\n      \"start\": \"09:00\",\r\n      \"end\": \"12:00\"\r\n    },\r\n    {\r\n      \"start\": \"14:00\",\r\n      \"end\": \"18:00\"\r\n    }\r\n  ]\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"transactionId\": \"Fix-It-Now-1756905600000-483920\",\n  \"val_id\": \"2609031355AbCdEf\",\n  \"amount\": \"2500.00\",\n  \"status\": \"VALID\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "{{base-url}}/api/technician/availability",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "technician",
-                "availability"
-              ]
-            }
+              "raw": "{{base-url}}/payments/confirm",
+              "host": ["{{base-url}}"],
+              "path": ["payments", "confirm"]
+            },
+            "description": "Marks the payment COMPLETED and the booking PAID. Emails go to customer AND technician."
           },
           "response": []
         },
         {
-          "name": "Get bookings",
+          "name": "Payment history",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
-              "raw": "{{base-url}}/api/technician/bookings",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "technician",
-                "bookings"
-              ]
+              "raw": "{{base-url}}/payments",
+              "host": ["{{base-url}}"],
+              "path": ["payments"]
             }
           },
           "response": []
         },
         {
-          "name": "Update booking status",
+          "name": "Payment details (by bookingId)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base-url}}/payments/{{bookingId}}",
+              "host": ["{{base-url}}"],
+              "path": ["payments", "{{bookingId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Technician Portal",
+      "item": [
+        {
+          "name": "My technician profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base-url}}/technician",
+              "host": ["{{base-url}}"],
+              "path": ["technician"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update tech profile",
           "request": {
             "method": "PATCH",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"status\": \"ACCEPTED\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"bio\": \"Certified HVAC specialist with 8+ years of experience.\",\n  \"skills\": [\"AC Repair\", \"Refrigerator\", \"Washing Machine\"],\n  \"experience\": 8,\n  \"hourlyRate\": 500,\n  \"isAvailable\": true\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "{{base-url}}/api/technician/bookings/002ee3c9-b4c1-47dd-b915-9a2025b9b07f",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "technician",
-                "bookings",
-                "002ee3c9-b4c1-47dd-b915-9a2025b9b07f"
-              ]
+              "raw": "{{base-url}}/technician/tech-profile",
+              "host": ["{{base-url}}"],
+              "path": ["technician", "tech-profile"]
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Update availability (one day)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"day\": \"monday\",\n  \"slots\": [\n    { \"start\": \"09:00\", \"end\": \"12:00\" },\n    { \"start\": \"14:00\", \"end\": \"18:00\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base-url}}/technician/availability",
+              "host": ["{{base-url}}"],
+              "path": ["technician", "availability"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get availability",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base-url}}/technician/availability",
+              "host": ["{{base-url}}"],
+              "path": ["technician", "availability"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dashboard overview",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base-url}}/technician/overview",
+              "host": ["{{base-url}}"],
+              "path": ["technician", "overview"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "My bookings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base-url}}/technician/bookings",
+              "host": ["{{base-url}}"],
+              "path": ["technician", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Booking status → ACCEPTED",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base-url}}/technician/bookings/{{bookingId}}",
+              "host": ["{{base-url}}"],
+              "path": ["technician", "bookings", "{{bookingId}}"]
+            },
+            "description": "Emails the customer: booking accepted."
+          },
+          "response": []
+        },
+        {
+          "name": "Booking status → DECLINED (+reason)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DECLINED\",\n  \"declineReason\": \"I am unavailable on that date\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base-url}}/technician/bookings/{{bookingId}}",
+              "host": ["{{base-url}}"],
+              "path": ["technician", "bookings", "{{bookingId}}"]
+            },
+            "description": "Emails the customer: booking declined + reason."
+          },
+          "response": []
+        },
+        {
+          "name": "Booking status → IN_PROGRESS",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base-url}}/technician/bookings/{{bookingId}}",
+              "host": ["{{base-url}}"],
+              "path": ["technician", "bookings", "{{bookingId}}"]
+            },
+            "description": "Emails the customer: service started."
+          },
+          "response": []
+        },
+        {
+          "name": "Booking status → COMPLETED",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base-url}}/technician/bookings/{{bookingId}}",
+              "host": ["{{base-url}}"],
+              "path": ["technician", "bookings", "{{bookingId}}"]
+            },
+            "description": "Emails customer (completed + review request) and technician (completed)."
+          },
+          "response": []
+        },
+        {
+          "name": "Booking status → CANCELLED (+reason)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\",\n  \"cancellationReason\": \"Customer requested cancellation\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base-url}}/technician/bookings/{{bookingId}}",
+              "host": ["{{base-url}}"],
+              "path": ["technician", "bookings", "{{bookingId}}"]
+            },
+            "description": "Emails customer AND technician: booking cancelled."
           },
           "response": []
         }
@@ -620,28 +679,19 @@
       "name": "Reviews",
       "item": [
         {
-          "name": "Create review",
+          "name": "Create review (COMPLETED booking)",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"bookingId\": \"002ee3c9-b4c1-47dd-b915-9a2025b9b07f\",\r\n  \"rating\": 4.5,\r\n  \"comment\": \"Excellent service. Highly recommended!\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"bookingId\": \"{{bookingId}}\",\n  \"rating\": 5,\n  \"comment\": \"Fantastic service, very professional!\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "{{base-url}}/api/reviews",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "reviews"
-              ]
+              "raw": "{{base-url}}/reviews",
+              "host": ["{{base-url}}"],
+              "path": ["reviews"]
             }
           },
           "response": []
@@ -652,49 +702,43 @@
       "name": "Admin",
       "item": [
         {
-          "name": "Get all users",
+          "name": "Get all users (saves userId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.length) pm.collectionVariables.set('userId', json.data[0].id);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
-              "raw": "{{base-url}}\t/api/admin/users",
-              "host": [
-                "{{base-url}}\t"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "users"
-              ]
+              "raw": "{{base-url}}/admin/users",
+              "host": ["{{base-url}}"],
+              "path": ["admin", "users"]
             }
           },
           "response": []
         },
         {
-          "name": "Update user status",
+          "name": "Update user status (ban/unban)",
           "request": {
             "method": "PATCH",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"status\":\"ACTIVE\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"status\": \"BANNED\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "{{base-url}}/api/admin/users/aed43669-4aed-41ce-970c-2d876da9116b",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "users",
-                "aed43669-4aed-41ce-970c-2d876da9116b"
-              ]
+              "raw": "{{base-url}}/admin/users/{{userId}}",
+              "host": ["{{base-url}}"],
+              "path": ["admin", "users", "{{userId}}"]
             }
           },
           "response": []
@@ -703,36 +747,22 @@
           "name": "Get all bookings",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
-              "raw": "{{base-url}}/api/admin/bookings",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "bookings"
-              ]
+              "raw": "{{base-url}}/admin/bookings",
+              "host": ["{{base-url}}"],
+              "path": ["admin", "bookings"]
             }
           },
           "response": []
         },
         {
-          "name": "Get all categories",
+          "name": "Dashboard overview",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
-              "raw": "{{base-url}}/api/admin/categories",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "categories"
-              ]
+              "raw": "{{base-url}}/admin/overview",
+              "host": ["{{base-url}}"],
+              "path": ["admin", "overview"]
             }
           },
           "response": []
@@ -741,61 +771,57 @@
           "name": "Create category",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"name\": \" Wiring Repair\",\r\n  \"description\": \"Comprehensive troubleshooting for residential power failures and socket overloads.\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\n  \"name\": \"Plumbing\",\n  \"description\": \"Leak repair, pipe fitting and bathroom services.\"\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
-              "raw": "{{base-url}}/api/admin/categories",
-              "host": [
-                "{{base-url}}"
-              ],
-              "path": [
-                "api",
-                "admin",
-                "categories"
-              ]
+              "raw": "{{base-url}}/admin/categories",
+              "host": ["{{base-url}}"],
+              "path": ["admin", "categories"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update category",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Plumbing & Sanitary\",\n  \"description\": \"Updated description\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base-url}}/admin/categories/{{categoryId}}",
+              "host": ["{{base-url}}"],
+              "path": ["admin", "categories", "{{categoryId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update category status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base-url}}/admin/update/category/{{categoryId}}",
+              "host": ["{{base-url}}"],
+              "path": ["admin", "update", "category", "{{categoryId}}"]
             }
           },
           "response": []
         }
       ]
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
-      }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
-      }
-    }
-  ],
-  "variable": [
-    {
-      "key": "base-url",
-      "value": "http://localhost:5000"
     }
   ]
 }

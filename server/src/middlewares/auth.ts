@@ -12,8 +12,12 @@ const auth = (...roles: string[]) => {
     next: NextFunction,
   ) => {
     try {
-      const tokenw = req.cookies.accessToken;
-      const { accessToken: token } = req.cookies;
+      const { accessToken: cookieToken } = req.cookies;
+      const authHeader = req.headers.authorization;
+      // Support both cookie-based auth (browser) and Bearer token auth (Postman / mobile)
+      const token =
+        cookieToken ||
+        (authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined);
       // console.log("token", token);
       // console.log("tokenw", req);
       if (!token) {

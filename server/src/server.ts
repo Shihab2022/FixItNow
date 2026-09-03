@@ -3,8 +3,12 @@ import app from "./app";
 import config from "./config";
 // app.ts or server.ts
 import './queues/emailQueue';
+import { initializeReminderCronJobs } from './jobs/bookingReminders.job';
 
 async function main() {
+  // Start automated email reminder jobs (24h / 2h / review / stale-request reminders)
+  initializeReminderCronJobs();
+
   const port = config.port;
   const server: Server = app.listen(port, () => {
     console.log(`Server is running on  ${port}`);

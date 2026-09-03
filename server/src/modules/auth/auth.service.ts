@@ -12,13 +12,17 @@ import { createToken } from "../../utils/auth";
 import { emailSenderMessages } from "../../constant";
 import { formatHtml } from "../../utils/formatHtml";
 import crypto from "crypto";
+
 const register = async (payload: RegisterUserPayload) => {
   const { email, password, name, role, phone, address } = payload;
 
   // Validate if user exists
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
-    throw new Error("User with this email already exists.");
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "User with this email already exists.",
+    );
   }
 
   const hashedPassword = await bcrypt.hash(
@@ -44,34 +48,39 @@ const register = async (payload: RegisterUserPayload) => {
       technicianProfile: true,
     },
   });
-  const jwtPayload = {
-    id: user.id,
-    role: user.role,
-    name: user.name,
-  };
-  const token = createToken(
-    jwtPayload,
-    config.jwt_access_secret as string,
-    config.jwt_access_expire_in as number | undefined,
-  );
-  const html = await formatHtml('src/templates/confirmAccount.ejs', {
-    name: name,
-    url: `${config?.front_end_base_url}/confirm?token=${token}`,
-    baseUrl: config?.front_end_base_url as string,
-    year: new Date().getFullYear(),
-  })
-  // 🔹 Email
-  const notifyMsg = {
-    to: [email],
-    from: `"FixItNow" <${config.smtp.user_name}>`,
-    subject: emailSenderMessages.WELCOME_EMAIL_SUBJECT,
-    replyTo: config.smtp.user_name,
-    text: emailSenderMessages.CONFIRM_EMAIL_MESSAGE,
-    html,
-    // attachments,
-  };
 
-  await transporter.sendMail(notifyMsg);
+  // Confirmation email is best-effort: a broken SMTP should NEVER block account creation
+  try {
+    const jwtPayload = {
+      id: user.id,
+      role: user.role,
+      name: user.name,
+    };
+    const token = createToken(
+      jwtPayload,
+      config.jwt_access_secret as string,
+      config.jwt_access_expire_in as number | undefined,
+    );
+    const html = await formatHtml("src/templates/confirmAccount.ejs", {
+      name: name,
+      url: `${config?.front_end_base_url}/confirm?token=${token}`,
+      baseUrl: config?.front_end_base_url as string,
+      year: new Date().getFullYear(),
+    });
+    const notifyMsg = {
+      to: [email],
+      from: `"FixItNow" <${config.smtp.user_name}>`,
+      subject: emailSenderMessages.WELCOME_EMAIL_SUBJECT,
+      replyTo: config.smtp.user_name,
+      text: emailSenderMessages.CONFIRM_EMAIL_MESSAGE,
+      html,
+    };
+
+    await transporter.sendMail(notifyMsg);
+  } catch (emailErr) {
+    console.error("[Auth] Confirmation email could not be sent:", emailErr);
+  }
+
   const { password: _, ...userWithoutPassword } = user;
   return userWithoutPassword;
 };
@@ -79,22 +88,30 @@ const register = async (payload: RegisterUserPayload) => {
 const login = async (payload: { email: string; password: string }) => {
   const { email, password } = payload;
 
-  const user = await prisma.user.findUniqueOrThrow({
+  const user = await prisma.user.findUnique({
     where: { email },
   });
 
-  if (user.status === UserStatus.BANNED) {
-    throw new Error("Your account has been blocked. Please contact support.");
+  if (!user) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      "User not found with this email. Please register first.",
+    );
   }
 
-  const isPasswordCorrect = await bcrypt.compare(
-    payload.password,
-    user.password,
-  );
+  if (user.status === UserStatus.BANNED) {
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED,
+      "Your account has been blocked. Please contact support.",
+    );
+  }
+
+  const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
   if (!isPasswordCorrect) {
-    throw new Error("Password is not correct!");
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Password is not correct!");
   }
+
   const tokenData: IAuthUser = {
     id: user?.id,
     role: user.role,
@@ -113,57 +130,56 @@ const login = async (payload: { email: string; password: string }) => {
 
   return { accessToken, refreshToken };
 };
-
 const getMe = async (user: IAuthUser) => {
-  if (!user) {
-    throw new Error("User not found");
-  }
-  const reUser = await prisma.user.findUnique({
-    where: { id: user.id },
-    include: {
-      technicianProfile: true, // Will cleanly return data for techs, or null for customers/admins
+  // Original behavior: fetch user safely, never expose password
+  const result = await prisma.user.findUnique({
+    where: { id: user?.id },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      phone: true,
+      address: true,
+      status: true,
+      emailVerified: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
-
-  if (!reUser) {
-    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
-  }
-
-  const { password: _, ...userWithoutPassword } = reUser;
-  return userWithoutPassword;
+  return result;
 };
-const updateMe = async (user: IAuthUser, payload: Partial<IAuthUser>) => {
-  if (!user) {
-    throw new Error("User not found");
-  }
 
-  const updateData: any = Object.fromEntries(
-    Object.entries(payload as Record<string, any>).filter(
-      ([, value]) => value !== undefined && value !== null,
-    ),
-  ) as any;
-  const reUser = await prisma.user.update({
-    where: { id: user.id },
+const updateMe = async (user: IAuthUser, payload: any) => {
+  const updateData = Object.fromEntries(
+    Object.entries(payload).filter(([_, value]) => value !== undefined),
+  );
+  const result = await prisma.user.update({
+    where: { id: user?.id },
     data: updateData,
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      phone: true,
+      address: true,
+      status: true,
+      emailVerified: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
-
-  const { password: _, ...userWithoutPassword } = reUser;
-  return userWithoutPassword;
+  return result;
 };
+
 const forgetPassword = async (payload: { email: string }) => {
   const { email } = payload;
 
   const user = await prisma.user.findUniqueOrThrow({
     where: { email },
   });
-  // const hashedPassword = await bcrypt.hash(
-  //   password,
-  //   Number(config.bcrypt_salt_rounds),
-  // );
-  // const updatedUser = await prisma.user.update({
-  //   where: { email },
-  //   data: { password: hashedPassword },
-  // });
+
   const jwtPayload = {
     id: user.id,
     role: user.role,
@@ -174,91 +190,89 @@ const forgetPassword = async (payload: { email: string }) => {
     config.jwt_access_expire_in as number | undefined,
   );
   const pin = crypto.randomInt(100000, 999999).toString();
-  const html = await formatHtml('src/templates/forgotPassword.ejs', {
-    name: user.name,
-    url: `${config?.front_end_base_url}/reset-password?token=${token}`,
-    baseUrl: config?.front_end_base_url as string,
-    pin: pin,
-    year: new Date().getFullYear(),
-  });
 
-  // 🔹 Email
-  const notifyMsg = {
-    to: [email],
-    from: `"FixItNow" <${config.smtp.user_name}>`,
-    subject: emailSenderMessages.FORGET_PASSWORD_SUBJECT,
-    replyTo: config.smtp.user_name,
-    text: emailSenderMessages.FORGET_PASSWORD_MESSAGE,
-    html,
-  };
+  try {
+    const html = await formatHtml("src/templates/forgotPassword.ejs", {
+      name: user.name,
+      url: `${config?.front_end_base_url}/reset-password?token=${token}`,
+      baseUrl: config?.front_end_base_url as string,
+      pin: pin,
+      year: new Date().getFullYear(),
+    });
 
-  await transporter.sendMail(notifyMsg);
+    const notifyMsg = {
+      to: [email],
+      from: `"FixItNow" <${config.smtp.user_name}>`,
+      subject: emailSenderMessages.FORGET_PASSWORD_SUBJECT,
+      replyTo: config.smtp.user_name,
+      text: emailSenderMessages.FORGET_PASSWORD_MESSAGE,
+      html,
+    };
+
+    await transporter.sendMail(notifyMsg);
+  } catch (emailErr) {
+    console.error("[Auth] Forgot-password email could not be sent:", emailErr);
+  }
   return null;
 };
+
 const updatePassword = async (payload: { email: string }) => {
   const { email } = payload;
 
   const user = await prisma.user.findUniqueOrThrow({
     where: { email },
   });
-  // const hashedPassword = await bcrypt.hash(
-  //   password,
-  //   Number(config.bcrypt_salt_rounds),
-  // );
-  // const updatedUser = await prisma.user.update({
-  //   where: { email },
-  //   data: { password: hashedPassword },
-  // });
-  const html = await formatHtml('src/templates/passwordResetSuccess.ejs', {
-    name: user.name,
-    loginUrl: `${config?.front_end_base_url}/login`,
-    baseUrl: config?.front_end_base_url as string,
-  });
 
-  // 🔹 Email
-  const notifyMsg = {
-    to: [email],
-    from: `"FixItNow" <${config.smtp.user_name}>`,
-    subject: emailSenderMessages.PASSWORD_RESET_SUCCESS_SUBJECT,
-    replyTo: config.smtp.user_name,
-    text: emailSenderMessages.PASSWORD_RESET_SUCCESS_MESSAGE,
-    html,
-  };
+  try {
+    const html = await formatHtml("src/templates/passwordResetSuccess.ejs", {
+      name: user.name,
+      loginUrl: `${config?.front_end_base_url}/login`,
+      baseUrl: config?.front_end_base_url as string,
+    });
 
-  await transporter.sendMail(notifyMsg);
+    const notifyMsg = {
+      to: [email],
+      from: `"FixItNow" <${config.smtp.user_name}>`,
+      subject: emailSenderMessages.PASSWORD_RESET_SUCCESS_SUBJECT,
+      replyTo: config.smtp.user_name,
+      text: emailSenderMessages.PASSWORD_RESET_SUCCESS_MESSAGE,
+      html,
+    };
+
+    await transporter.sendMail(notifyMsg);
+  } catch (emailErr) {
+    console.error("[Auth] Password-reset-email could not be sent:", emailErr);
+  }
   return null;
 };
+
 const resetPassword = async (payload: { email: string }) => {
   const { email } = payload;
 
   const user = await prisma.user.findUniqueOrThrow({
     where: { email },
   });
-  // const hashedPassword = await bcrypt.hash(
-  //   password,
-  //   Number(config.bcrypt_salt_rounds),
-  // );
-  // const updatedUser = await prisma.user.update({
-  //   where: { email },
-  //   data: { password: hashedPassword },
-  // });
-  const html = await formatHtml('src/templates/passwordResetSuccess.ejs', {
-    name: user.name,
-    loginUrl: `${config?.front_end_base_url}/login`,
-    baseUrl: config?.front_end_base_url as string,
-  });
 
-  // 🔹 Email
-  const notifyMsg = {
-    to: [email],
-    from: `"FixItNow" <${config.smtp.user_name}>`,
-    subject: emailSenderMessages.PASSWORD_RESET_SUCCESS_SUBJECT,
-    replyTo: config.smtp.user_name,
-    text: emailSenderMessages.PASSWORD_RESET_SUCCESS_MESSAGE,
-    html,
-  };
+  try {
+    const html = await formatHtml("src/templates/passwordResetSuccess.ejs", {
+      name: user.name,
+      loginUrl: `${config?.front_end_base_url}/login`,
+      baseUrl: config?.front_end_base_url as string,
+    });
 
-  await transporter.sendMail(notifyMsg);
+    const notifyMsg = {
+      to: [email],
+      from: `"FixItNow" <${config.smtp.user_name}>`,
+      subject: emailSenderMessages.PASSWORD_RESET_SUCCESS_SUBJECT,
+      replyTo: config.smtp.user_name,
+      text: emailSenderMessages.PASSWORD_RESET_SUCCESS_MESSAGE,
+      html,
+    };
+
+    await transporter.sendMail(notifyMsg);
+  } catch (emailErr) {
+    console.error("[Auth] Password-reset email could not be sent:", emailErr);
+  }
   return null;
 };
 
@@ -269,5 +283,5 @@ export const AuthServices = {
   updateMe,
   forgetPassword,
   updatePassword,
-  resetPassword
+  resetPassword,
 };

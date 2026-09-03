@@ -33,6 +33,8 @@ export const loginUser = async (params: any) => {
     formData: false,
     params: params,
   });
+
+  // On success, persist the tokens as httpOnly cookies in Next.js
   if (res?.data?.success) {
     const accessToken = res?.data?.data?.accessToken;
     const refreshToken = res?.data?.data?.refreshToken;
@@ -48,8 +50,10 @@ export const loginUser = async (params: any) => {
       maxAge: 60 * 60 * 24 * 7,
       sameSite: "lax",
     });
-    return res;
   }
+
+  // Always return the response so the UI can show the real error message
+  return res;
 };
 
 export const getMe = async () => {
@@ -76,9 +80,17 @@ export const updateMe = async (params: any) => {
 export const logout = async () => {
   const cookieStore = await cookies();
 
+  // Also invalidate the session server-side (clears cookies on the API side)
+  await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `auth/logout`,
+    method: apiMethods.POST as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+
   cookieStore.delete("accessToken");
   cookieStore.delete("refreshToken");
 
   revalidateTag("my-profile", "max");
-  // redirect("/login");
 };

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/purity */
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,7 +26,7 @@ import {
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { createBookingApi } from "@/service/publicApi";
+import { createBookingApi, getTechnicianAvailableSlots } from "@/service/publicApi";
 import { createPayment } from "@/service/payment";
 import { showToast } from "../toast/toast";
 import { toastTypes } from "@/app/constant";
@@ -148,8 +148,35 @@ export function CreateBookingForm({
       .toLowerCase();
   }, [selectedDate]);
 
-  // Check availability for the selected day
-  const dayAvailability = technician.availability?.[selectedDayName];
+  const [liveSlots, setLiveSlots] = useState<
+    Array<{ start: string; end: string }> | null
+  >(null);
+
+  // Fetch REAL availability for the selected date (already-booked slots are
+  // excluded by the backend: GET /bookings/availability?technicianId&date)
+  useEffect(() => {
+    if (!selectedDate) return;
+    let active = true;
+    getTechnicianAvailableSlots(technician.id, selectedDate)
+      .then((res) => {
+        if (!active) return;
+        if (res?.data?.success) {
+          setLiveSlots(res.data.data || []);
+        } else {
+          setLiveSlots(null); // fall back to the static weekly schedule
+        }
+      })
+      .catch(() => {
+        if (active) setLiveSlots(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedDate, technician.id]);
+
+  // Live slots win over the static weekly schedule when available
+  const staticDayAvailability = technician.availability?.[selectedDayName];
+  const dayAvailability = liveSlots ?? staticDayAvailability ?? [];
   const isTechnicianAvailableOnDay =
     Boolean(dayAvailability && dayAvailability.length > 0) &&
     technician.isAvailable;
@@ -428,7 +455,11 @@ export function CreateBookingForm({
               >
                 <AlertCircle className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
                 <div className="text-xs space-y-1">
-                  <p className="font-bold">Technician Not Available</p>
+                  <p className="font-bold">
+                    {staticDayAvailability && staticDayAvailability.length > 0
+                      ? "All Slots Are Booked For This Date"
+                      : "Technician Not Available"}
+                  </p>
                   <p>
                     {technician.user.name} does not work on{" "}
                     <strong className="capitalize">{selectedDayName}</strong>.

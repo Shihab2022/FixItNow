@@ -6,6 +6,8 @@ model Booking {
   customerAddress String
   notes           String?
   scheduledTime   String
+  declineReason   String?
+  cancellationReason String?
   paymentStatus   PaymentStatus @default(PENDING)
   customerId      String
   customer        User          @relation("CustomerBookings", fields: [customerId], references: [id])
@@ -18,6 +20,12 @@ model Booking {
 
   payment Payment?
   review  Review?
+
+  reminder24hSent          Boolean   @default(false)
+  reminder2hSent           Boolean   @default(false)
+  reviewReminderSent       Boolean   @default(false)
+  completedAt              DateTime?
+  lastTechnicianRemindedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

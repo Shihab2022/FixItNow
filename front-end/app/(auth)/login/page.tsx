@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FiEye, FiEyeOff, FiLock, FiMail, FiArrowRight } from "react-icons/fi";
-import { loginUser } from "@/service/auth";
+import { loginUser, getMe } from "@/service/auth";
 import { toastTypes } from "@/app/constant";
 import { showToast } from "@/components/toast/toast";
 
@@ -37,11 +37,23 @@ export default function LoginPage() {
         const accessToken = res.data.data.accessToken;
         localStorage.setItem("accessToken", accessToken);
         showToast(toastTypes.SUCCESS, "Login successful!");
-        router.push("/dashboard");
+
+        // Redirect to the dashboard that matches the user role
+        const me = await getMe();
+        const role = me?.data?.data?.role;
+        if (role === "ADMIN") {
+          router.push("/dashboard/admin");
+        } else if (role === "TECHNICIAN") {
+          router.push("/dashboard/technician");
+        } else {
+          router.push("/dashboard/customer");
+        }
       } else {
         showToast(
           toastTypes.FAILED,
-          res?.message || "Something went wrong. Please try again later.",
+          res?.message ||
+            res?.data?.message ||
+            "Something went wrong. Please try again later.",
         );
       }
     } catch (error) {

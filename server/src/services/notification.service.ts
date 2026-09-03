@@ -1,5 +1,5 @@
 import config from '../config';
-import { emailQueue } from '../queues/emailQueue';
+import { enqueueEmail } from '../queues/emailQueue';
 import { EmailRenderer } from '../utils/emailRenderer';
 
 export interface BookingPayload {
@@ -40,17 +40,7 @@ export class NotificationService {
         templateName: string,
         templateData: Record<string, any>
     ) {
-        await emailQueue.add(
-            'sendEmail',
-            { idempotencyKey, to, subject, templateName, templateData },
-            {
-                jobId: idempotencyKey,
-                attempts: 3,
-                backoff: { type: 'exponential', delay: 5000 },
-                removeOnComplete: true,
-                removeOnFail: { age: 24 * 3600, count: 10 },
-            }
-        );
+        await enqueueEmail({ idempotencyKey, to, subject, templateName, templateData });
     }
 
     // 1. BOOKING_CREATED
@@ -161,6 +151,26 @@ export class NotificationService {
                 customerAddress: payment.booking.customerAddress,
                 bookingId: payment.booking.id,
                 ctaUrl: `${config.front_end_base_url}/customer/bookings/${payment.booking.id}`,
+            }
+        );
+
+        // Technician Email
+        await this.dispatch(
+            `evt_pay_success_tech_${payment.transactionId}`,
+            payment.booking.technician.user.email,
+            'Payment Received for Your Booking',
+            'paymentSuccessTechnician',
+            {
+                technicianName: payment.booking.technician.user.name,
+                customerName: payment.booking.customer.name,
+                serviceTitle: payment.booking.service.title,
+                amount: formattedAmount,
+                transactionId: payment.transactionId,
+                scheduledDate: formattedDate,
+                scheduledTime: payment.booking.scheduledTime,
+                customerAddress: payment.booking.customerAddress,
+                bookingId: payment.booking.id,
+                ctaUrl: `${config.front_end_base_url}/technician/bookings/${payment.booking.id}`,
             }
         );
     }

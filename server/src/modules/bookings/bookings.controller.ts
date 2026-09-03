@@ -43,9 +43,25 @@ const GetBookingDetails = catchAsync(async (req: Request, res: Response) => {
     data,
   });
 });
+const GetTechnicianAvailability = catchAsync(
+  async (req: Request, res: Response) => {
+    const { technicianId, date } = req.query;
+    const data = await BookingsService.GetTechnicianAvailability(
+      technicianId as string,
+      date as string,
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Available time slots retrieved successfully!",
+      data,
+    });
+  },
+);
 
 export const BookingsController = {
   CreateNewBooking,
   GetUserBookings,
   GetBookingDetails,
+  GetTechnicianAvailability,
 };

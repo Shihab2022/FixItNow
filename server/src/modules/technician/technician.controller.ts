@@ -101,6 +101,10 @@ const UpdateBookingStatus = catchAsync(
       req.user.id as string,
       req.params.id as string,
       req.body.status,
+      {
+        declineReason: req.body.declineReason,
+        cancellationReason: req.body.cancellationReason,
+      },
     );
 
     sendResponse(res, {

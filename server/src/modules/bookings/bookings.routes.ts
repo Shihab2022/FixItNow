@@ -5,6 +5,11 @@ import { Role } from "../../../generated/prisma/client";
 const router = express.Router();
 router.post("/", auth(Role.CUSTOMER), BookingsController.CreateNewBooking);
 router.get("/", auth(Role.CUSTOMER), BookingsController.GetUserBookings);
+router.get(
+  "/availability",
+  auth(Role.CUSTOMER),
+  BookingsController.GetTechnicianAvailability,
+);
 router.get("/:id", auth(Role.CUSTOMER, Role.ADMIN), BookingsController.GetBookingDetails);
 
 export const BookingsRouter = router;

@@ -28,8 +28,8 @@ const login = catchAsync(async (req: Request, res: Response) => {
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    secure: false,
-    sameSite: "none",
+    sameSite: config.NODE_ENV === "production" ? "none" : "lax",
+    secure: config.NODE_ENV === "production",
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 day
   });
   sendResponse(res, {
@@ -37,6 +37,25 @@ const login = catchAsync(async (req: Request, res: Response) => {
     success: true,
     message: "User logged in successfully!",
     data: { accessToken, refreshToken },
+  });
+});
+const logout = catchAsync(async (req: Request, res: Response) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    sameSite: config.NODE_ENV === "production" ? "none" : "lax",
+    secure: config.NODE_ENV === "production",
+  });
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    sameSite: config.NODE_ENV === "production" ? "none" : "lax",
+    secure: config.NODE_ENV === "production",
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Logged out successfully!",
+    data: null,
   });
 });
 const getMe = catchAsync(
@@ -97,6 +116,7 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 export const AuthController = {
   register,
   login,
+  logout,
   getMe,
   updateMe,
   forgetPassword,

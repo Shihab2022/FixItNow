@@ -25,7 +25,6 @@ const CreateReview = async (payload: CreateReviewPayload) => {
   if (!booking) {
     throw new ApiError(httpStatus.NOT_FOUND, "Booking not found.");
   }
-  console.log("Booking:", booking.customerId, customerId);
   // Ensure booking belongs to customer
   if (booking.customerId !== customerId) {
     throw new ApiError(
@@ -41,6 +40,16 @@ const CreateReview = async (payload: CreateReviewPayload) => {
       "You can review only completed bookings.",
     );
   }
+  // Resolve the technician's USER id (Review.technician references the users table,
+  // while booking.technicianId is the TechnicianProfile id)
+  const techProfile = await prisma.technicianProfile.findUnique({
+    where: { id: booking.technicianId },
+    select: { userId: true },
+  });
+  if (!techProfile) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Technician profile not found.");
+  }
+
   const review = await prisma.review.upsert({
     where: {
       bookingId,
@@ -52,7 +61,7 @@ const CreateReview = async (payload: CreateReviewPayload) => {
     create: {
       rating,
       comment,
-      technicianId: booking.technicianId,
+      technicianId: techProfile.userId,
       customerId: booking.customerId,
       bookingId: booking.id,
     },

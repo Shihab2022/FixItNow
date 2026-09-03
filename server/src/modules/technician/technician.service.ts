@@ -1,4 +1,8 @@
 import { BookingStatus, PaymentStatus } from "../../../generated/prisma/enums";
+import {
+  BookingPayload,
+  NotificationService,
+} from "../../services/notification.service";
 import ApiError from "../../helpars/ApiError";
 import { prisma } from "../../lib/prisma";
 import { TimeSlot, UpdateAvailabilityPayload } from "../../types";
@@ -102,6 +106,7 @@ const UpdateBookingStatus = async (
   userId: string,
   bookingId: string,
   status: BookingStatus,
+  extra?: { declineReason?: string; cancellationReason?: string },
 ) => {
   const technician = await prisma.technicianProfile.findUniqueOrThrow({
     where: {
@@ -115,17 +120,76 @@ const UpdateBookingStatus = async (
     },
   });
 
+  const { declineReason, cancellationReason } = extra || {};
+
   const result = await prisma.booking.update({
     where: {
       id: booking.id,
     },
     data: {
       status,
+      ...(declineReason !== undefined && { declineReason }),
+      ...(cancellationReason !== undefined && { cancellationReason }),
     },
+  });
+
+  await safeNotify(async () => {
+    const notifyBooking = await loadBookingForNotification(booking.id);
+    if (!notifyBooking) return;
+
+    switch (status) {
+      case BookingStatus.ACCEPTED:
+        await NotificationService.sendBookingAccepted(notifyBooking);
+        break;
+      case BookingStatus.DECLINED:
+        await NotificationService.sendBookingDeclined(notifyBooking, declineReason);
+        break;
+      case BookingStatus.IN_PROGRESS:
+        await NotificationService.sendBookingStarted(notifyBooking);
+        break;
+      case BookingStatus.COMPLETED:
+        await NotificationService.sendBookingCompleted(notifyBooking);
+        await NotificationService.sendReviewRequest(notifyBooking);
+        break;
+      case BookingStatus.CANCELLED:
+        await NotificationService.sendBookingCancelled(notifyBooking, cancellationReason);
+        break;
+      default:
+        break;
+    }
   });
 
   return result;
 };
+
+const safeNotify = async (action: () => Promise<void>): Promise<void> => {
+  try {
+    await action();
+  } catch (err) {
+    console.error("[Notification] Email could not be sent:", err);
+  }
+};
+
+async function loadBookingForNotification(bookingId: string): Promise<BookingPayload | null> {
+  return (await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      id: true,
+      scheduledDate: true,
+      scheduledTime: true,
+      customerAddress: true,
+      totalPrice: true,
+      customer: { select: { email: true, name: true } },
+      service: { select: { title: true } },
+      technician: {
+        include: {
+          user: { select: { email: true, name: true } },
+        },
+      },
+    },
+  })) as unknown as BookingPayload | null;
+}
+
 export const GetOverview = async (userId: string) => {
   console.log("Fetching overview for userId:", userId);
 

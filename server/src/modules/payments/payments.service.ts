@@ -1,8 +1,21 @@
-import { PaymentStatus } from "../../../generated/prisma/client";
+import { BookingStatus, PaymentStatus } from "../../../generated/prisma/client";
 import ApiError from "../../helpars/ApiError";
 import { prisma } from "../../lib/prisma";
 import httpStatus from "http-status";
 import { ssl } from "../SSL/ssl.service";
+import {
+  BookingPayload,
+  NotificationService,
+} from "../../services/notification.service";
+
+/** Wraps email dispatch so a broken SMTP/queue never blocks the core payment flow */
+const safeNotify = async (action: () => Promise<void>): Promise<void> => {
+  try {
+    await action();
+  } catch (err) {
+    console.error("[Notification] Email could not be sent:", err);
+  }
+};
 
 const create = async (appointmentDetails: any) => {
   const { bookingId } = appointmentDetails;
@@ -30,7 +43,7 @@ const create = async (appointmentDetails: any) => {
     );
   }
 
-  if (paymentData.status === PaymentStatus.COMPLETED) {
+  if (paymentData.payment?.status === PaymentStatus.COMPLETED) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Payment has already been made for this booking!",
@@ -59,6 +72,33 @@ const create = async (appointmentDetails: any) => {
 const confirm = async (payload: any) => {
   const response = payload;
 
+  const payment = await prisma.payment.findUnique({
+    where: { transactionId: response.transactionId },
+    include: {
+      booking: {
+        include: {
+          customer: { select: { id: true, name: true, email: true } },
+          service: { select: { id: true, title: true } },
+          technician: {
+            include: {
+              user: { select: { name: true, email: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!payment) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Payment not found.");
+  }
+  if (payment.status === PaymentStatus.COMPLETED) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Payment has already been processed for this booking.",
+    );
+  }
+
   await prisma.$transaction(async (tx) => {
     const updatedPaymentData = await tx.payment.update({
       where: {
@@ -70,17 +110,44 @@ const confirm = async (payload: any) => {
       },
     });
 
+    const bookingUpdateData: any = { paymentStatus: PaymentStatus.COMPLETED };
+    if (
+      payment.booking.status !== BookingStatus.CANCELLED &&
+      payment.booking.status !== BookingStatus.COMPLETED
+    ) {
+      bookingUpdateData.status = BookingStatus.PAID;
+    }
+
     await tx.booking.update({
       where: {
         id: updatedPaymentData.bookingId,
       },
-      data: {
-        paymentStatus: PaymentStatus.COMPLETED,
-      },
+      data: bookingUpdateData,
     });
   });
-};
 
+  // Notify customer + technician that the payment was successful
+  await safeNotify(async () => {
+    const notifPayload: BookingPayload = {
+      id: payment.booking.id,
+      scheduledDate: payment.booking.scheduledDate,
+      scheduledTime: payment.booking.scheduledTime,
+      customerAddress: payment.booking.customerAddress,
+      totalPrice: payment.booking.totalPrice,
+      customer: payment.booking.customer as BookingPayload["customer"],
+      technician: payment.booking.technician as BookingPayload["technician"],
+      service: payment.booking.service as BookingPayload["service"],
+    };
+    await NotificationService.sendPaymentSuccess({
+      id: payment.id,
+      amount: payment.amount,
+      transactionId: payment.transactionId,
+      booking: notifPayload,
+    });
+  });
+
+  return payment;
+};
 const GetPaymentHistory = async (id: string) => {
   const paymentHistory = await prisma.payment.findMany({
     where: {
