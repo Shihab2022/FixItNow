@@ -71,7 +71,7 @@ export default function EditTechnicianProfilePage() {
 
   const getTech = async () => {
     const res = await getTechProfile();
-    if (res.data.success) {
+    if (res?.data?.success) {
       setProfile(res.data.data);
     }
   };
@@ -115,7 +115,7 @@ export default function EditTechnicianProfilePage() {
       const res = await updateTechnicianProfile(payload);
 
       console.log("API Response:", res); // Log the entire response for debugging
-      if (res.data.success) {
+      if (res?.data?.success) {
         setFeedback({
           type: "success",
           message: "Profile updated successfully!",
@@ -127,7 +127,7 @@ export default function EditTechnicianProfilePage() {
       } else {
         setFeedback({
           type: "error",
-          message: res?.data?.message || "Failed to update profile",
+          message: res?.data?.message || res?.message || "Failed to update profile",
         });
       }
     } catch (err) {

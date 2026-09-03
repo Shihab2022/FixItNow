@@ -58,7 +58,7 @@ export const TechnicianTable: React.FC<TechnicianTableProps> = () => {
   const [allTechnicians, setAllTechnicians] = useState<any>([]);
   const getTech = async () => {
     const res = await getAllTechnicians();
-    if (res.data.success) {
+    if (res?.data?.success) {
       setAllTechnicians(res?.data?.data?.data);
     }
   };

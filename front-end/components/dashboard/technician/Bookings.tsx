@@ -74,7 +74,7 @@ export default function BookingsPage({ bookingsData }: any) {
 
   const updateStatus = async (id: string, newStatus: BookingStatus) => {
     const res = await updateBookingStatus({ id, status: newStatus });
-    if (res.data.success) {
+    if (res?.data?.success) {
       showToast(toastTypes.SUCCESS, `Booking status updated to ${newStatus}`);
       setBookings((prev) =>
         prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b)),

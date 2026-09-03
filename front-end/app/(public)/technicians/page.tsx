@@ -13,7 +13,7 @@ export default function AllTechniciansSection() {
   const fetchTopRatedTechnicians = async () => {
     try {
       const response = await getAllTechnicians();
-      if (response.data.success) {
+      if (response?.data?.success) {
         setTechnicians(response.data.data.data);
       }
     } catch (err) {

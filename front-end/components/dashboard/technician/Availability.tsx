@@ -58,7 +58,7 @@ function DayAvailabilityCard({
     setIsUpdating(true);
     try {
       const res = await updateSlot(data);
-      if (res.data.success) {
+      if (res?.data?.success) {
         showToast(toastTypes.SUCCESS, "Availability updated successfully");
       }
 
@@ -170,7 +170,7 @@ export default function AvailabilityPage() {
   const getAvailability = async () => {
     try {
       const res = await getSlot({});
-      if (res.data.success) {
+      if (res?.data?.success) {
         setAvailabilityData(res.data.data || {});
       }
     } catch (error) {

@@ -53,7 +53,7 @@ export default function ServicesPage() {
   const getCategoryName = async () => {
     try {
       const res = await getCategory();
-      if (res.data.success) {
+      if (res?.data?.success) {
         setCat(res.data.data);
       }
     } catch (error) {
@@ -64,7 +64,7 @@ export default function ServicesPage() {
   const getAllTechnicianServices = async () => {
     try {
       const res = await getTechnicianServices();
-      if (res.data.success) {
+      if (res?.data?.success) {
         setServices(res.data.data || []);
       }
     } catch (error) {

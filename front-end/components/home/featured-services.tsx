@@ -52,7 +52,7 @@ export function FeaturedServices() {
   const getAllServices = async () => {
     try {
       const res = await getAllServicesApi();
-      if (res.data.success) {
+      if (res?.data?.success) {
         setServices(res.data.data.data);
       }
       // cons

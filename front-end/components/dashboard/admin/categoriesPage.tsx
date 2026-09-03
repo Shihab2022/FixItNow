@@ -27,7 +27,7 @@ export default function CategoriesPage() {
   });
   const getC = async () => {
     const res = await getCategory();
-    if (res.data.success) {
+    if (res?.data?.success) {
       setCategories(res.data.data);
     }
   };

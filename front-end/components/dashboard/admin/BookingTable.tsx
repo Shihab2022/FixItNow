@@ -45,7 +45,7 @@ export const BookingTable: React.FC = () => {
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const getBooking = async () => {
     const res = await getAllBookings();
-    if (res.data.success) {
+    if (res?.data?.success) {
       setAllBookings(res.data.data);
     }
   };

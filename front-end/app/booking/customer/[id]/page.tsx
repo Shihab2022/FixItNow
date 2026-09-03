@@ -84,7 +84,7 @@ export default function BookingDetailPage() {
       setLoading(true);
       try {
         const res = await getSingleBookingApi(params.id as string);
-        if (res.data.success) {
+        if (res?.data?.success) {
           setBooking(res.data.data);
         }
       } catch (err) {

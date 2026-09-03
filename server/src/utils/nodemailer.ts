@@ -6,7 +6,7 @@ try {
   transporter = nodemailer.createTransport({
     host: config?.smtp?.host,
     port: config?.smtp?.port,
-    secure: true, // true for port 465
+    secure: Number(config?.smtp?.port) === 465, // true only for port 465, false for other ports (like 587, 2525)
     auth: {
       user: config?.smtp?.user_name,
       pass: config?.smtp?.password,
