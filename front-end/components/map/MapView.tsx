@@ -1,6 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  memo,
+  type RefObject,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   MapPin,
@@ -11,8 +19,18 @@ import {
   Loader2,
   Map as MapIcon,
   Briefcase,
+  Layers,
 } from "lucide-react";
-import { Map, Marker, NavigationControl } from "react-map-gl/maplibre";
+import {
+  Map,
+  Marker,
+  NavigationControl,
+  AttributionControl,
+  type MapRef,
+  Source,
+  Layer,
+} from "react-map-gl/maplibre";
+import type { StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
   getMapTechnicians,
@@ -37,15 +55,255 @@ interface Category {
   name: string;
 }
 
+/** Minimal shape MapCanvas needs from each result to draw its marker. */
+interface MapMarkerItem {
+  id: string;
+  latitude: number;
+  longitude: number;
+}
+
 const DEFAULT_CENTER = { latitude: 23.8103, longitude: 90.4125, zoom: 12 };
-const MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
+
+/** Base-map styles the user can switch between (vector + raster). */
+const STYLE_STORAGE_KEY = "fixitnow:map-style";
+
+const RASTER_STREETS: StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "© OpenStreetMap contributors",
+    },
+  },
+  layers: [{ id: "osm", type: "raster", source: "osm" }],
+};
+
+const RASTER_SATELLITE: StyleSpecification = {
+  version: 8,
+  sources: {
+    esriWorldImagery: {
+      type: "raster",
+      tiles: [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      ],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution:
+        "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, GIS User Community",
+    },
+  },
+  layers: [{ id: "esri-imagery", type: "raster", source: "esriWorldImagery" }],
+};
+
+type MapStyleDef = {
+  id: string;
+  name: string;
+  dot: string;
+  mapStyle: string | StyleSpecification;
+};
+
+const MAP_STYLES: MapStyleDef[] = [
+  {
+    id: "liberty",
+    name: "Liberty (Default)",
+    dot: "bg-blue-400",
+    mapStyle: "https://tiles.openfreemap.org/styles/liberty",
+  },
+  {
+    id: "bright",
+    name: "Bright",
+    dot: "bg-sky-300",
+    mapStyle: "https://tiles.openfreemap.org/styles/bright",
+  },
+  {
+    id: "positron",
+    name: "Positron",
+    dot: "bg-slate-300",
+    mapStyle: "https://tiles.openfreemap.org/styles/positron",
+  },
+  {
+    id: "dark",
+    name: "Dark Matter",
+    dot: "bg-slate-800",
+    mapStyle: "https://tiles.openfreemap.org/styles/dark-matter",
+  },
+  {
+    id: "fiord",
+    name: "Fiord",
+    dot: "bg-indigo-400",
+    mapStyle: "https://tiles.openfreemap.org/styles/fiord",
+  },
+  {
+    id: "streets",
+    name: "OpenStreetMap",
+    dot: "bg-emerald-400",
+    mapStyle: RASTER_STREETS,
+  },
+  {
+    id: "satellite",
+    name: "Satellite",
+    dot: "bg-gradient-to-br from-emerald-600 to-slate-900",
+    mapStyle: RASTER_SATELLITE,
+  },
+];
+
+/** Build a polygon (GeoJSON) showing a radius boundary around a point. */
+function buildRadiusCircle(latitude: number, longitude: number, radiusKm: number) {
+  const { asin, atan2, cos, sin, PI } = Math;
+  const R = 6371; // Earth radius in km
+  const d = radiusKm / R;
+  const lat1 = (latitude * PI) / 180;
+  const lon1 = (longitude * PI) / 180;
+  const STEPS = 96;
+  const points: [number, number][] = [];
+  for (let i = 0; i <= STEPS; i++) {
+    const brng = (i * 2 * PI) / STEPS;
+    const lat2 = asin(sin(lat1) * cos(d) + cos(lat1) * sin(d) * cos(brng));
+    const lon2 =
+      lon1 + atan2(sin(brng) * sin(d) * cos(lat1), cos(d) - sin(lat1) * sin(lat2));
+    points.push([(lon2 * 180) / PI, (lat2 * 180) / PI]);
+  }
+  // First point uses bearing 0° → due north; used for the radius label marker.
+  const [northLon, northLat] = points[0];
+  return {
+    geoJson: {
+      type: "Feature" as const,
+      properties: {},
+      geometry: { type: "Polygon" as const, coordinates: [points] },
+    },
+    northPoint: { latitude: northLat, longitude: northLon },
+  };
+}
+/**
+ * Memoized map scene. The GL canvas, base-map layers and HTML markers only
+ * re-render when their own inputs change (radius, markers, style, location) —
+ * never when unrelated UI state (search text, loading flags, filter panel)
+ * toggles. This keeps pan/zoom and the radius slider silky smooth.
+ */
+const MapCanvas = memo(function MapCanvas({
+  mapRef,
+  userLocation,
+  radiusKm,
+  items,
+  isCustomer,
+  mapStyle,
+  onItemClick,
+}: {
+  mapRef: RefObject<MapRef | null>;
+  userLocation: { latitude: number; longitude: number } | null;
+  radiusKm: number;
+  items: MapMarkerItem[];
+  isCustomer: boolean;
+  mapStyle: string | StyleSpecification;
+  onItemClick: (item: MapMarkerItem) => void;
+}) {
+  // Live radius boundary — regenerated only when the location or radius changes.
+  const circle = useMemo(
+    () =>
+      userLocation
+        ? buildRadiusCircle(
+            userLocation.latitude,
+            userLocation.longitude,
+            radiusKm,
+          )
+        : null,
+    [userLocation, radiusKm],
+  );
+
+  // Keep marker elements referentially stable so they are NOT re-rendered while
+  // the radius slider (or any other MapView state) changes.
+  const markers = useMemo(
+    () =>
+      items.map((item) => (
+        <Marker
+          key={item.id}
+          latitude={item.latitude}
+          longitude={item.longitude}
+          onClick={() => onItemClick(item)}
+        >
+          <div
+            className={`cursor-pointer w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shadow-lg transition-transform hover:scale-110 ${
+              isCustomer ? "bg-emerald-500" : "bg-amber-500"
+            }`}
+          >
+            {isCustomer ? (
+              <Briefcase className="w-4 h-4 text-white" />
+            ) : (
+              <MapIcon className="w-4 h-4 text-white" />
+            )}
+          </div>
+        </Marker>
+      )),
+    [items, isCustomer, onItemClick],
+  );
+
+  return (
+    <Map
+      ref={mapRef}
+      initialViewState={{
+        latitude: userLocation?.latitude ?? DEFAULT_CENTER.latitude,
+        longitude: userLocation?.longitude ?? DEFAULT_CENTER.longitude,
+        zoom: DEFAULT_CENTER.zoom,
+      }}
+      mapStyle={mapStyle}
+      style={{ width: "100%", height: "100%" }}
+      attributionControl={false}
+      minZoom={2}
+      maxZoom={18}
+      reuseMaps
+    >
+      <NavigationControl position="bottom-right" />
+      <AttributionControl compact />
+      {userLocation && circle && (
+        <Source id="radius-circle" type="geojson" data={circle.geoJson}>
+          <Layer
+            id="radius-fill"
+            type="fill"
+            paint={{ "fill-color": "#2563eb", "fill-opacity": 0.12 }}
+          />
+          <Layer
+            id="radius-line"
+            type="line"
+            paint={{
+              "line-color": "#2563eb",
+              "line-width": 2.5,
+              "line-opacity": 0.9,
+              "line-dasharray": [4, 3],
+            }}
+          />
+        </Source>
+      )}
+      {userLocation && circle && (
+        <Marker
+          latitude={circle.northPoint.latitude}
+          longitude={circle.northPoint.longitude}
+          anchor="bottom"
+        >
+          <div className="px-2 py-1 rounded-lg bg-blue-600 text-white text-[11px] font-bold shadow-lg whitespace-nowrap border border-white/60">
+            {radiusKm} km radius
+          </div>
+        </Marker>
+      )}
+      {userLocation && (
+        <Marker
+          latitude={userLocation.latitude}
+          longitude={userLocation.longitude}
+          anchor="center"
+        >
+          <div className="w-5 h-5 rounded-full bg-blue-600 border-2 border-white shadow-lg ring-4 ring-blue-600/20" />
+        </Marker>
+      )}
+      {markers}
+    </Map>
+  );
+});
+
 export default function MapView({ user }: { user: User }) {
   const router = useRouter();
-  const [center, setCenter] = useState({
-    latitude: user.latitude ?? DEFAULT_CENTER.latitude,
-    longitude: user.longitude ?? DEFAULT_CENTER.longitude,
-  });
-  const [zoom, setZoom] = useState(DEFAULT_CENTER.zoom);
+  const mapRef = useRef<MapRef | null>(null);
   const [userLocation, setUserLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -59,35 +317,91 @@ export default function MapView({ user }: { user: User }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [radiusKm, setRadiusKm] = useState(10);
+  const [debouncedRadius, setDebouncedRadius] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [geocoding, setGeocoding] = useState(false);
+  const [mapStyleId, setMapStyleId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const saved = window.localStorage.getItem(STYLE_STORAGE_KEY);
+      if (saved && MAP_STYLES.some((s) => s.id === saved)) return saved;
+    }
+    return MAP_STYLES[0].id;
+  });
+  const [showStylePicker, setShowStylePicker] = useState(false);
+
+  /** Resolve the selected style definition (URL string or inline style object). */
+  const currentMapStyle = useMemo(
+    () =>
+      MAP_STYLES.find((s) => s.id === mapStyleId)?.mapStyle ??
+      MAP_STYLES[0].mapStyle,
+    [mapStyleId],
+  );
+
+  // Persist the user's base-map choice so the map reopens on the same style.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STYLE_STORAGE_KEY, mapStyleId);
+    } catch {
+      /* storage unavailable — non-blocking */
+    }
+  }, [mapStyleId]);
 
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isCustomer = user.role === "CUSTOMER";
 
+  const flyTo = useCallback(
+    (latitude: number, longitude: number, zoom: number) => {
+      mapRef.current?.flyTo({
+        center: [longitude, latitude],
+        zoom,
+        duration: 1200,
+        essential: true,
+      });
+    },
+    [],
+  );
+
+  /** Zooms the camera so the full radius boundary is visible on screen. */
+  const fitRadiusToView = useCallback(
+    (latitude: number, longitude: number, km: number) => {
+      const map = mapRef.current;
+      if (!map) return;
+      // 1° of latitude ≈ 111.32 km; longitude degrees shrink by cos(latitude).
+      const latDelta = km / 111.32;
+      const lonDelta =
+        km / (111.32 * Math.max(0.2, Math.cos((latitude * Math.PI) / 180)));
+      map.fitBounds(
+        [
+          [longitude - lonDelta, latitude - latDelta],
+          [longitude + lonDelta, latitude + latDelta],
+        ],
+        { padding: 72, duration: 800, maxZoom: 14, essential: true },
+      );
+    },
+    [],
+  );
+
   const fetchItems = useCallback(async () => {
     if (!userLocation) return;
     setLoading(true);
     try {
-      const params = {
+      const base = {
         latitude: userLocation.latitude,
         longitude: userLocation.longitude,
-        radiusKm,
+        radiusKm: debouncedRadius,
         categoryId: selectedCategory || undefined,
-        q: searchQuery || undefined,
       };
       const res = isCustomer
-        ? await getMapTechnicians(params)
-        : await getMapTasks({
-            latitude: userLocation.latitude,
-            longitude: userLocation.longitude,
-            radiusKm,
-            categoryId: selectedCategory || undefined,
-          });
+        ? await getMapTechnicians({
+            ...base,
+            q: debouncedSearch || undefined,
+          })
+        : await getMapTasks(base);
       if (res?.data?.success) {
         setItems(res.data.data.data || []);
       } else {
@@ -99,7 +413,25 @@ export default function MapView({ user }: { user: User }) {
     } finally {
       setLoading(false);
     }
-  }, [userLocation, radiusKm, selectedCategory, searchQuery, isCustomer]);
+  }, [
+    userLocation,
+    debouncedRadius,
+    selectedCategory,
+    debouncedSearch,
+    isCustomer,
+  ]);
+
+  // Debounce the radius slider so we don't fire a request on every tick.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedRadius(radiusKm), 400);
+    return () => clearTimeout(t);
+  }, [radiusKm]);
+
+  // Debounce the search text so results only load once you stop typing.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   useEffect(() => {
     getAllCategories().then((res) => {
@@ -131,8 +463,8 @@ export default function MapView({ user }: { user: User }) {
           longitude: position.coords.longitude,
         };
         setUserLocation(loc);
-        setCenter(loc);
         setShowPermissionModal(false);
+        fitRadiusToView(loc.latitude, loc.longitude, radiusKm);
         try {
           await saveUserLocation(loc);
         } catch {
@@ -171,8 +503,7 @@ export default function MapView({ user }: { user: User }) {
         if (data?.length) {
           const lat = parseFloat(data[0].lat);
           const lon = parseFloat(data[0].lon);
-          setCenter({ latitude: lat, longitude: lon });
-          setZoom(13);
+          flyTo(lat, lon, 13);
         }
       } catch (err) {
         console.warn("Geocoding failed:", err);
@@ -184,17 +515,19 @@ export default function MapView({ user }: { user: User }) {
 
   const centerOnUser = () => {
     if (userLocation) {
-      setCenter(userLocation);
-      setZoom(14);
+      flyTo(userLocation.latitude, userLocation.longitude, 14);
     } else {
       requestLocationPermission();
     }
   };
 
-  const handleItemClick = (item: any) => {
-    setSelectedItem(item);
-    setCenter({ latitude: item.latitude, longitude: item.longitude });
-  };
+  const handleItemClick = useCallback(
+    (item: any) => {
+      setSelectedItem(item);
+      flyTo(item.latitude, item.longitude, 13);
+    },
+    [flyTo],
+  );
 
   const navigateToItem = () => {
     if (!selectedItem) return;
@@ -274,6 +607,48 @@ export default function MapView({ user }: { user: User }) {
           <Navigation className="w-4 h-4" />
           My Location
         </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowStylePicker((v) => !v)}
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg font-medium text-sm transition-all ${
+              showStylePicker
+                ? "bg-blue-600 text-white"
+                : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span className="hidden sm:inline">Base Map</span>
+          </button>
+          {showStylePicker && (
+            <div className="absolute right-0 mt-2 w-56 max-h-80 overflow-y-auto bg-white rounded-xl shadow-xl border border-slate-200 p-2 space-y-1 z-20">
+              <p className="px-2 pt-1 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Base Map
+              </p>
+              {MAP_STYLES.map((style) => (
+                <button
+                  key={style.id}
+                  onClick={() => {
+                    setMapStyleId(style.id);
+                    setShowStylePicker(false);
+                  }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    mapStyleId === style.id
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  <span
+                    className={`w-3.5 h-3.5 rounded-full shadow ${style.dot}`}
+                  />
+                  <span className="flex-1 text-left">{style.name}</span>
+                  {mapStyleId === style.id && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {showFilters && (
@@ -297,6 +672,14 @@ export default function MapView({ user }: { user: User }) {
               max={50}
               value={radiusKm}
               onChange={(e) => setRadiusKm(Number(e.target.value))}
+              onPointerUp={() => {
+                if (userLocation)
+                  fitRadiusToView(
+                    userLocation.latitude,
+                    userLocation.longitude,
+                    radiusKm,
+                  );
+              }}
               className="w-full accent-blue-600"
             />
             <div className="flex justify-between text-[10px] text-slate-400">
@@ -407,53 +790,15 @@ export default function MapView({ user }: { user: User }) {
         </div>
       )}
 
-      <Map
-        initialViewState={{
-          latitude: center.latitude,
-          longitude: center.longitude,
-          zoom,
-        }}
-        mapStyle={MAP_STYLE}
-        style={{ width: "100%", height: "100%" }}
-        attributionControl={false}
-        onMove={(evt) => {
-          setCenter({
-            latitude: evt.viewState.latitude,
-            longitude: evt.viewState.longitude,
-          });
-          setZoom(evt.viewState.zoom);
-        }}
-      >
-        <NavigationControl position="bottom-right" />
-        {userLocation && (
-          <Marker
-            latitude={userLocation.latitude}
-            longitude={userLocation.longitude}
-          >
-            <div className="w-4 h-4 rounded-full bg-blue-600 border-2 border-white shadow-lg ring-4 ring-blue-600/20" />
-          </Marker>
-        )}
-        {items.map((item) => (
-          <Marker
-            key={item.id}
-            latitude={item.latitude}
-            longitude={item.longitude}
-            onClick={() => handleItemClick(item)}
-          >
-            <div
-              className={`cursor-pointer w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shadow-lg transition-transform hover:scale-110 ${
-                isCustomer ? "bg-emerald-500" : "bg-amber-500"
-              }`}
-            >
-              {isCustomer ? (
-                <Briefcase className="w-4 h-4 text-white" />
-              ) : (
-                <MapIcon className="w-4 h-4 text-white" />
-              )}
-            </div>
-          </Marker>
-        ))}
-      </Map>
+      <MapCanvas
+        mapRef={mapRef}
+        userLocation={userLocation}
+        radiusKm={radiusKm}
+        items={items}
+        isCustomer={isCustomer}
+        mapStyle={currentMapStyle}
+        onItemClick={handleItemClick}
+      />
     </div>
   );
 }
