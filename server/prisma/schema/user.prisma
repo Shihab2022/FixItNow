@@ -7,6 +7,8 @@ model User {
   phone         String?
   address       String?
   imageUrl      String?
+  latitude      Float?
+  longitude     Float?
   status        UserStatus @default(ACTIVE)
   emailVerified Boolean    @default(true)
   forgotPinCode Int?       @default(0)
@@ -18,7 +20,7 @@ model User {
   technicianProfile TechnicianProfile?
   // A user can be involved in bookings/payments/reviews as either a customer or a tech
   customerBookings   Booking[] @relation("CustomerBookings")
-
+  jobRequests        JobRequest[] @relation("CustomerJobRequests")
 
   payments Payment[]
 

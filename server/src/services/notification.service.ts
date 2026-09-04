@@ -559,4 +559,62 @@ export class NotificationService {
             }
         );
     }
+
+    // 15. JOB_REQUEST_APPLICATION_RECEIVED (technician applied to a customer's task)
+    public static async sendJobRequestApplicationApplied(payload: {
+        customer: { email: string; name: string };
+        jobRequest: { id: string; title: string; category: { name: string } };
+        technician: {
+            profileId: string;
+            name: string;
+            skills: string[];
+            experience: number;
+            hourlyRate: number | null;
+            rating: number;
+            message?: string | null;
+        };
+    }): Promise<void> {
+        await this.dispatch(
+            `evt_job_app_${payload.jobRequest.id}_${payload.technician.profileId}_${Date.now()}`,
+            payload.customer.email,
+            'A Technician Wants to Work on Your Task',
+            'jobRequestApplied',
+            {
+                customerName: payload.customer.name,
+                taskTitle: payload.jobRequest.title,
+                categoryName: payload.jobRequest.category.name,
+                technicianName: payload.technician.name,
+                skills: Array.isArray(payload.technician.skills)
+                    ? payload.technician.skills.join(', ')
+                    : '',
+                experience: payload.technician.experience,
+                hourlyRate:
+                    payload.technician.hourlyRate == null
+                        ? 'Not set'
+                        : EmailRenderer.formatCurrency(payload.technician.hourlyRate),
+                rating: payload.technician.rating,
+                message: payload.technician.message || '',
+                technicianUrl: `${config.front_end_base_url}/technicians/${payload.technician.profileId}`,
+                taskUrl: `${config.front_end_base_url}/tasks/${payload.jobRequest.id}`,
+            }
+        );
+    }
+
+    // 16. JOB_REQUEST_APPLICATION_ACCEPTED (customer accepted a technician's application)
+    public static async sendJobRequestApplicationAccepted(payload: {
+        technician: { email: string; name: string };
+        jobRequest: { id: string; title: string };
+    }): Promise<void> {
+        await this.dispatch(
+            `evt_job_acc_${payload.jobRequest.id}_${payload.technician.name}_${Date.now()}`,
+            payload.technician.email,
+            'Great News! The Customer Accepted Your Application',
+            'jobRequestAccepted',
+            {
+                technicianName: payload.technician.name,
+                taskTitle: payload.jobRequest.title,
+                taskUrl: `${config.front_end_base_url}/tasks/${payload.jobRequest.id}`,
+            }
+        );
+    }
 }

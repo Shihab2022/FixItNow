@@ -1,0 +1,15 @@
+<%- include('layouts/emailHeader', { title: 'Application Accepted', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= technicianName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Great news — the customer has accepted your application for the task
+  <strong>"<%= taskTitle %>"</strong>. The customer will reach out to you to
+  schedule the work. Head over to the task to stay up to date.
+</p>
+
+<%- include('components/button', { text: 'View Task', url: taskUrl }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

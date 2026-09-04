@@ -29,3 +29,16 @@ enum PaymentStatus {
   COMPLETED
   FAILED
 }
+
+enum JobRequestStatus {
+  OPEN
+  BOOKED
+  CLOSED
+}
+
+enum JobRequestApplicationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+}

@@ -1,0 +1,61 @@
+
+> front-end@0.1.0 build
+> next build
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of e:\personal project\FixItNow\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * e:\personal project\FixItNow\front-end\package-lock.json
+
+▲ Next.js 16.2.12 (Turbopack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 7.6s
+  Running TypeScript ...
+  Finished TypeScript in 6.0s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/26) ...
+  Generating static pages using 15 workers (6/26) 
+  Generating static pages using 15 workers (12/26) 
+  Generating static pages using 15 workers (19/26) 
+✓ Generating static pages using 15 workers (26/26) in 451ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /booking/[id]
+├ ƒ /booking/customer/[id]
+├ ○ /category
+├ ƒ /category/[id]
+├ ƒ /dashboard
+├ ƒ /dashboard/admin
+├ ƒ /dashboard/admin/bookings
+├ ƒ /dashboard/admin/categories
+├ ƒ /dashboard/admin/technicians
+├ ƒ /dashboard/admin/users
+├ ƒ /dashboard/customer
+├ ƒ /dashboard/customer/bookings
+├ ƒ /dashboard/customer/payments/history
+├ ƒ /dashboard/technician
+├ ƒ /dashboard/technician/availability
+├ ƒ /dashboard/technician/bookings
+├ ƒ /dashboard/technician/calendar
+├ ƒ /dashboard/technician/earnings
+├ ƒ /dashboard/technician/profile
+├ ƒ /dashboard/technician/services
+├ ○ /forgot-password
+├ ○ /login
+├ ○ /payment
+├ ○ /register
+├ ○ /services
+├ ○ /technicians
+└ ƒ /technicians/[id]
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

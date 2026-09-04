@@ -14,6 +14,7 @@ model TechnicianProfile {
   status        Boolean @default(true)
   services Service[]
   technicianBookings Booking[] @relation("TechnicianBookings")
+  jobRequestApplications JobRequestApplication[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

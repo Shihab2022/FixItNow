@@ -1,0 +1,332 @@
+
+> front-end@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.41.123.230:3000
+- Environments: .env.local, .env
+✓ Ready in 3.6s
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of e:\personal project\FixItNow\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * e:\personal project\FixItNow\front-end\package-lock.json
+
+
+○ Compiling /login ...
+
+
+
+
+<--- Last few GCs --->
+<--- Last few GCs --->
+<--- Last few GCs --->
+
+
+
+<--- Last few GCs --->
+<--- Last few GCs --->
+<--- Last few GCs --->
+
+
+
+
+<--- Last few GCs --->
+
+[57240:00000205FFD1B000]      208 ms: Scavenge 8.7 (11.6) -> 7.4 (11.5) MB, pooled: 0 MB, 2.67 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+[13132:000001E82815F000]      583 ms: Scavenge 8.7 (11.6) -> 7.4 (11.5) MB, pooled: 0 MB, 10.55 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[35644:000001FB7B956000]      171 ms: Scavenge 8.7 (11.9) -> 7.4 (11.5) MB, pooled: 0 MB, 1.30 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+[49404:0000019C0FBF3000]      749 ms: Scavenge 8.7 (11.9) -> 7.4 (11.3) MB, pooled: 0 MB, 3.31 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[13132:000001E82815F000]      670 ms: Scavenge 9.4 (12.1) -> 8.8 (13.6) MB, pooled: 4 MB, 24.28 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[35644:000001FB7B956000]      212 ms: Scavenge 9.4 (12.1) -> 8.8 (17.3) MB, pooled: 0 MB, 1.60 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[44588:0000017FED86D000]      526 ms: Scavenge 6.6 (8.5) -> 5.8 (8.2) MB, pooled: 1 MB, 3.04 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[57240:00000205FFD1B000]      287 ms: Scavenge 9.4 (12.3) -> 8.7 (17.3) MB, pooled: 0 MB, 1.26 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[56744:000002C961965000]     1096 ms: Scavenge 8.7 (11.9) -> 7.4 (11.3) MB, pooled: 0 MB, 1.29 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[103872:0000021F4C7A3000]      373 ms: Scavenge 8.7 (11.9) -> 7.3 (11.3) MB, pooled: 0 MB, 1.68 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+[44588:0000017FED86D000]      543 ms: Scavenge 6.3 (8.2) -> 6.0 (10.7) MB, pooled: 0 MB, 6.45 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[103872:0000021F4C7A3000]      766 ms: Scavenge 9.4 (12.3) -> 8.8 (17.3) MB, pooled: 0 MB, 283.45 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+
+
+
+
+
+FATAL ERROR: MarkCompactCollector: young object promotion failed Allocation failed - JavaScript heap out of memory
+FATAL ERROR: NewSpace::EnsureCurrentCapacity Allocation failed - JavaScript heap out of memory
+FATAL ERROR: Zone Allocation failed - process out of memory
+----- Native stack trace -----
+----- Native stack trace -----
+FATAL ERROR: Zone Allocation failed - process out of memory
+FATAL ERROR: Zone Allocation failed - process out of memory
+FATAL ERROR: MarkCompactCollector: young object promotion failed Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+FATAL ERROR: MarkCompactCollector: young object promotion failed Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+----- Native stack trace -----
+----- Native stack trace -----
+
+
+----- Native stack trace -----
+
+
+ 1: 00007FF714AA0FA9 
+
+
+
+ 1: 00007FF714AA0FA9 
+
+ 1: 00007FF714AA0FA9 
+
+ 2: 00007FF7156CF6E7 
+ 1: 00007FF714AA0FA9 
+ 2: 00007FF7156CF6E7 
+ 1: 00007FF714AA0FA9 
+ 2: 00007FF7156CF6E7 
+<--- Last few GCs --->
+<--- Last few GCs --->
+ 3: 00007FF7154D19B7 
+ 2: 00007FF7156CF6E7 
+ 3: 00007FF71504C8B6 
+ 3: 00007FF7154D19B7 
+ 2: 00007FF7156CF6E7 
+
+
+ 4: 00007FF7154B15CE 
+ 3: 00007FF71504C8B6 
+ 4: 00007FF7154927D3 
+ 3: 00007FF71504C8B6 
+ 4: 00007FF714C13CFD 
+[35644:000001FB7B956000]      171 ms: Scavenge 8.7 (11.9) -> 7.4 (11.5) MB, pooled: 0 MB, 1.30 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+ 5: 00007FF7154A6CBD 
+[57240:00000205FFD1B000]      208 ms: Scavenge 8.7 (11.6) -> 7.4 (11.5) MB, pooled: 0 MB, 2.67 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+ 5: 00007FF714C13A84 
+[35644:000001FB7B956000]      212 ms: Scavenge 9.4 (12.1) -> 8.8 (17.3) MB, pooled: 0 MB, 1.60 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[57240:00000205FFD1B000]      287 ms: Scavenge 9.4 (12.3) -> 8.7 (17.3) MB, pooled: 0 MB, 1.26 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+ 6: 00007FF7154A696C 
+ 4: 00007FF715111E33 
+ 4: 00007FF714E77DD7 
+ 5: 00007FF71510DAB7 
+ 5: 00007FF7154D3DAA 
+ 6: 00007FF7154D33E6 
+ 5: 00007FF714E800BE 
+ 6: 00007FF714C16CD7 
+
+ 7: 00007FF7154A65B1 
+FATAL ERROR: MarkCompactCollector: young object promotion failed Allocation failed - JavaScript heap out of memory
+ 7: 00007FF7154E4282 
+ 7: 00007FF7162E96AC 
+ 6: 00007FF71511690C 
+
+FATAL ERROR: MarkCompactCollector: young object promotion failed Allocation failed - JavaScript heap out of memory
+ 8: 00007FF7154B8A18 
+ 7: 00007FF7150F8B3B 
+ 8: 00007FF7162E92CC 
+----- Native stack trace -----
+ 6: 00007FF714E7FE33 
+----- Native stack trace -----
+ 9: 00007FF715D785CF 
+ 8: 00007FF7150DBFA0 
+ 8: 00007FF7154E3DAB 
+ 9: 00007FF7168202ED 
+ 9: 00007FF7162F2AAE 
+
+ 7: 00007FF714EE2884 
+
+10: 00007FF714A055AE 
+ 9: 00007FF7150DB6C2 
+10: 00007FF7154CF4E0 
+10: 00007FF7162F3F4F 
+ 1: 00007FF714AA0FA9 
+ 8: 00007FF714EE3180 
+ 9: 00007FF714EE1D17 
+ 1: 00007FF714AA0FA9 
+11: 00007FF7157249D6 
+ 2: 00007FF7156CF6E7 
+12: 00007FF71683CB16 
+10: 00007FF7150D9FB9 
+ 2: 00007FF7156CF6E7 
+11: 00007FF7150DA24C 
+11: 00007FF7154E9BAA 
+11: 00007FF7162F3DA5 
+12: 00007FF715500346 
+12: 00007FF7162F3DE9 
+ 3: 00007FF7154D19B7 
+10: 00007FF714EDF1F3 
+ 3: 00007FF7154D19B7 
+13: 00007FFFAE67CCB7 
+12: 00007FF7150DA12B 
+13: 00007FF71520C638 
+13: 00007FF7162F3C82 
+ 4: 00007FF7154B15CE 
+11: 00007FF714EB4D9B 
+14: 00007FFFAF86CAEC 
+ 4: 00007FF7154B15CE 
+13: 00007FF7150B0FA2 
+14: 00007FF71520CB5F 
+ 5: 00007FF7154A6CBD 
+ 5: 00007FF7154A6CBD 
+12: 00007FF714F2CDA6 
+14: 00007FF7162ED664 
+14: 0000017F9FE7733A 
+15: 00007FF71520C7F8 
+15: 00007FF7162F311E 
+ 6: 00007FF7154A696C 
+13: 00007FF714F2BAD0 
+ 6: 00007FF7154A696C 
+16: 00007FF715210FEE 
+16: 00007FF7162E8DB7 
+ 7: 00007FF7154A65B1 
+17: 00007FF7162E629C 
+ 7: 00007FF7154A65B1 
+17: 00007FF7152108AC 
+14: 00007FF714F298CA 
+ 8: 00007FF7154B8A18 
+15: 00007FF71564332F 
+18: 00007FF7162E551F 
+ 8: 00007FF7154B8808 
+18: 00007FF715214959 
+ 9: 00007FF715D785CF 
+16: 00007FF714F2B3AB 
+ 9: 00007FF715D77EED 
+19: 00007FF7152174EB 
+19: 00007FF7162E531E 
+17: 00007FF715D785CF 
+10: 00007FF714A055AE 
+10: 00007FF715D78202 
+20: 00007FF715F833F6 
+11: 00007FF7157249D6 
+20: 00007FF7156AECAA 
+18: 00007FF714A055AE 
+11: 00007FF7154A95F4 
+21: 00007FF7156AE992 
+21: 00007FF715F7A68B 
+12: 00007FF71683CB16 
+19: 00007FF7157249D6 
+12: 00007FF715490D6D 
+22: 00007FF7151F833C 
+13: 00007FFFAE67CCB7 
+13: 00007FF71548ADF4 
+23: 00007FF7151F7E41 
+20: 00007FF71683CB16 
+22: 00007FF715F79AF0 
+23: 00007FF71564332F 
+14: 00007FFFAF86CAEC 
+21: 00007FFFAE67CCB7 
+14: 00007FF7154D3DAA 
+24: 00007FF715277EE6 
+24: 00007FF7156083ED 
+
+22: 00007FFFAF86CAEC 
+15: 00007FF7154D33E6 
+25: 00007FF715277873 
+25: 00007FF7156080E5 
+16: 00007FF7154E4282 
+<--- Last few GCs --->
+26: 00007FF715D785CF 
+26: 00007FF71527670D 
+
+17: 00007FF7154E3DAB 
+27: 00007FF715276474 
+27: 00007FF714A055AE 
+[35644:000001FB7B956000]      171 ms: Scavenge 8.7 (11.9) -> 7.4 (11.5) MB, pooled: 0 MB, 1.30 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+18: 00007FF7168202ED 
+[35644:000001FB7B956000]      212 ms: Scavenge 9.4 (12.1) -> 8.8 (17.3) MB, pooled: 0 MB, 1.60 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+19: 00007FF7154CF4E0 
+28: 00007FF7157249D6 
+28: 00007FF715275F27 
+29: 00007FF715275C98 
+29: 00007FF71683CB16 
+
+20: 00007FF7154F5921 
+30: 00007FF715683946 
+30: 00007FFFAE67CCB7 
+21: 00007FF715510BC5 
+31: 0000019C47BB727A 
+FATAL ERROR: MarkCompactCollector: young object promotion failed Allocation failed - JavaScript heap out of memory
+31: 00007FFFAF86CAEC 
+----- Native stack trace -----
+22: 00007FF715510B2C 
+
+23: 00007FF7154F7A29 
+24: 00007FF7154F7C22 
+25: 00007FF7156CF4E2 
+26: 00007FF714A82165 
+27: 00000205A7DCF64D 
+
+<--- Last few GCs --->
+
+[57240:00000205FFD1B000]      208 ms: Scavenge 8.7 (11.6) -> 7.4 (11.5) MB, pooled: 0 MB, 2.67 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[57240:00000205FFD1B000]      287 ms: Scavenge 9.4 (12.3) -> 8.7 (17.3) MB, pooled: 0 MB, 1.26 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+FATAL ERROR: MarkCompactCollector: young object promotion failed Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 00007FF714AA0FA9 
+ 2: 00007FF7156CF6E7 
+ 3: 00007FF7154D19B7 
+ 4: 00007FF7154B15CE 
+ 5: 00007FF7154A6CBD 
+ 6: 00007FF7154A696C 
+ 7: 00007FF7154A65B1 
+ 8: 00007FF7154B8A18 
+ 9: 00007FF715D785CF 
+10: 00007FF714A055AE 
+11: 00007FF7157249D6 
+12: 00007FF71683CB16 
+13: 00007FFFAE67CCB7 
+14: 00007FFFAF86CAEC 
+
+thread 'tokio-runtime-worker' (53448) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-1.43.0\src\runtime\io\driver.rs:157:23:
+unexpected error when polling the I/O driver: Os { code: 1450, kind: Uncategorized, message: "Insufficient system resources exist to complete the requested service." }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'tokio-runtime-worker' (2160) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (36008) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (53428) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (53928) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (50004) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (59612) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (45176) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (46512) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (53032) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (53260) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (52812) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (52928) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (54024) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (53680) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+
+thread 'tokio-runtime-worker' (55004) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\mio-1.0.3\src\sys\windows\selector.rs:454:9:
+assertion failed: !self.is_polling.swap(true, Ordering::AcqRel)
+[?25h

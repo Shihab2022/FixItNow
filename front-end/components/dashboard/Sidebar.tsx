@@ -4,6 +4,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { IconType } from "react-icons";
 import {
   FiHome,
   FiCalendar,
@@ -11,6 +12,7 @@ import {
   FiUser,
   FiSettings,
   FiBriefcase,
+  FiMapPin,
 } from "react-icons/fi";
 import { CgProfile } from "react-icons/cg";
 import { TbBrandBooking } from "react-icons/tb";
@@ -21,12 +23,20 @@ interface SidebarProps {
   role: "CUSTOMER" | "TECHNICIAN" | "ADMIN";
 }
 
+interface NavItem {
+  name: string;
+  href: string;
+  icon: IconType;
+  absolute?: boolean;
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const navMap = {
+  const navMap: Record<"CUSTOMER" | "TECHNICIAN" | "ADMIN", NavItem[]> = {
     CUSTOMER: [
+      { name: "Map", href: "/map", icon: FiMapPin, absolute: true },
       { name: "Profile", href: "/", icon: CgProfile },
       // { name: "Overview", href: "/customer", icon: FiHome },
       { name: "Bookings", href: "/customer/bookings", icon: FiCalendar },
@@ -37,6 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       },
     ],
     TECHNICIAN: [
+      { name: "Map", href: "/map", icon: FiMapPin, absolute: true },
       { name: "Profile", href: "/", icon: CgProfile },
       {
         name: "Technician Profile",
@@ -113,12 +124,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       <div className="space-y-6">
         <nav className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === `/dashboard${item.href}`;
+            const href = item.absolute ? item.href : `/dashboard${item.href}`;
+            const isActive = pathname === href;
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
-                href={`/dashboard${item.href}`}
+                href={href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm transition-all ${
                   isActive
                     ? "bg-blue-600 text-white shadow-sm"

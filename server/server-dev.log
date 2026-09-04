@@ -1,0 +1,207 @@
+
+> fixitnow@1.0.0 dev
+> tsx watch src/server.ts
+
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+[SMTP Ready] Transporter can send messages
+(node:12596) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+3:31:01 PM [tsx] change in ./generated\prisma\browser.ts Restarting...
+3:31:02 PM [tsx] unlink in ./generated\prisma\internal\class.ts Restarting...
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+[SMTP Ready] Transporter can send messages
+(node:584) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+3:39:31 PM [tsx] change in ./src\modules\auth\auth.service.ts Restarting...
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+3:39:33 PM [tsx] change in ./src\modules\auth\auth.service.ts Restarting...
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+[SMTP Ready] Transporter can send messages
+3:42:21 PM [tsx] change in ./src\services\notification.service.ts Restarting...
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+[SMTP Ready] Transporter can send messages
+(node:23360) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+3:45:16 PM [tsx] change in ./src\routes\index.ts Restarting...
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+[SMTP Ready] Transporter can send messages
+3:45:27 PM [tsx] change in ./src\routes\index.ts Restarting...
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+[SMTP Ready] Transporter can send messages
+(node:35812) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+3:47:14 PM [tsx] unlink in ./generated\prisma\enums.ts Restarting...
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+[SMTP Ready] Transporter can send messages
+(node:34484) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[EmailWorker] Email sent ✔ evt_job_app_054b2675-823e-4b7b-945e-a5345d846235_20a85615-cc78-4874-bb1e-a6445bb10c8f_1788515396224
+[EmailWorker] Email sent ✔ evt_job_acc_054b2675-823e-4b7b-945e-a5345d846235_Tech One_1788515405613
+4:49:35 PM [tsx] change in ./generated\prisma\enums.ts Restarting...
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+[SMTP Ready] Transporter can send messages
+(node:74884) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[ReminderJob] Cron cycle failed: PrismaClientKnownRequestError: 
+Invalid `prisma.booking.findMany()` invocation in
+e:\personal project\FixItNow\server\src\jobs\bookingReminders.job.ts:35:51
+
+  32 const in24HoursMin = new Date(now.getTime() + 23.5 * 60 * 60 * 1000);
+  33 const in24HoursMax = new Date(now.getTime() + 24.5 * 60 * 60 * 1000);
+  34 
+→ 35 const bookingsFor24h = await prisma.booking.findMany(
+Can't reach database server at ep-winter-glade-aop5pq8a-pooler.c-2.ap-southeast-1.aws.neon.tech
+    at vn.handleRequestError (e:\personal project\FixItNow\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:238:13)
+    at vn.handleAndLogRequestError (e:\personal project\FixItNow\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:184:12)
+    at vn.request (e:\personal project\FixItNow\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:153:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async a (e:\personal project\FixItNow\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:1014:24)
+    at async <anonymous> (e:\personal project\FixItNow\server\src\jobs\bookingReminders.job.ts:35:30)
+    at async execute (e:\personal project\FixItNow\server\node_modules\node-cron\src\scheduler\runner.ts:194:26)
+    at async runTask (e:\personal project\FixItNow\server\node_modules\node-cron\src\scheduler\runner.ts:237:9)
+    at async Runner.runCoordinated (e:\personal project\FixItNow\server\node_modules\node-cron\src\scheduler\runner.ts:125:7)
+    at async <anonymous> (e:\personal project\FixItNow\server\node_modules\node-cron\src\scheduler\runner.ts:275:13) {
+  code: 'P1001',
+  meta: {
+    modelName: 'Booking',
+    driverAdapterError: DriverAdapterError: DatabaseNotReachable
+        at PrismaPgAdapter.onError (e:\personal project\FixItNow\server\node_modules\@prisma\adapter-pg\dist\index.js:702:11)
+        at PrismaPgAdapter.performIO (e:\personal project\FixItNow\server\node_modules\@prisma\adapter-pg\dist\index.js:697:12)
+        at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+        at async PrismaPgAdapter.queryRaw (e:\personal project\FixItNow\server\node_modules\@prisma\adapter-pg\dist\index.js:631:30)
+        at async <anonymous> (e:\personal project\FixItNow\server\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:200:28)
+        at async e.interpretNode (e:\personal project\FixItNow\server\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:149:29)
+        at async e.interpretNode (e:\personal project\FixItNow\server\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:273:41)
+        at async e.run (e:\personal project\FixItNow\server\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:121:23)
+        at async e.execute (e:\personal project\FixItNow\server\node_modules\@prisma\client\src\runtime\core\engines\client\LocalExecutor.ts:81:12)
+        at async yr.request (e:\personal project\FixItNow\server\node_modules\@prisma\client\src\runtime\core\engines\client\ClientEngine.ts:510:22) {
+      cause: [Object]
+    }
+  },
+  clientVersion: '7.10.0'
+}
+6:33:43 PM [tsx] change in ./src\modules\jobRequests\jobRequests.controller.ts Restarting...
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+[SMTP Ready] Transporter can send messages
+6:33:55 PM [tsx] change in ./src\modules\jobRequests\jobRequests.service.ts Restarting...
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+[SMTP Ready] Transporter can send messages

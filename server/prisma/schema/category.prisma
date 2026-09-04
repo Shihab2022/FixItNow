@@ -5,6 +5,7 @@ model Category {
   imageUrl    String?
   status      Boolean   @default(true)
   services    Service[]
+  jobRequests JobRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

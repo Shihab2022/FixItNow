@@ -1,0 +1,41 @@
+model JobRequest {
+  id          String  @id @default(uuid())
+  title       String
+  description String
+  budget      Float?
+  address     String
+  latitude    Float
+  longitude   Float
+  status      JobRequestStatus @default(OPEN)
+
+  customerId String
+  customer   User   @relation("CustomerJobRequests", fields: [customerId], references: [id])
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  applications JobRequestApplication[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("job_requests")
+}
+
+model JobRequestApplication {
+  id     String @id @default(uuid())
+  status JobRequestApplicationStatus @default(PENDING)
+  message String?
+
+  jobRequestId String
+  jobRequest   JobRequest @relation(fields: [jobRequestId], references: [id], onDelete: Cascade)
+
+  technicianId String
+  technician   TechnicianProfile @relation(fields: [technicianId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([jobRequestId, technicianId])
+  @@map("job_request_applications")
+}
