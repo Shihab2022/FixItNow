@@ -214,3 +214,26 @@ To prepare for this change:
 
 See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
 (Use `node --trace-warnings ...` to show where the warning was created)
+7:34:36 PM [tsx] change in ./src\modules\jobRequests\jobRequests.service.ts Restarting...
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Server is running on  5000
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+[SMTP Ready] Transporter can send messages
+(node:37868) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2026-09-04T15:18:10.058Z] [PID: 37868] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Fri Sep 04 2026 20:30:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-09-04T15:18:10.058Z] [PID: 37868] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Fri Sep 04 2026 20:45:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-09-04T15:18:10.059Z] [PID: 37868] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Fri Sep 04 2026 21:00:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-09-04T15:18:10.059Z] [PID: 37868] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Fri Sep 04 2026 21:15:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
