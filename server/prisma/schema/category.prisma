@@ -2,6 +2,7 @@ model Category {
   id          String    @id @default(uuid())
   name        String    @unique
   description String?
+  imageUrl    String?
   status      Boolean   @default(true)
   services    Service[]
 

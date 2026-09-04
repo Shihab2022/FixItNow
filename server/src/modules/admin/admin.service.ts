@@ -11,6 +11,8 @@ const GetAllUsers = async () => {
       status: true,
       role: true,
       phone: true,
+      address: true,
+      imageUrl: true,
       emailVerified: true,
       createdAt: true,
       updatedAt: true,

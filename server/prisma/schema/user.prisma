@@ -6,6 +6,7 @@ model User {
   role          Role
   phone         String?
   address       String?
+  imageUrl      String?
   status        UserStatus @default(ACTIVE)
   emailVerified Boolean    @default(true)
   forgotPinCode Int?       @default(0)

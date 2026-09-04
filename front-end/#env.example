@@ -1,1 +1,4 @@
-NEXT_PUBLIC_API_ENDPOINT=backend url 
+NEXT_PUBLIC_API_ENDPOINT=backend url
+# Optional: used only when the contact form sends to a dedicated inbox
+# (otherwise the backend falls back to ADMIN_EMAIL)
+CONTACT_EMAIL=support@fixitnow.com 

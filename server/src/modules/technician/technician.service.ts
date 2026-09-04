@@ -356,7 +356,7 @@ const UpdateTechnicianProfile = async (userId: string, payload: any) => {
     );
   }
 
-  const { bio, skills, experience, hourlyRate, isAvailable, status } = payload;
+  const { bio, skills, experience, hourlyRate, isAvailable, status, imageUrl } = payload;
 
   // 2. Validate technician profile existence
   const existingProfile = await prisma.technicianProfile.findUnique({
@@ -379,6 +379,7 @@ const UpdateTechnicianProfile = async (userId: string, payload: any) => {
       }),
       ...(isAvailable !== undefined && { isAvailable: Boolean(isAvailable) }),
       ...(status !== undefined && { status: Boolean(status) }),
+      ...(imageUrl !== undefined && { imageUrl }),
     },
   });
 

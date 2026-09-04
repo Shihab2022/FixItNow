@@ -5,12 +5,20 @@ import transporter from '../utils/nodemailer';
 import { EmailRenderer } from '../utils/emailRenderer';
 
 // src/queues/emailQueue.ts
+export interface EmailAttachment {
+    filename: string;
+    content: Buffer | string;
+    contentType?: string;
+    cid?: string;
+}
+
 export interface EmailJobData {
     idempotencyKey: string;
     to: string;
     subject: string;
     templateName: string;
     templateData: Record<string, any>;
+    attachments?: EmailAttachment[];
 }
 // src/queues/emailQueue.ts
 
@@ -32,13 +40,14 @@ export const emailQueue = new Queue<EmailJobData>(queueName, {
 export const emailWorker = new Worker<EmailJobData>(
     queueName,
     async (job: Job<EmailJobData>) => {
-        const { to, subject, templateName, templateData, idempotencyKey } = job.data;
+        const { to, subject, templateName, templateData, idempotencyKey, attachments } = job.data;
 
         await sendEmailWithTemplate({
             to,
             subject,
             templateName,
             templateData,
+            attachments,
         });
     },
     {
@@ -84,7 +93,7 @@ export async function enqueueEmail(jobData: EmailJobData): Promise<void> {
 }
 
 async function sendDirect(jobData: EmailJobData): Promise<void> {
-    const { to, subject, templateName, templateData } = jobData;
+    const { to, subject, templateName, templateData, attachments } = jobData;
     const html = await EmailRenderer.render(templateName, templateData);
 
     await transporter.sendMail({
@@ -92,11 +101,12 @@ async function sendDirect(jobData: EmailJobData): Promise<void> {
         to,
         subject,
         html,
+        attachments,
     });
 }
 
 async function sendEmailWithTemplate(
-    jobData: Pick<EmailJobData, 'to' | 'subject' | 'templateName' | 'templateData'>
+    jobData: Pick<EmailJobData, 'to' | 'subject' | 'templateName' | 'templateData' | 'attachments'>
 ): Promise<void> {
     const html = await EmailRenderer.render(jobData.templateName, jobData.templateData);
 
@@ -105,5 +115,6 @@ async function sendEmailWithTemplate(
         to: jobData.to,
         subject: jobData.subject,
         html,
+        attachments: jobData.attachments,
     });
 }

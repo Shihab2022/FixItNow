@@ -5,20 +5,31 @@
 </p>
 
 <p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
-  Your service has been successfully completed. We hope you are satisfied with the work done!
+  Great news — your service has been successfully completed. We hope you are
+  satisfied with the work done! Here is a summary of your completed booking:
 </p>
 
 <%- include('components/bookingDetails', {
   serviceTitle: serviceTitle,
   technicianName: technicianName,
   scheduledDate: scheduledDate,
-  bookingId: bookingId
+  scheduledTime: scheduledTime,
+  customerAddress: customerAddress,
+  totalPrice: totalPrice,
+  bookingId: bookingId,
+  status: 'Completed',
 }) %>
 
-<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
-  Please take a moment to share your experience by leaving a review for <%= technicianName %>.
+<p style="color:#334155; font-size:15px; line-height:24px; margin:24px 0 8px;">
+  Please take a moment to share your experience by leaving a review for
+  <strong><%= technicianName %></strong>. Your feedback helps us keep our
+  technicians accountable and helps other customers make the right choice.
 </p>
 
 <%- include('components/button', { text: 'Leave a Review', url: ctaUrl, color: '#16a34a' }) %>
+
+<p style="color:#64748b; font-size:12.5px; line-height:20px; margin:18px 0 0;">
+  A copy of your booking details has been attached to this email as a PDF document. You can also download it anytime from your dashboard.
+</p>
 
 <%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

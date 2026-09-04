@@ -4,6 +4,7 @@ model Service {
   description String
   price       Float
   location    String
+  imageUrl    String?
   status      Boolean @default(true)
 
   technicianId String

@@ -20,6 +20,7 @@ export const LoginSchema = z.object({
 export const CreateCategorySchema = z.object({
   name: z.string().min(3, "Category name is required"),
   description: z.string().optional(),
+  imageUrl: z.string().optional(),
 });
 
 export const UpdateUserStatusSchema = z.object({
@@ -33,6 +34,7 @@ export const CreateServiceSchema = z.object({
   price: z.number().positive("Price must be greater than 0"),
   location: z.string().min(2, "Location area is required"),
   categoryId: z.string().uuid("Invalid Category ID"),
+  imageUrl: z.string().optional(),
 });
 
 // --- BOOKING VALIDATION ---

@@ -14,6 +14,7 @@ const getAllTechnicians = async (query: any) => {
     maxRate,
     minExperience,
     available,
+    categoryId,
     status,
     sortBy = "createdAt",
     sortOrder = "desc",
@@ -76,6 +77,15 @@ const getAllTechnicians = async (query: any) => {
     where.isAvailable = available === "true";
   }
 
+  // Filter by category: technicians who offer at least one service in that category
+  if (categoryId) {
+    where.services = {
+      some: {
+        categoryId,
+      },
+    };
+  }
+
   // Status
   if (status !== undefined) {
     where.status = status === "true";
@@ -116,8 +126,25 @@ const getAllTechnicians = async (query: any) => {
 };
 
 const getAllCategories = async () => {
-  const categories = await prisma.category.findMany();
-  return categories;
+  const categories = await prisma.category.findMany({
+    include: {
+      services: {
+        select: {
+          technicianId: true,
+        },
+      },
+    },
+  });
+
+  // Return categories with a live technician count (distinct technicians per category)
+  return categories.map((cat: any) => ({
+    ...cat,
+    services: undefined,
+    _count: {
+      services: cat.services?.length || 0,
+    },
+    techniciansCount: new Set((cat.services || []).map((s: any) => s.technicianId)).size,
+  }));
 };
 
 const getAllServices = async (query: any) => {

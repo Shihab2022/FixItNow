@@ -1,6 +1,7 @@
 import config from '../config';
-import { enqueueEmail } from '../queues/emailQueue';
+import { enqueueEmail, EmailAttachment } from '../queues/emailQueue';
 import { EmailRenderer } from '../utils/emailRenderer';
+import { PdfGenerator } from '../utils/pdfGenerator';
 
 export interface BookingPayload {
     id: string;
@@ -38,9 +39,59 @@ export class NotificationService {
         to: string,
         subject: string,
         templateName: string,
-        templateData: Record<string, any>
+        templateData: Record<string, any>,
+        attachments?: EmailAttachment[]
     ) {
-        await enqueueEmail({ idempotencyKey, to, subject, templateName, templateData });
+        await enqueueEmail({ idempotencyKey, to, subject, templateName, templateData, attachments });
+    }
+
+    /** Generate a booking PDF attachment best-effort; email still sends when generation fails */
+    private static async bookingPdfAttachment(
+        payload: {
+            bookingId: string;
+            serviceTitle: string;
+            technicianName: string;
+            customerName: string;
+            scheduledDate: string;
+            scheduledTime: string;
+            customerAddress: string;
+            totalPrice: string;
+            status?: string;
+            notes?: string;
+        },
+        filename: string = 'booking-details.pdf'
+    ): Promise<EmailAttachment | undefined> {
+        try {
+            const invoice = PdfGenerator.buildBookingInvoice(payload);
+            const buffer = await PdfGenerator.generatePdfBuffer(invoice);
+            return { filename, content: buffer, contentType: 'application/pdf' };
+        } catch (err) {
+            console.warn('[Notification] PDF attachment could not be generated:', (err as Error)?.message);
+            return undefined;
+        }
+    }
+
+    /** Generate a payment receipt PDF attachment best-effort*/
+    private static async paymentPdfAttachment(
+        payload: {
+            transactionId: string;
+            bookingId: string;
+            amount: string;
+            serviceTitle: string;
+            technicianName: string;
+            scheduledDate: string;
+            status?: string;
+        },
+        filename: string = 'payment-receipt.pdf'
+    ): Promise<EmailAttachment | undefined> {
+        try {
+            const invoice = PdfGenerator.buildPaymentInvoice(payload);
+            const buffer = await PdfGenerator.generatePdfBuffer(invoice);
+            return { filename, content: buffer, contentType: 'application/pdf' };
+        } catch (err) {
+            console.warn('[Notification] Payment PDF attachment could not be generated:', (err as Error)?.message);
+            return undefined;
+        }
     }
 
     // 1. BOOKING_CREATED
@@ -49,6 +100,17 @@ export class NotificationService {
         const formattedPrice = EmailRenderer.formatCurrency(booking.totalPrice);
 
         // Customer Email
+        const customerAttachment = await this.bookingPdfAttachment({
+            bookingId: booking.id,
+            serviceTitle: booking.service.title,
+            technicianName: booking.technician.user.name,
+            customerName: booking.customer.name,
+            scheduledDate: formattedDate,
+            scheduledTime: booking.scheduledTime,
+            customerAddress: booking.customerAddress,
+            totalPrice: formattedPrice,
+            status: 'Pending Technician Approval',
+        });
         await this.dispatch(
             `evt_created_cust_${booking.id}`,
             booking.customer.email,
@@ -64,7 +126,8 @@ export class NotificationService {
                 totalPrice: formattedPrice,
                 bookingId: booking.id,
                 ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
-            }
+            },
+            customerAttachment ? [customerAttachment] : undefined
         );
 
         // Technician Email
@@ -135,6 +198,15 @@ export class NotificationService {
         const formattedDate = EmailRenderer.formatDate(payment.booking.scheduledDate);
 
         // Customer Email
+        const payAttachment = await this.paymentPdfAttachment({
+            transactionId: payment.transactionId,
+            bookingId: payment.booking.id,
+            amount: formattedAmount,
+            serviceTitle: payment.booking.service.title,
+            technicianName: payment.booking.technician.user.name,
+            scheduledDate: formattedDate,
+            status: 'Successful',
+        });
         await this.dispatch(
             `evt_pay_success_cust_${payment.transactionId}`,
             payment.booking.customer.email,
@@ -151,7 +223,8 @@ export class NotificationService {
                 customerAddress: payment.booking.customerAddress,
                 bookingId: payment.booking.id,
                 ctaUrl: `${config.front_end_base_url}/customer/bookings/${payment.booking.id}`,
-            }
+            },
+            payAttachment ? [payAttachment] : undefined
         );
 
         // Technician Email
@@ -386,6 +459,17 @@ export class NotificationService {
         const formattedDate = EmailRenderer.formatDate(booking.scheduledDate);
 
         // Customer
+        const completedAttachment = await this.bookingPdfAttachment({
+            bookingId: booking.id,
+            serviceTitle: booking.service.title,
+            technicianName: booking.technician.user.name,
+            customerName: booking.customer.name,
+            scheduledDate: formattedDate,
+            scheduledTime: booking.scheduledTime || '',
+            customerAddress: booking.customerAddress,
+            totalPrice: EmailRenderer.formatCurrency(booking.totalPrice),
+            status: 'Completed',
+        });
         await this.dispatch(
             `evt_completed_cust_${booking.id}`,
             booking.customer.email,
@@ -396,9 +480,13 @@ export class NotificationService {
                 serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
                 scheduledDate: formattedDate,
+                scheduledTime: booking.scheduledTime || '',
+                customerAddress: booking.customerAddress,
+                totalPrice: EmailRenderer.formatCurrency(booking.totalPrice),
                 bookingId: booking.id,
                 ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}/review`,
-            }
+            },
+            completedAttachment ? [completedAttachment] : undefined
         );
 
         // Technician

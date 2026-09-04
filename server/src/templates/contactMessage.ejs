@@ -1,0 +1,34 @@
+<%- include('layouts/emailHeader', { title: 'New Direct Message from Website', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi there,</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  A new direct message was submitted through the <strong>Send us a Direct Message</strong>
+  form on the FixItNow website.
+</p>
+
+<div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+  <h3 style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Direct Message Details</h3>
+  <table width="100%" border="0" cellpadding="0" cellspacing="0" style="font-size: 14px; color: #334155;">
+    <tr>
+      <td style="padding: 4px 0; font-weight: 600; width: 28%;">From:</td>
+      <td style="padding: 4px 0;"><strong><%= senderName %></strong> &lt;<a href="mailto:<%= senderEmail %>" style="color:#2563eb;"><%= senderEmail %></a>&gt;</td>
+    </tr>
+    <tr>
+      <td style="padding: 4px 0; font-weight: 600;">Subject:</td>
+      <td style="padding: 4px 0;"><%= subject %></td>
+    </tr>
+    <tr>
+      <td style="padding: 4px 0; font-weight: 600; vertical-align: top;">Message:</td>
+      <td style="padding: 4px 0; white-space: pre-wrap;"><%= message %></td>
+    </tr>
+  </table>
+</div>
+
+<%- include('components/button', { text: 'Reply to Sender', url: `mailto:${senderEmail}` }) %>
+
+<p style="color:#64748b; font-size:12.5px; line-height:20px; margin:18px 0 0;">
+  This message was sent from the public contact form. Reply directly to the sender using the button above.
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

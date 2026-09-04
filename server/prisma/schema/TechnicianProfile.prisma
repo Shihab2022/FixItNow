@@ -5,6 +5,7 @@ model TechnicianProfile {
 
   bio           String?
   skills        Json?
+  imageUrl     String?
   experience    Int     @default(0)
   completedJobs Int     @default(0)
   isAvailable   Boolean @default(true) // In years

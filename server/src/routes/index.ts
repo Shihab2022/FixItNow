@@ -8,6 +8,8 @@ import { PaymentsRouter } from "../modules/payments/payments.route";
 import { TechnicianRouter } from "../modules/technician/technician.route";
 import { ReviewsRouter } from "../modules/reviews/reviews.route";
 import { AdminRouter } from "../modules/admin/admin.route";
+import { UploadsRouter } from "../modules/uploads/uploads.route";
+import { ContactRouter } from "../modules/contact/contact.route";
 const router = express.Router();
 
 const moduleRoutes = [
@@ -46,6 +48,14 @@ const moduleRoutes = [
   {
     path: "/admin",
     endPoint: AdminRouter,
+  },
+  {
+    path: "/uploads",
+    endPoint: UploadsRouter,
+  },
+  {
+    path: "/contact",
+    endPoint: ContactRouter,
   },
 ];
 
