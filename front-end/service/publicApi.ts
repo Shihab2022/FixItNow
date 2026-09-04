@@ -85,6 +85,18 @@ export const getSingleBookingApi = async (id: string) => {
   return res;
 };
 
+/** Fetch all technicians that offer services in a given category */
+export const getCategoryTechnicians = async (categoryId: string) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `technicians?categoryId=${encodeURIComponent(categoryId)}`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+  return res;
+};
+
 /**
  * Fetch the technician's free time slots for a specific date.
  * Slots that are already booked (REQUESTED / ACCEPTED / PAID / IN_PROGRESS)

@@ -27,7 +27,7 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Please enter a valid email address.');
     }
 
-    const recipient = config.contact.email || config.admin.email;
+        const recipient = config.contact.email || config.admin.email || '';
 
     // Best-effort: the API still returns success when email dispatch fails,
     // but the error is logged server-side so the team can follow up.

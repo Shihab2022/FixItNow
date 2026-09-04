@@ -97,25 +97,29 @@ export default function AllCategoriesPage() {
               .sort((a, b) => b.count.localeCompare(a.count))
               .map((cat, index) => {
                 const IconComponent = cat.icon;
-                return (
-                  <motion.div
-                    key={cat.id || index}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.03 }}
-                    whileHover={{ y: -6 }}
-                    className="group flex flex-col items-center rounded-3xl border border-slate-200/80 bg-white p-6 text-center shadow-xs transition hover:border-blue-300 hover:shadow-lg"
-                  >
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
-                      <IconComponent className="h-7 w-7" />
-                    </div>
-                    <h3 className="font-semibold text-slate-900 text-base">
-                      {cat.title}
-                    </h3>
-                    <span className="mt-1 text-xs text-slate-500 font-medium">
-                      {cat.count}
-                    </span>
-                  </motion.div>
+                                return (
+                  <Link href={`/category/${cat.id}`} className="block">
+                    <motion.div
+                      key={cat.id || index}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.03 }}
+                      whileHover={{ y: -6 }}
+                      className="group flex flex-col items-center rounded-3xl border border-slate-200/80 bg-white p-6 text-center shadow-xs transition hover:border-blue-300 hover:shadow-lg cursor-pointer"
+                    >
+                      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
+                        <IconComponent className="h-7 w-7" />
+                      </div>
+                      <h3 className="font-semibold text-slate-900 text-base">
+                        {cat.title}
+                      </h3>
+                      <span className="mt-1 text-xs text-slate-500 font-medium">
+                        {cat.techniciansCount != null
+                          ? `${cat.techniciansCount} Techs`
+                          : cat.count}
+                      </span>
+                    </motion.div>
+                  </Link>
                 );
               })}
           </div>

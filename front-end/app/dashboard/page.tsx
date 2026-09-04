@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/incompatible-library */
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,81 +11,205 @@ import {
   FiMail,
   FiPhone,
   FiMapPin,
-  FiCamera,
   FiCheck,
   FiBell,
   FiSave,
+  FiBriefcase,
+  FiClock,
+  FiDollarSign,
+  FiTool,
 } from "react-icons/fi";
-import Image from "next/image";
 import { getMe, updateMe } from "@/service/auth";
+import { getTechProfile, updateTechnicianProfile } from "@/service/technician";
 import { showToast } from "@/components/toast/toast";
 import { toastTypes } from "../constant";
+import ImageUpload from "@/components/ui/ImageUpload";
 
-// Validation Schema
 const profileSchema = z.object({
   name: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   phone: z.string().min(10, "Please enter a valid phone number"),
   address: z.string().min(5, "Address must be at least 5 characters"),
-  city: z.string().min(2, "City is required"),
-  zipCode: z.string().min(4, "ZIP code is required"),
-  // currentPassword: z.string().optional(),
-  // newPassword: z
-  //   .string()
-  //   .optional()
-  //   .refine((val) => !val || val.length >= 8, {
-  //     message: "New password must be at least 8 characters",
-  //   }),
+  // Technician-specific fields
+  bio: z.string().optional(),
+  hourlyRate: z.string().optional(),
+  experience: z.string().optional(),
+  skills: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-export default function CustomerProfileEditPage() {
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  address?: string | null;
+  imageUrl?: string | null;
+  role: string;
+  status?: string;
+  emailVerified?: boolean;
+  createdAt?: string;
+  technicianProfile?: {
+    id: string;
+    bio?: string | null;
+    skills?: any;
+    experience?: number;
+    completedJobs?: number;
+    hourlyRate?: number | null;
+    isAvailable?: boolean;
+    availability?: any;
+    status?: boolean;
+    imageUrl?: string | null;
+  } | null;
+}
+
+export default function ProfileEditPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(true);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const {
     register,
     handleSubmit,
-    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    defaultValues: async () => {
-      const response = await getMe();
-      const data = response?.data?.data;
-      return {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        address: data.address?.split(" ")[0] || "",
-        city: data.address?.split(" ")[1] || "",
-        zipCode: data.address?.split(" ")[2] || "",
-      };
-    },
   });
-  const onSubmit = async (data: ProfileFormData) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const res = await updateMe({
-      name: data.name,
-      phone: data.phone,
-      address: `#${data.address} ${data.city} ${data.zipCode}`,
-    });
-    if (res?.data?.success) {
-      setSaveSuccess(true);
-      showToast(toastTypes.SUCCESS, "Profile updated successfully!");
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const res = await getMe();
+        const data = res?.data?.data;
+        if (data) {
+          setUser(data);
+          setValue("name", data.name || "");
+          setValue("email", data.email || "");
+          setValue("phone", data.phone || "");
+          setValue("address", data.address || "");
+          // Technician fields
+          if (data.role === "TECHNICIAN" && data.technicianProfile) {
+            const tp = data.technicianProfile;
+            setValue("bio", tp.bio || "");
+            setValue("hourlyRate", tp.hourlyRate?.toString() || "");
+            setValue("experience", tp.experience?.toString() || "");
+            setValue(
+              "skills",
+              Array.isArray(tp.skills) ? tp.skills.join(", ") : ""
+            );
+          }
+          // If technician, also fetch full tech profile
+          if (data.role === "TECHNICIAN") {
+            try {
+              const techRes = await getTechProfile();
+              if (techRes?.data?.success) {
+                const tp = techRes.data.data;
+                setUser((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        technicianProfile: {
+                          id: tp.id,
+                          bio: tp.bio,
+                          skills: tp.skills,
+                          experience: tp.experience,
+                          completedJobs: tp.completedJobs,
+                          hourlyRate: tp.hourlyRate,
+                          isAvailable: tp.isAvailable,
+                          availability: tp.availability,
+                          status: tp.status,
+                          imageUrl: tp.imageUrl,
+                        },
+                      }
+                    : prev
+                );
+                setValue("bio", tp.bio || "");
+                setValue("hourlyRate", tp.hourlyRate?.toString() || "");
+                setValue("experience", tp.experience?.toString() || "");
+                setValue(
+                  "skills",
+                  Array.isArray(tp.skills) ? tp.skills.join(", ") : ""
+                );
+              }
+            } catch (err) {
+              console.error("Failed to fetch tech profile:", err);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load user data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserData();
+  }, [setValue]);
+
+  const onSubmit = async (data: ProfileFormData) => {
+    try {
+      // Update base user fields
+      const res = await updateMe({
+        name: data.name,
+        phone: data.phone,
+        address: data.address,
+      });
+
+      // Update technician-specific fields
+      if (user?.role === "TECHNICIAN") {
+        await updateTechnicianProfile({
+          bio: data.bio,
+          hourlyRate: data.hourlyRate ? Number(data.hourlyRate) : undefined,
+          experience: data.experience ? Number(data.experience) : undefined,
+          skills: data.skills
+            ? data.skills.split(",").map((s) => s.trim())
+            : undefined,
+        });
+      }
+
+      if (res?.data?.success) {
+        setSaveSuccess(true);
+        showToast(toastTypes.SUCCESS, "Profile updated successfully!");
+        setTimeout(() => setSaveSuccess(false), 4000);
+      } else {
+        showToast(
+          toastTypes.FAILED,
+          res?.message || "Failed to update profile."
+        );
+      }
+    } catch (err: any) {
+      showToast(toastTypes.FAILED, err?.message || "Something went wrong.");
     }
-    setTimeout(() => setSaveSuccess(false), 4000);
   };
+
+  const handleImageChange = async (url: string | null) => {
+    if (url) {
+      await updateMe({ imageUrl: url });
+      setUser((prev) => (prev ? { ...prev, imageUrl: url } : prev));
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-8 pb-16 animate-pulse">
+        <div className="h-10 bg-slate-200 rounded-lg w-1/3"></div>
+        <div className="h-64 bg-slate-200 rounded-2xl"></div>
+      </div>
+    );
+  }
+
+  const isTechnician = user?.role === "TECHNICIAN";
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-16">
       <div>
         <h1 className="text-2xl font-black text-slate-900">Account Settings</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Manage your personal information, address, password, and preferences.
+          Manage your personal information
+          {isTechnician ? ", professional profile," : ""} and preferences.
         </p>
       </div>
 
@@ -100,53 +224,49 @@ export default function CustomerProfileEditPage() {
         </motion.div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center gap-6">
-          <div className="relative group">
-            <Image
-              src={`https://randomuser.me/api/portraits/men/${Math.floor(Math.random() * 90) + 10}.jpg`}
-              height={96}
-              width={96}
-              alt="Profile"
-              className="w-24 h-24 rounded-2xl object-cover border-2 border-slate-200 shadow-inner"
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Profile Picture & Basic Info */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2 mb-6">
+            <FiUser className="text-blue-500" /> Profile Picture
+          </h2>
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <ImageUpload
+              value={user?.imageUrl || user?.technicianProfile?.imageUrl || undefined}
+              onChange={handleImageChange}
+              size="lg"
+              label="Profile Photo"
             />
-            <label
-              htmlFor="avatar-upload"
-              className="absolute -bottom-2 -right-2 p-2.5 bg-blue-600 text-white rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition-all active:scale-95"
-            >
-              <FiCamera className="text-sm" />
-            </label>
-          </div>
-
-          <div className="text-center sm:text-left space-y-1">
-            <h2 className="text-xl font-bold text-slate-900">
-              {watch("name")}
-            </h2>
-            <p className="text-xs font-medium text-slate-500">
-              Customer Account
-            </p>
-            <span className="inline-block mt-2 px-3 py-1 bg-teal-50 text-teal-700 text-[10px] font-bold rounded-full border border-teal-200">
-              Verified Member
-            </span>
+            <div className="text-center sm:text-left">
+              <p className="text-sm text-slate-500">
+                Upload a professional photo. JPG, PNG, WEBP, GIF up to 5 MB.
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                {isTechnician
+                  ? "A good photo helps customers trust your services."
+                  : "This photo may appear in communications."}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Personal Details Section */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        {/* Personal Information */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <FiUser className="text-blue-600" /> Personal Details
+            <FiMail className="text-blue-500" /> Personal Information
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-700 mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Full Name
               </label>
               <div className="relative">
-                <FiUser className="absolute left-3.5 top-3 text-slate-400 text-sm" />
+                <FiUser className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
                 <input
                   {...register("name")}
                   type="text"
+                  placeholder="John Doe"
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
                 />
               </div>
@@ -158,34 +278,34 @@ export default function CustomerProfileEditPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-700 mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Email Address
               </label>
               <div className="relative">
-                <FiMail className="absolute left-3.5 top-3 text-slate-400 text-sm" />
+                <FiMail className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
                 <input
-                  disabled
                   {...register("email")}
                   type="email"
-                  className="w-full pl-10 pr-4  py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
+                  placeholder="john@example.com"
+                  disabled
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-medium text-slate-500 cursor-not-allowed"
                 />
               </div>
-              {errors.email && (
-                <p className="text-[11px] text-rose-500 mt-1">
-                  {errors.email.message}
-                </p>
-              )}
+              <p className="text-[10px] text-slate-400 mt-1">
+                Email cannot be changed
+              </p>
             </div>
 
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold uppercase text-slate-700 mb-1.5">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
                 Phone Number
               </label>
               <div className="relative">
-                <FiPhone className="absolute left-3.5 top-3 text-slate-400 text-sm" />
+                <FiPhone className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
                 <input
                   {...register("phone")}
-                  type="text"
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
                 />
               </div>
@@ -195,103 +315,108 @@ export default function CustomerProfileEditPage() {
                 </p>
               )}
             </div>
-          </div>
-        </div>
 
-        {/* Address Information Section */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <FiMapPin className="text-rose-500" /> Primary Service Address
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div className="sm:col-span-3">
-              <label className="block text-xs font-bold uppercase text-slate-700 mb-1.5">
-                Street Address
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Address
               </label>
-              <input
-                {...register("address")}
-                type="text"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
-              />
+              <div className="relative">
+                <FiMapPin className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+                <input
+                  {...register("address")}
+                  type="text"
+                  placeholder="123 Main St, City, State"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
+                />
+              </div>
               {errors.address && (
                 <p className="text-[11px] text-rose-500 mt-1">
                   {errors.address.message}
                 </p>
               )}
             </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold uppercase text-slate-700 mb-1.5">
-                City
-              </label>
-              <input
-                {...register("city")}
-                type="text"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
-              />
-              {errors.city && (
-                <p className="text-[11px] text-rose-500 mt-1">
-                  {errors.city.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-700 mb-1.5">
-                ZIP Code
-              </label>
-              <input
-                {...register("zipCode")}
-                type="text"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all font-mono"
-              />
-              {errors.zipCode && (
-                <p className="text-[11px] text-rose-500 mt-1">
-                  {errors.zipCode.message}
-                </p>
-              )}
-            </div>
           </div>
         </div>
 
-        {/* Change Password Section */}
-        {/* <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <FiLock className="text-amber-500" /> Change Security Password
-          </h2>
+        {/* Technician-Specific Fields */}
+        {isTechnician && (
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+              <FiBriefcase className="text-blue-500" /> Professional Profile
+            </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-700 mb-1.5">
-                Current Password
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Bio / About
               </label>
-              <input
-                {...register("currentPassword")}
-                type="password"
-                placeholder="••••••••"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
+              <textarea
+                {...register("bio")}
+                rows={3}
+                placeholder="Describe your experience and services..."
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all resize-none"
               />
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <FiDollarSign className="inline w-3 h-3 mr-1" />
+                  Hourly Rate ($)
+                </label>
+                <input
+                  {...register("hourlyRate")}
+                  type="number"
+                  placeholder="45"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <FiClock className="inline w-3 h-3 mr-1" />
+                  Experience (years)
+                </label>
+                <input
+                  {...register("experience")}
+                  type="number"
+                  placeholder="5"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <FiTool className="inline w-3 h-3 mr-1" />
+                  Completed Jobs
+                </label>
+                <input
+                  type="number"
+                  value={user?.technicianProfile?.completedJobs || 0}
+                  disabled
+                  className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-medium text-slate-500 cursor-not-allowed"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Auto-tracked
+                </p>
+              </div>
+            </div>
+
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-700 mb-1.5">
-                New Password
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Skills (comma-separated)
               </label>
               <input
-                {...register("newPassword")}
-                type="password"
-                placeholder="••••••••"
+                {...register("skills")}
+                type="text"
+                placeholder="Electrical Wiring, Circuit Repair, Lighting Installation"
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
               />
-              {errors.newPassword && (
-                <p className="text-[11px] text-rose-500 mt-1">
-                  {errors.newPassword.message}
-                </p>
-              )}
+              <p className="text-[10px] text-slate-400 mt-1">
+                Separate skills with commas
+              </p>
             </div>
           </div>
-        </div> */}
+        )}
 
         {/* Preferences Section */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">

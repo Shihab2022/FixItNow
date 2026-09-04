@@ -19,15 +19,21 @@ import { CATEGORY_ICONS } from "@/mock/categoryIconsData";
 import { getAllCategories } from "@/service/publicApi";
 import Link from "next/link";
 
-const DEFAULT_CATEGORIES = [
-  { title: "Electrical", count: "120+ Techs", icon: Zap },
-  { title: "Plumbing", count: "95+ Techs", icon: Droplet },
-  { title: "Cleaning", count: "210+ Techs", icon: Sparkles },
-  { title: "Painting", count: "80+ Techs", icon: Paintbrush },
-  { title: "AC Repair", count: "110+ Techs", icon: Wind },
-  { title: "Carpentry", count: "65+ Techs", icon: Hammer },
-  { title: "Appliance Repair", count: "75+ Techs", icon: Tv },
-  { title: "Pest Control", count: "45+ Techs", icon: Bug },
+const DEFAULT_CATEGORIES: Array<{
+  id: string;
+  title: string;
+  count: string;
+  icon: any;
+  techniciansCount?: number;
+}> = [
+  { id: "1", title: "Electrical", count: "120+ Techs", icon: Zap },
+  { id: "2", title: "Plumbing", count: "95+ Techs", icon: Droplet },
+  { id: "3", title: "Cleaning", count: "210+ Techs", icon: Sparkles },
+  { id: "4", title: "Painting", count: "80+ Techs", icon: Paintbrush },
+  { id: "5", title: "AC Repair", count: "110+ Techs", icon: Wind },
+  { id: "6", title: "Carpentry", count: "65+ Techs", icon: Hammer },
+  { id: "7", title: "Appliance Repair", count: "75+ Techs", icon: Tv },
+  { id: "8", title: "Pest Control", count: "45+ Techs", icon: Bug },
 ];
 
 export function PopularCategories() {
@@ -43,6 +49,7 @@ export function PopularCategories() {
           id: cat._id || cat.id,
           title: cat.name,
           count: `${Math.floor(Math.random() * 90) + 10}+ Techs`,
+          techniciansCount: cat.techniciansCount,
           icon: CATEGORY_ICONS[cat.name] || Droplet,
         }));
         setCategories(catData);
@@ -77,26 +84,30 @@ export function PopularCategories() {
               .slice(0, 8)
               .map((cat, index) => {
                 const IconComponent = cat.icon;
-                return (
-                  <motion.div
-                    key={cat.title + index}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    whileHover={{ y: -6 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="group flex flex-col items-center rounded-3xl border border-slate-200/80 bg-white p-6 text-center shadow-xs transition hover:border-blue-300 hover:shadow-lg"
-                  >
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
-                      <IconComponent className="h-7 w-7" />
-                    </div>
-                    <h3 className="font-semibold text-slate-900 text-base">
-                      {cat.title}
-                    </h3>
-                    <span className="mt-1 text-xs text-slate-500 font-medium">
-                      {cat.count}
-                    </span>
-                  </motion.div>
+                                return (
+                  <Link href={`/category/${cat.id ?? index}`} key={`${cat.title + index}-link`} className="block">
+                    <motion.div
+                      key={cat.title + index}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      whileHover={{ y: -6 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      className="group flex flex-col items-center rounded-3xl border border-slate-200/80 bg-white p-6 text-center shadow-xs transition hover:border-blue-300 hover:shadow-lg cursor-pointer"
+                    >
+                      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
+                        <IconComponent className="h-7 w-7" />
+                      </div>
+                      <h3 className="font-semibold text-slate-900 text-base">
+                        {cat.title}
+                      </h3>
+                      <span className="mt-1 text-xs text-slate-500 font-medium">
+                        {cat.techniciansCount != null
+                          ? `${cat.techniciansCount} Techs`
+                          : cat.count}
+                      </span>
+                    </motion.div>
+                  </Link>
                 );
               })}
           </AnimatePresence>

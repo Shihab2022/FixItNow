@@ -15,6 +15,7 @@ import {
   FiBriefcase,
   FiUser,
 } from "react-icons/fi";
+import CopyableCell from "@/components/ui/CopyableCell";
 
 // Types derived from your Prisma schema
 export type Role = "ADMIN" | "TECHNICIAN" | "CUSTOMER";
@@ -194,6 +195,9 @@ export const UserTable: React.FC = () => {
                         {user.name}
                       </div>
                       <div className="text-xs text-slate-500">{user.email}</div>
+                      <div className="mt-0.5">
+                        <CopyableCell value={user.id} maxChars={8} />
+                      </div>
                     </div>
                   </div>
                 </td>

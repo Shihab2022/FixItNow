@@ -15,7 +15,7 @@ const fileFilter = (
     if (allowed.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Only JPG, PNG, WEBP, GIF and AVIF images are allowed.')));
+                cb(new Error('Only JPG, PNG, WEBP, GIF and AVIF images are allowed.'));
     }
 };
 

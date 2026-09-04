@@ -14,6 +14,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
 } from "react-icons/fi";
+import CopyableCell from "@/components/ui/CopyableCell";
 
 // Enums / Types matching your Prisma & API payload
 export type BookingStatus =
@@ -191,12 +192,10 @@ export const BookingTable: React.FC = () => {
                   >
                     {/* Booking ID */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-mono text-xs font-semibold text-slate-900 bg-slate-100 px-2 py-1 rounded w-fit border border-slate-200">
-                        #{booking.id.slice(0, 8)}
-                      </div>
+                      <CopyableCell value={booking.id} label="#" maxChars={8} />
                       <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
                         <FiTool className="w-3 h-3" /> Svc:{" "}
-                        {booking.serviceId.slice(0, 8)}...
+                        <CopyableCell value={booking.serviceId} maxChars={8} />
                       </div>
                     </td>
 
@@ -241,16 +240,12 @@ export const BookingTable: React.FC = () => {
                       <div className="flex items-center gap-1 text-slate-700">
                         <FiUser className="w-3.5 h-3.5 text-slate-400" />
                         Cust:{" "}
-                        <span className="font-mono">
-                          {booking.customerId.slice(0, 8)}...
-                        </span>
+                        <CopyableCell value={booking.customerId} maxChars={8} />
                       </div>
                       <div className="flex items-center gap-1 text-slate-500 mt-1">
                         <FiTool className="w-3.5 h-3.5 text-slate-400" />
                         Tech:{" "}
-                        <span className="font-mono">
-                          {booking.technicianId.slice(0, 8)}...
-                        </span>
+                        <CopyableCell value={booking.technicianId} maxChars={8} />
                       </div>
                     </td>
 

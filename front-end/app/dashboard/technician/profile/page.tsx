@@ -14,6 +14,7 @@ import {
   FiAlertCircle,
   FiClock,
 } from "react-icons/fi";
+import ImageUpload from "@/components/ui/ImageUpload";
 
 // Initializing state directly with your exact API response
 type TechnicianProfile = {
@@ -62,6 +63,7 @@ const initialProfileData: TechnicianProfile = {
 
 export default function EditTechnicianProfilePage() {
   const [profile, setProfile] = useState<TechnicianProfile>(initialProfileData);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [newSkillInput, setNewSkillInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -73,6 +75,7 @@ export default function EditTechnicianProfilePage() {
     const res = await getTechProfile();
     if (res?.data?.success) {
       setProfile(res.data.data);
+      setProfileImage(res.data.data.imageUrl || null);
     }
   };
   useEffect(() => {
@@ -110,6 +113,7 @@ export default function EditTechnicianProfilePage() {
         hourlyRate: profile.hourlyRate,
         isAvailable: profile.isAvailable,
         status: profile.status,
+        imageUrl: profileImage,
       };
 
       const res = await updateTechnicianProfile(payload);
@@ -354,6 +358,14 @@ export default function EditTechnicianProfilePage() {
               >
                 {profile.isAvailable ? "Available" : "Unavailable"}
               </span>
+            </div>
+
+            <div className="flex justify-center">
+              <ImageUpload
+                value={profileImage || undefined}
+                onChange={(url) => setProfileImage(url)}
+                size="md"
+              />
             </div>
 
             <div>

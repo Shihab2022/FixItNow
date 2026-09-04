@@ -1,17 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   FiMail,
   FiPhone,
-  //   FiMapPin,
   FiSend,
   FiCheckCircle,
 } from "react-icons/fi";
+import { showToast } from "@/components/toast/toast";
+import { toastTypes } from "@/app/constant";
+import { sendMessage } from "@/service/contact";
 
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -34,13 +36,25 @@ export default function ContactSection() {
     resolver: zodResolver(contactSchema),
   });
 
-  const onSubmit = async (data: ContactFormData) => {
-    // Simulate submission
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log("Contact form payload:", data);
-    setSubmitted(true);
-    reset();
-    setTimeout(() => setSubmitted(false), 5000);
+    const onSubmit = async (data: ContactFormData) => {
+    try {
+      const res = await sendMessage(data);
+      if (res?.data?.success || res?.success) {
+        setSubmitted(true);
+        reset();
+        setTimeout(() => setSubmitted(false), 6000);
+      } else {
+        showToast(
+          toastTypes.FAILED,
+          res?.message || "Failed to send your message. Please try again."
+        );
+      }
+    } catch (err: any) {
+      showToast(
+        toastTypes.FAILED,
+        err?.message || "Something went wrong. Please try again later."
+      );
+    }
   };
 
   return (
@@ -207,14 +221,38 @@ export default function ContactSection() {
                 )}
               </div>
 
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                <FiSend />
-                {isSubmitting ? "Sending Message..." : "Send Message"}
-              </button>
+                            <AnimatePresence>
+                {submitted ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex flex-col items-center justify-center py-8 text-center gap-3"
+                  >
+                    <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center">
+                      <FiCheckCircle className="w-8 h-8 text-emerald-500" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900 text-base">
+                        Message Sent!
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Your message has been received. Our team will get back
+                        to you shortly.
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    <FiSend />
+                    {isSubmitting ? "Sending Message..." : "Send Message"}
+                  </button>
+                )}
+              </AnimatePresence>
             </form>
           </div>
         </div>
