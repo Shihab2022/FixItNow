@@ -13,15 +13,15 @@
 - Environments: .env.local, .env
 
   Creating an optimized production build ...
-✓ Compiled successfully in 7.6s
+✓ Compiled successfully in 7.0s
   Running TypeScript ...
-  Finished TypeScript in 6.0s ...
+  Finished TypeScript in 4.5s ...
   Collecting page data using 15 workers ...
-  Generating static pages using 15 workers (0/26) ...
-  Generating static pages using 15 workers (6/26) 
-  Generating static pages using 15 workers (12/26) 
-  Generating static pages using 15 workers (19/26) 
-✓ Generating static pages using 15 workers (26/26) in 451ms
+  Generating static pages using 15 workers (0/27) ...
+  Generating static pages using 15 workers (6/27) 
+  Generating static pages using 15 workers (13/27) 
+  Generating static pages using 15 workers (20/27) 
+✓ Generating static pages using 15 workers (27/27) in 321ms
   Finalizing page optimization ...
 
 Route (app)
@@ -49,9 +49,12 @@ Route (app)
 ├ ƒ /dashboard/technician/services
 ├ ○ /forgot-password
 ├ ○ /login
+├ ƒ /map
 ├ ○ /payment
 ├ ○ /register
 ├ ○ /services
+├ ○ /tasks
+├ ƒ /tasks/[id]
 ├ ○ /technicians
 └ ƒ /technicians/[id]
 

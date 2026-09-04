@@ -139,7 +139,6 @@ export default function TaskDetailPage() {
           </div>
 
           <p className="text-slate-600 leading-relaxed">{task.description}</p>
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 rounded-xl px-4 py-3">
               <MapPin className="w-4 h-4 text-blue-500" />
@@ -168,6 +167,93 @@ export default function TaskDetailPage() {
           </div>
         </div>
       </div>
+      {user && !isCustomer && task.status === "OPEN" && !isOwner && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-4">
+          <h2 className="text-lg font-bold text-slate-900">Apply for this Task</h2>
+          {hasApplied ? (
+            <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 rounded-xl px-4 py-3">
+              <CheckCircle2 className="w-5 h-5" />
+              <span className="text-sm font-medium">
+                You have already applied to this task.
+              </span>
+            </div>
+          ) : (
+            <>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Introduce yourself and explain why you're a good fit for this task..."
+                rows={4}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              />
+              <button
+                onClick={handleApply}
+                disabled={submitting}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold rounded-xl text-sm transition-all"
+              >
+                <Send className="w-4 h-4" />
+                {submitting ? "Sending..." : "Send Application"}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+      {isOwner && applications.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-4">
+          <h2 className="text-lg font-bold text-slate-900">
+            Applications ({applications.length})
+          </h2>
+          <div className="space-y-3">
+            {applications.map((app: any) => (
+              <div
+                key={app.id}
+                className="border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
+                    <User className="w-5 h-5 text-slate-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">
+                      {app.technician?.user?.name}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {app.technician?.experience} yrs • ★{" "}
+                      {app.technician?.hourlyRate
+                        ? `$${app.technician.hourlyRate}/hr`
+                        : "N/A"}
+                    </p>
+                    {app.message && (
+                      <p className="text-xs text-slate-500 mt-1 italic">
+                        &ldquo;{app.message}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                    app.status === "PENDING"
+                      ? "bg-amber-50 text-amber-700"
+                      : app.status === "ACCEPTED"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-slate-100 text-slate-600"
+                  }`}>
+                    {app.status}
+                  </span>
+                  {app.status === "PENDING" && (
+                    <button
+                      onClick={() => handleAccept(app.id)}
+                      className="text-xs font-semibold px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all"
+                    >
+                      Accept
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
