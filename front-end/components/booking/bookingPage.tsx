@@ -176,7 +176,24 @@ export function CreateBookingForm({
 
   // Live slots win over the static weekly schedule when available
   const staticDayAvailability = technician.availability?.[selectedDayName];
-  const dayAvailability = liveSlots ?? staticDayAvailability ?? [];
+
+  // For TODAY's date, hide slots that have already started (e.g. at 4:00 PM
+  // the customer cannot book slots starting before 4:00 PM anymore)
+  const todayKey = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
+  const isToday = selectedDate === todayKey;
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+
+  const dayAvailability = (
+    liveSlots ??
+    staticDayAvailability ??
+    []
+  ).filter((slot) => {
+    if (!isToday) return true;
+    const [h, m] = slot.start.split(":").map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return true;
+    const startMinutes = h * 60 + m;
+    return startMinutes >= nowMinutes; // slot time is gone for today otherwise
+  });
   const isTechnicianAvailableOnDay =
     Boolean(dayAvailability && dayAvailability.length > 0) &&
     technician.isAvailable;

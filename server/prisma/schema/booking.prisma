@@ -23,6 +23,7 @@ model Booking {
 
   reminder24hSent          Boolean   @default(false)
   reminder2hSent           Boolean   @default(false)
+  paymentReminderSent      Boolean   @default(false)
   reviewReminderSent       Boolean   @default(false)
   completedAt              DateTime?
   lastTechnicianRemindedAt DateTime?

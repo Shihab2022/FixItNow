@@ -1,17 +1,22 @@
 import cron from "node-cron";
 import { NotificationService } from "../services/notification.service";
 import { prisma } from "../lib/prisma";
-import { BookingStatus } from "../../generated/prisma/browser";
+import { BookingStatus, PaymentStatus } from "../../generated/prisma/browser";
 
 const defaultIncludes = {
-  customer: { select: { id: true, name: true, email: true } },
+  customer: { select: { id: true, name: true, email: true, phone: true } },
   service: { select: { id: true, title: true } },
   technician: {
     include: {
-      user: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, phone: true } },
     },
   },
 } as const;
+
+/** An unpaid booking is cancelled this many minutes after it was created */
+const PAYMENT_WINDOW_MINUTES = 60;
+/** A "complete your payment" reminder is sent this many minutes before the auto-cancel deadline */
+const PAYMENT_REMINDER_BEFORE_CANCEL_MINUTES = 10;
 
 /** Wraps email dispatch so a broken SMTP/queue never kills the cron loop */
 const safeNotify = async (action: () => Promise<void>): Promise<void> => {
@@ -22,11 +27,110 @@ const safeNotify = async (action: () => Promise<void>): Promise<void> => {
   }
 };
 
+/**
+ * Auto-cancel unpaid bookings 1 hour after they were created, and send a
+ * last-chance payment reminder email ~10 minutes before that deadline.
+ *   Example: booking created at 4:00 PM → reminder at ~4:50 PM with booking
+ *   details + payment link → cancelled at 5:00 PM if still unpaid.
+ */
+async function processPaymentDeadlines(now: Date) {
+  const unpaidWhere = {
+    paymentStatus: PaymentStatus.PENDING,
+    status: { in: [BookingStatus.REQUESTED, BookingStatus.ACCEPTED] },
+  };
+
+  // 1. Auto-cancel bookings whose 1-hour payment window has expired
+  const expiredBookings = await prisma.booking.findMany({
+    where: {
+      ...unpaidWhere,
+      createdAt: {
+        lte: new Date(now.getTime() - PAYMENT_WINDOW_MINUTES * 60 * 1000),
+      },
+    },
+    include: defaultIncludes as any,
+  });
+
+  for (const booking of expiredBookings) {
+    const cancellationReason =
+      "Automatically cancelled — payment was not completed within 1 hour of creating the booking.";
+    try {
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: {
+          status: BookingStatus.CANCELLED,
+          cancellationReason,
+        },
+      });
+      await safeNotify(() =>
+        NotificationService.sendBookingCancelled(
+          booking as any,
+          cancellationReason,
+        ),
+      );
+      console.log(
+        `[ReminderJob] Auto-cancelled unpaid booking ${booking.id} (payment window expired)`,
+      );
+    } catch (err) {
+      console.error(
+        `[ReminderJob] Failed to auto-cancel booking ${booking.id}:`,
+        err,
+      );
+    }
+  }
+
+  // 2. Last-chance payment reminder (10 minutes before the deadline, sent once)
+  const reminderCutoffMin = now.getTime() - PAYMENT_WINDOW_MINUTES * 60 * 1000;
+  const reminderStartMin =
+    now.getTime() -
+    (PAYMENT_WINDOW_MINUTES - PAYMENT_REMINDER_BEFORE_CANCEL_MINUTES) *
+      60 *
+      1000;
+
+  const bookingsForPaymentReminder = await prisma.booking.findMany({
+    where: {
+      ...unpaidWhere,
+      paymentReminderSent: false,
+      createdAt: {
+        gt: new Date(reminderCutoffMin), // deadline not yet passed (those were cancelled above)
+        lte: new Date(reminderStartMin), // deadline less than 10 minutes away
+      },
+    },
+    include: defaultIncludes as any,
+  });
+
+  for (const booking of bookingsForPaymentReminder) {
+    const createdAt = new Date(booking.createdAt).getTime();
+    const deadline = createdAt + PAYMENT_WINDOW_MINUTES * 60 * 1000;
+    const minutesRemaining = Math.max(
+      1,
+      Math.round((deadline - now.getTime()) / 60000),
+    );
+
+    await safeNotify(() =>
+      NotificationService.sendPaymentDeadlineReminder(
+        booking as any,
+        minutesRemaining,
+      ),
+    );
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: { paymentReminderSent: true },
+    });
+  }
+}
+
 export function initializeReminderCronJobs() {
-  // Runs every 15 minutes
-  cron.schedule("*/15 * * * *", async () => {
+  // Runs every minute so the payment-deadline reminder lands close to exactly
+  // 10 minutes before the 1-hour auto-cancellation deadline and unpaid
+  // bookings are cancelled promptly once their 1-hour window expires.
+  //   Example: booking created at 4:00 PM → payment reminder at ~4:50 PM with
+  //   booking details + payment URL → cancelled at 5:00 PM if still unpaid.
+  cron.schedule("* * * * *", async () => {
     try {
       const now = new Date();
+
+      // 0. Unpaid bookings: payment reminder + 1-hour auto-cancel
+      await processPaymentDeadlines(now);
 
       // 1. 24-Hour Reminders
       const in24HoursMin = new Date(now.getTime() + 23.5 * 60 * 60 * 1000);

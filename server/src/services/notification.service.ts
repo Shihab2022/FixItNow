@@ -14,11 +14,13 @@ export interface BookingPayload {
     customer: {
         email: string;
         name: string;
+        phone?: string | null;
     };
     technician: {
         user: {
             email: string;
             name: string;
+            phone?: string | null;
         };
     };
     service: {
@@ -34,6 +36,40 @@ export interface PaymentPayload {
 }
 
 export class NotificationService {
+    // ------------------------------------------------------------------
+    // Frontend URL helpers — every link points to a REAL page so the
+    // buttons inside the emails never land on a 404 "not found" page.
+    // ------------------------------------------------------------------
+    /** Base URL with any trailing slash removed (config already normalizes it) */
+    private static baseUrl(): string {
+        return String(config.front_end_base_url || 'http://localhost:3000').replace(/\/+$/, '');
+    }
+    /** Customer booking details page (has Make Payment / Download Receipt buttons) */
+    private static customerBookingUrl(bookingId: string): string {
+        return `${this.baseUrl()}/booking/customer/${bookingId}`;
+    }
+    /** Customer bookings list */
+    private static customerBookingsUrl(): string {
+        return `${this.baseUrl()}/dashboard/customer/bookings`;
+    }
+    /** Technician bookings management page */
+    private static technicianBookingsUrl(): string {
+        return `${this.baseUrl()}/dashboard/technician/bookings`;
+    }
+
+    /** Support / platform inbox that receives operational copies (best-effort) */
+    private static get adminEmail(): string | undefined {
+        return config.contact?.email || config.admin?.email || undefined;
+    }
+
+    /**
+     * Enqueue (or directly send) one email.
+     *
+     * Delivery is BEST-EFFORT: if one recipient's SMTP send fails, the error is
+     * caught here so the remaining recipients (e.g. the technician when the
+     * customer email fails, or the admin copy) are still sent. This guarantees
+     * that every party always receives their own notification independently.
+     */
     private static async dispatch(
         idempotencyKey: string,
         to: string,
@@ -42,7 +78,48 @@ export class NotificationService {
         templateData: Record<string, any>,
         attachments?: EmailAttachment[]
     ) {
-        await enqueueEmail({ idempotencyKey, to, subject, templateName, templateData, attachments });
+        try {
+            await enqueueEmail({ idempotencyKey, to, subject, templateName, templateData, attachments });
+        } catch (err) {
+            console.error(
+                `[Notification] Email "${templateName}" to ${to} could not be sent:`,
+                (err as Error)?.message || err,
+            );
+        }
+    }
+
+    /** Shared template data: booking details that go to BOTH parties */
+    private static bookingInfo(booking: BookingPayload, formattedDate: string) {
+        return {
+            serviceTitle: booking.service.title,
+            scheduledDate: formattedDate,
+            scheduledTime: booking.scheduledTime,
+            customerAddress: booking.customerAddress,
+            totalPrice: EmailRenderer.formatCurrency(booking.totalPrice),
+            bookingId: booking.id,
+        };
+    }
+
+    /** Build the shared booking-details PDF (booking + both parties' contact info) */
+    private static async bookingDetailsPdf(
+        booking: BookingPayload,
+        status: string
+    ): Promise<EmailAttachment | undefined> {
+        return this.bookingPdfAttachment({
+            bookingId: booking.id,
+            serviceTitle: booking.service.title,
+            technicianName: booking.technician.user.name,
+            customerName: booking.customer.name,
+            scheduledDate: EmailRenderer.formatDate(booking.scheduledDate),
+            scheduledTime: booking.scheduledTime,
+            customerAddress: booking.customerAddress,
+            totalPrice: EmailRenderer.formatCurrency(booking.totalPrice),
+            status,
+            customerPhone: booking.customer.phone,
+            customerEmail: booking.customer.email,
+            technicianPhone: booking.technician.user.phone,
+            technicianEmail: booking.technician.user.email,
+        });
     }
 
     /** Generate a booking PDF attachment best-effort; email still sends when generation fails */
@@ -58,6 +135,10 @@ export class NotificationService {
             totalPrice: string;
             status?: string;
             notes?: string;
+            customerPhone?: string | null;
+            customerEmail?: string | null;
+            technicianPhone?: string | null;
+            technicianEmail?: string | null;
         },
         filename: string = 'booking-details.pdf'
     ): Promise<EmailAttachment | undefined> {
@@ -81,6 +162,9 @@ export class NotificationService {
             technicianName: string;
             scheduledDate: string;
             status?: string;
+            customerName?: string;
+            customerPhone?: string | null;
+            technicianPhone?: string | null;
         },
         filename: string = 'payment-receipt.pdf'
     ): Promise<EmailAttachment | undefined> {
@@ -97,20 +181,12 @@ export class NotificationService {
     // 1. BOOKING_CREATED
     public static async sendBookingCreated(booking: BookingPayload): Promise<void> {
         const formattedDate = EmailRenderer.formatDate(booking.scheduledDate);
-        const formattedPrice = EmailRenderer.formatCurrency(booking.totalPrice);
+        const info = this.bookingInfo(booking, formattedDate);
 
-        // Customer Email
-        const customerAttachment = await this.bookingPdfAttachment({
-            bookingId: booking.id,
-            serviceTitle: booking.service.title,
-            technicianName: booking.technician.user.name,
-            customerName: booking.customer.name,
-            scheduledDate: formattedDate,
-            scheduledTime: booking.scheduledTime,
-            customerAddress: booking.customerAddress,
-            totalPrice: formattedPrice,
-            status: 'Pending Technician Approval',
-        });
+        // Booking summary PDF goes to BOTH parties (customer + technician)
+        const attachment = await this.bookingDetailsPdf(booking, 'Pending Technician Approval');
+
+        // Customer Email — includes the TECHNICIAN's contact info
         await this.dispatch(
             `evt_created_cust_${booking.id}`,
             booking.customer.email,
@@ -118,19 +194,16 @@ export class NotificationService {
             'bookingCreatedCustomer',
             {
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
+                ...info,
                 technicianName: booking.technician.user.name,
-                scheduledDate: formattedDate,
-                scheduledTime: booking.scheduledTime,
-                customerAddress: booking.customerAddress,
-                totalPrice: formattedPrice,
-                bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
+                technicianPhone: booking.technician.user.phone,
+                technicianEmail: booking.technician.user.email,
+                ctaUrl: this.customerBookingUrl(booking.id),
             },
-            customerAttachment ? [customerAttachment] : undefined
+            attachment ? [attachment] : undefined
         );
 
-        // Technician Email
+        // Technician Email — includes the CUSTOMER's contact info
         await this.dispatch(
             `evt_created_tech_${booking.id}`,
             booking.technician.user.email,
@@ -139,19 +212,36 @@ export class NotificationService {
             {
                 technicianName: booking.technician.user.name,
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
-                scheduledDate: formattedDate,
-                scheduledTime: booking.scheduledTime,
-                customerAddress: booking.customerAddress,
-                totalPrice: formattedPrice,
-                bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}/manage`,
-            }
+                customerPhone: booking.customer.phone,
+                customerEmail: booking.customer.email,
+                ...info,
+                ctaUrl: this.technicianBookingsUrl(),
+            },
+            attachment ? [attachment] : undefined
         );
+
+        // Operational copy to the platform support inbox (never blocks; skipped when unset)
+        if (this.adminEmail) {
+            await this.dispatch(
+                `evt_created_admin_${booking.id}`,
+                this.adminEmail,
+                'New Booking Created on FixItNow',
+                'adminBookingAlert',
+                {
+                    event: 'New Booking Created',
+                    customerName: booking.customer.name,
+                    customerEmail: booking.customer.email,
+                    technicianName: booking.technician.user.name,
+                    ...info,
+                    bookingsUrl: `${config.front_end_base_url}/dashboard/admin/bookings`,
+                }
+            ).catch(() => undefined);
+        }
     }
 
     // 2. BOOKING_ACCEPTED
     public static async sendBookingAccepted(booking: BookingPayload): Promise<void> {
+        const attachment = await this.bookingDetailsPdf(booking, 'Accepted — Awaiting Payment');
         await this.dispatch(
             `evt_accepted_${booking.id}`,
             booking.customer.email,
@@ -159,20 +249,19 @@ export class NotificationService {
             'bookingAccepted',
             {
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
-                scheduledDate: EmailRenderer.formatDate(booking.scheduledDate),
-                scheduledTime: booking.scheduledTime,
-                customerAddress: booking.customerAddress,
-                totalPrice: EmailRenderer.formatCurrency(booking.totalPrice),
-                bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
-            }
+                technicianPhone: booking.technician.user.phone,
+                technicianEmail: booking.technician.user.email,
+                ...this.bookingInfo(booking, EmailRenderer.formatDate(booking.scheduledDate)),
+                ctaUrl: this.customerBookingUrl(booking.id),
+            },
+            attachment ? [attachment] : undefined
         );
     }
 
     // 3. BOOKING_DECLINED
     public static async sendBookingDeclined(booking: BookingPayload, reason?: string): Promise<void> {
+        const attachment = await this.bookingDetailsPdf(booking, 'Declined');
         await this.dispatch(
             `evt_declined_${booking.id}`,
             booking.customer.email,
@@ -180,76 +269,98 @@ export class NotificationService {
             'bookingDeclined',
             {
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
-                scheduledDate: EmailRenderer.formatDate(booking.scheduledDate),
-                scheduledTime: booking.scheduledTime,
-                bookingId: booking.id,
+                ...this.bookingInfo(booking, EmailRenderer.formatDate(booking.scheduledDate)),
                 declineReason: reason || booking.declineReason,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
-                browseUrl: `${config.front_end_base_url}/customer/bookings`,
-            }
+                ctaUrl: this.customerBookingsUrl(),
+                browseUrl: this.customerBookingsUrl(),
+            },
+            attachment ? [attachment] : undefined
         );
     }
 
     // 4. PAYMENT_SUCCESS
     public static async sendPaymentSuccess(payment: PaymentPayload): Promise<void> {
+        const booking = payment.booking;
         const formattedAmount = EmailRenderer.formatCurrency(payment.amount);
-        const formattedDate = EmailRenderer.formatDate(payment.booking.scheduledDate);
+        const formattedDate = EmailRenderer.formatDate(booking.scheduledDate);
 
-        // Customer Email
+        const info = {
+            ...this.bookingInfo(booking, formattedDate),
+            amount: formattedAmount,
+            transactionId: payment.transactionId,
+        };
+
+        // Payment receipt PDF goes to BOTH parties (customer + technician)
         const payAttachment = await this.paymentPdfAttachment({
             transactionId: payment.transactionId,
-            bookingId: payment.booking.id,
+            bookingId: booking.id,
             amount: formattedAmount,
-            serviceTitle: payment.booking.service.title,
-            technicianName: payment.booking.technician.user.name,
+            serviceTitle: booking.service.title,
+            technicianName: booking.technician.user.name,
             scheduledDate: formattedDate,
             status: 'Successful',
+            customerName: booking.customer.name,
+            customerPhone: booking.customer.phone,
+            technicianPhone: booking.technician.user.phone,
         });
+
+        // Customer Email — includes the TECHNICIAN's contact info
         await this.dispatch(
             `evt_pay_success_cust_${payment.transactionId}`,
-            payment.booking.customer.email,
+            booking.customer.email,
             'Payment Successful — Booking Confirmed',
             'paymentSuccessCustomer',
             {
-                customerName: payment.booking.customer.name,
-                serviceTitle: payment.booking.service.title,
-                technicianName: payment.booking.technician.user.name,
-                amount: formattedAmount,
-                transactionId: payment.transactionId,
-                scheduledDate: formattedDate,
-                scheduledTime: payment.booking.scheduledTime,
-                customerAddress: payment.booking.customerAddress,
-                bookingId: payment.booking.id,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${payment.booking.id}`,
+                customerName: booking.customer.name,
+                technicianName: booking.technician.user.name,
+                technicianPhone: booking.technician.user.phone,
+                technicianEmail: booking.technician.user.email,
+                ...info,
+                ctaUrl: this.customerBookingUrl(booking.id),
             },
             payAttachment ? [payAttachment] : undefined
         );
 
-        // Technician Email
+        // Technician Email — includes the CUSTOMER's contact info
         await this.dispatch(
             `evt_pay_success_tech_${payment.transactionId}`,
-            payment.booking.technician.user.email,
+            booking.technician.user.email,
             'Payment Received for Your Booking',
             'paymentSuccessTechnician',
             {
-                technicianName: payment.booking.technician.user.name,
-                customerName: payment.booking.customer.name,
-                serviceTitle: payment.booking.service.title,
-                amount: formattedAmount,
-                transactionId: payment.transactionId,
-                scheduledDate: formattedDate,
-                scheduledTime: payment.booking.scheduledTime,
-                customerAddress: payment.booking.customerAddress,
-                bookingId: payment.booking.id,
-                ctaUrl: `${config.front_end_base_url}/technician/bookings/${payment.booking.id}`,
-            }
+                technicianName: booking.technician.user.name,
+                customerName: booking.customer.name,
+                customerPhone: booking.customer.phone,
+                customerEmail: booking.customer.email,
+                ...info,
+                ctaUrl: this.technicianBookingsUrl(),
+            },
+            payAttachment ? [payAttachment] : undefined
         );
+
+        // Operational copy to the platform support inbox
+        if (this.adminEmail) {
+            await this.dispatch(
+                `evt_pay_success_admin_${payment.transactionId}`,
+                this.adminEmail,
+                'Payment Received on FixItNow',
+                'adminBookingAlert',
+                {
+                    event: 'Payment Received',
+                    customerName: booking.customer.name,
+                    customerEmail: booking.customer.email,
+                    technicianName: booking.technician.user.name,
+                    ...info,
+                    bookingsUrl: `${config.front_end_base_url}/dashboard/admin/bookings`,
+                }
+            ).catch(() => undefined);
+        }
     }
 
     // 5. PAYMENT_FAILED
     public static async sendPaymentFailed(booking: BookingPayload, amount: number): Promise<void> {
+        const attachment = await this.bookingDetailsPdf(booking, 'Payment Failed');
         await this.dispatch(
             `evt_pay_failed_${booking.id}_${Date.now()}`,
             booking.customer.email,
@@ -257,20 +368,26 @@ export class NotificationService {
             'paymentFailed',
             {
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
+                serviceTitle: booking.service.title,
+                scheduledDate: EmailRenderer.formatDate(booking.scheduledDate),
+                scheduledTime: booking.scheduledTime,
                 amount: EmailRenderer.formatCurrency(amount),
                 bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}/payment`,
-            }
+                ctaUrl: this.customerBookingUrl(booking.id),
+            },
+            attachment ? [attachment] : undefined
         );
     }
 
     // 6. BOOKING_CANCELLED
     public static async sendBookingCancelled(booking: BookingPayload, reason?: string): Promise<void> {
         const formattedDate = EmailRenderer.formatDate(booking.scheduledDate);
+        const info = this.bookingInfo(booking, formattedDate);
 
-        // Customer Email
+        const attachment = await this.bookingDetailsPdf(booking, 'Cancelled');
+
+        // Customer Email — includes the TECHNICIAN's contact info
         await this.dispatch(
             `evt_cancel_cust_${booking.id}`,
             booking.customer.email,
@@ -278,17 +395,17 @@ export class NotificationService {
             'bookingCancelledCustomer',
             {
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
-                scheduledDate: formattedDate,
-                scheduledTime: booking.scheduledTime,
-                bookingId: booking.id,
+                technicianPhone: booking.technician.user.phone,
+                technicianEmail: booking.technician.user.email,
+                ...info,
                 cancellationReason: reason || booking.cancellationReason,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
-            }
+                ctaUrl: this.customerBookingsUrl(),
+            },
+            attachment ? [attachment] : undefined
         );
 
-        // Technician Email
+        // Technician Email — includes the CUSTOMER's contact info
         await this.dispatch(
             `evt_cancel_tech_${booking.id}`,
             booking.technician.user.email,
@@ -297,13 +414,13 @@ export class NotificationService {
             {
                 technicianName: booking.technician.user.name,
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
-                scheduledDate: formattedDate,
-                scheduledTime: booking.scheduledTime,
-                bookingId: booking.id,
+                customerPhone: booking.customer.phone,
+                customerEmail: booking.customer.email,
+                ...info,
                 cancellationReason: reason || booking.cancellationReason,
-                ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}`,
-            }
+                ctaUrl: this.technicianBookingsUrl(),
+            },
+            attachment ? [attachment] : undefined
         );
     }
 
@@ -315,10 +432,11 @@ export class NotificationService {
     ): Promise<void> {
         const formattedOldDate = EmailRenderer.formatDate(oldDate);
         const formattedNewDate = EmailRenderer.formatDate(booking.scheduledDate);
+        const eventKey = booking.scheduledDate.getTime();
 
-        // Customer
+        // Customer — includes the TECHNICIAN's contact info
         await this.dispatch(
-            `evt_resched_cust_${booking.id}_${booking.scheduledDate.getTime()}`,
+            `evt_resched_cust_${booking.id}_${eventKey}`,
             booking.customer.email,
             'Your Booking Has Been Rescheduled',
             'bookingRescheduled',
@@ -326,18 +444,19 @@ export class NotificationService {
                 recipientName: booking.customer.name,
                 serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
+                technicianPhone: booking.technician.user.phone,
                 oldDate: formattedOldDate,
                 oldTime: oldTime,
                 newDate: formattedNewDate,
                 newTime: booking.scheduledTime,
                 bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
+                ctaUrl: this.customerBookingUrl(booking.id),
             }
         );
 
-        // Technician
+        // Technician — includes the CUSTOMER's contact info
         await this.dispatch(
-            `evt_resched_tech_${booking.id}_${booking.scheduledDate.getTime()}`,
+            `evt_resched_tech_${booking.id}_${eventKey}`,
             booking.technician.user.email,
             'Your Booking Has Been Rescheduled',
             'bookingRescheduled',
@@ -345,12 +464,14 @@ export class NotificationService {
                 recipientName: booking.technician.user.name,
                 serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
+                customerName: booking.customer.name,
+                customerPhone: booking.customer.phone,
                 oldDate: formattedOldDate,
                 oldTime: oldTime,
                 newDate: formattedNewDate,
                 newTime: booking.scheduledTime,
                 bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}`,
+                ctaUrl: this.technicianBookingsUrl(),
             }
         );
     }
@@ -358,8 +479,10 @@ export class NotificationService {
     // 8. BOOKING_REMINDER_24H
     public static async sendBookingReminder24h(booking: BookingPayload): Promise<void> {
         const formattedDate = EmailRenderer.formatDate(booking.scheduledDate);
+        const info = this.bookingInfo(booking, formattedDate);
+        const attachment = await this.bookingDetailsPdf(booking, 'Reminder');
 
-        // Customer
+        // Customer — includes the TECHNICIAN's contact info
         await this.dispatch(
             `evt_rem_24h_cust_${booking.id}`,
             booking.customer.email,
@@ -367,17 +490,15 @@ export class NotificationService {
             'bookingReminder24hCustomer',
             {
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
-                scheduledDate: formattedDate,
-                scheduledTime: booking.scheduledTime,
-                customerAddress: booking.customerAddress,
-                bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
-            }
+                technicianPhone: booking.technician.user.phone,
+                ...info,
+                ctaUrl: this.customerBookingUrl(booking.id),
+            },
+            attachment ? [attachment] : undefined
         );
 
-        // Technician
+        // Technician — includes the CUSTOMER's contact info
         await this.dispatch(
             `evt_rem_24h_tech_${booking.id}`,
             booking.technician.user.email,
@@ -386,21 +507,22 @@ export class NotificationService {
             {
                 technicianName: booking.technician.user.name,
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
-                scheduledDate: formattedDate,
-                scheduledTime: booking.scheduledTime,
-                customerAddress: booking.customerAddress,
-                bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}`,
-            }
+                customerPhone: booking.customer.phone,
+                customerEmail: booking.customer.email,
+                ...info,
+                ctaUrl: this.technicianBookingsUrl(),
+            },
+            attachment ? [attachment] : undefined
         );
     }
 
     // 9. BOOKING_REMINDER_2H
     public static async sendBookingReminder2h(booking: BookingPayload): Promise<void> {
         const formattedDate = EmailRenderer.formatDate(booking.scheduledDate);
+        const info = this.bookingInfo(booking, formattedDate);
+        const attachment = await this.bookingDetailsPdf(booking, 'Reminder');
 
-        // Customer
+        // Customer — includes the TECHNICIAN's contact info
         await this.dispatch(
             `evt_rem_2h_cust_${booking.id}`,
             booking.customer.email,
@@ -408,17 +530,15 @@ export class NotificationService {
             'bookingReminder2hCustomer',
             {
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
-                scheduledDate: formattedDate,
-                scheduledTime: booking.scheduledTime,
-                customerAddress: booking.customerAddress,
-                bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
-            }
+                technicianPhone: booking.technician.user.phone,
+                ...info,
+                ctaUrl: this.customerBookingUrl(booking.id),
+            },
+            attachment ? [attachment] : undefined
         );
 
-        // Technician
+        // Technician — includes the CUSTOMER's contact info
         await this.dispatch(
             `evt_rem_2h_tech_${booking.id}`,
             booking.technician.user.email,
@@ -427,13 +547,12 @@ export class NotificationService {
             {
                 technicianName: booking.technician.user.name,
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
-                scheduledDate: formattedDate,
-                scheduledTime: booking.scheduledTime,
-                customerAddress: booking.customerAddress,
-                bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}`,
-            }
+                customerPhone: booking.customer.phone,
+                customerEmail: booking.customer.email,
+                ...info,
+                ctaUrl: this.technicianBookingsUrl(),
+            },
+            attachment ? [attachment] : undefined
         );
     }
 
@@ -446,10 +565,11 @@ export class NotificationService {
             'bookingStarted',
             {
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
+                technicianPhone: booking.technician.user.phone,
+                serviceTitle: booking.service.title,
                 bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}`,
+                ctaUrl: this.customerBookingUrl(booking.id),
             }
         );
     }
@@ -457,39 +577,28 @@ export class NotificationService {
     // 11. BOOKING_COMPLETED
     public static async sendBookingCompleted(booking: BookingPayload): Promise<void> {
         const formattedDate = EmailRenderer.formatDate(booking.scheduledDate);
+        const info = this.bookingInfo(booking, formattedDate);
 
-        // Customer
-        const completedAttachment = await this.bookingPdfAttachment({
-            bookingId: booking.id,
-            serviceTitle: booking.service.title,
-            technicianName: booking.technician.user.name,
-            customerName: booking.customer.name,
-            scheduledDate: formattedDate,
-            scheduledTime: booking.scheduledTime || '',
-            customerAddress: booking.customerAddress,
-            totalPrice: EmailRenderer.formatCurrency(booking.totalPrice),
-            status: 'Completed',
-        });
+        const completedAttachment = await this.bookingDetailsPdf(booking, 'Completed');
+
+        // Customer — includes the TECHNICIAN's contact info
         await this.dispatch(
             `evt_completed_cust_${booking.id}`,
             booking.customer.email,
-            'Your Service Has Been Completed',
+            'Booking Completed',
             'bookingCompletedCustomer',
             {
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
-                scheduledDate: formattedDate,
-                scheduledTime: booking.scheduledTime || '',
-                customerAddress: booking.customerAddress,
-                totalPrice: EmailRenderer.formatCurrency(booking.totalPrice),
-                bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}/review`,
+                technicianPhone: booking.technician.user.phone,
+                technicianEmail: booking.technician.user.email,
+                ...info,
+                ctaUrl: this.customerBookingUrl(booking.id),
             },
             completedAttachment ? [completedAttachment] : undefined
         );
 
-        // Technician
+        // Technician — includes the CUSTOMER's contact info
         await this.dispatch(
             `evt_completed_tech_${booking.id}`,
             booking.technician.user.email,
@@ -498,11 +607,12 @@ export class NotificationService {
             {
                 technicianName: booking.technician.user.name,
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
-                scheduledDate: formattedDate,
-                bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}`,
-            }
+                customerPhone: booking.customer.phone,
+                customerEmail: booking.customer.email,
+                ...info,
+                ctaUrl: this.technicianBookingsUrl(),
+            },
+            completedAttachment ? [completedAttachment] : undefined
         );
     }
 
@@ -515,10 +625,10 @@ export class NotificationService {
             'reviewRequested',
             {
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
+                serviceTitle: booking.service.title,
                 bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}/review`,
+                ctaUrl: this.customerBookingUrl(booking.id),
             }
         );
     }
@@ -532,10 +642,10 @@ export class NotificationService {
             'reviewReminder',
             {
                 customerName: booking.customer.name,
-                serviceTitle: booking.service.title,
                 technicianName: booking.technician.user.name,
+                serviceTitle: booking.service.title,
                 bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/customer/bookings/${booking.id}/review`,
+                ctaUrl: this.customerBookingUrl(booking.id),
             }
         );
     }
@@ -550,13 +660,39 @@ export class NotificationService {
             {
                 technicianName: booking.technician.user.name,
                 customerName: booking.customer.name,
+                customerPhone: booking.customer.phone,
+                customerEmail: booking.customer.email,
                 serviceTitle: booking.service.title,
                 scheduledDate: EmailRenderer.formatDate(booking.scheduledDate),
                 scheduledTime: booking.scheduledTime,
                 customerAddress: booking.customerAddress,
                 bookingId: booking.id,
-                ctaUrl: `${config.front_end_base_url}/technician/bookings/${booking.id}/manage`,
+                ctaUrl: this.technicianBookingsUrl(),
             }
+        );
+    }
+
+    // 15. PAYMENT_DEADLINE_REMINDER — sent ~10 minutes before an unpaid
+    // booking is auto-cancelled (1 hour after creation), with a direct
+    // link to the booking page so the customer can still pay.
+    public static async sendPaymentDeadlineReminder(
+        booking: BookingPayload,
+        minutesRemaining: number
+    ): Promise<void> {
+        const attachment = await this.bookingDetailsPdf(booking, 'Awaiting Payment');
+        await this.dispatch(
+            `evt_pay_deadline_${booking.id}`,
+            booking.customer.email,
+            `Action Required: Complete Your Payment Within ${Math.max(minutesRemaining, 1)} Minutes`,
+            'paymentDeadlineReminder',
+            {
+                customerName: booking.customer.name,
+                technicianName: booking.technician.user.name,
+                ...this.bookingInfo(booking, EmailRenderer.formatDate(booking.scheduledDate)),
+                minutesRemaining: Math.max(minutesRemaining, 1),
+                ctaUrl: this.customerBookingUrl(booking.id),
+            },
+            attachment ? [attachment] : undefined
         );
     }
 

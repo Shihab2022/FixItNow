@@ -327,7 +327,7 @@ export const generatePdfBuffer = async (
     });
 };
 
-/** Builds a booking details invoice (used for booking-created / completed emails) */
+/** Builds a booking details invoice (used for booking emails to both parties) */
 export const buildBookingInvoice = (payload: {
     bookingId: string;
     serviceTitle?: string;
@@ -339,6 +339,10 @@ export const buildBookingInvoice = (payload: {
     totalPrice?: string;
     status?: string;
     notes?: string;
+    customerPhone?: string | null;
+    customerEmail?: string | null;
+    technicianPhone?: string | null;
+    technicianEmail?: string | null;
 }): PdfInvoiceData => ({
     title: 'Booking Details',
     subtitle: 'Booking Confirmation',
@@ -346,7 +350,19 @@ export const buildBookingInvoice = (payload: {
         { label: 'Booking ID', value: payload.bookingId },
         { label: 'Service', value: payload.serviceTitle || 'N/A' },
         { label: 'Technician', value: payload.technicianName || 'N/A' },
+        ...(payload.technicianPhone
+            ? [{ label: 'Technician Phone', value: String(payload.technicianPhone) }]
+            : []),
+        ...(payload.technicianEmail
+            ? [{ label: 'Technician Email', value: String(payload.technicianEmail) }]
+            : []),
         { label: 'Customer', value: payload.customerName || 'N/A' },
+        ...(payload.customerPhone
+            ? [{ label: 'Customer Phone', value: String(payload.customerPhone) }]
+            : []),
+        ...(payload.customerEmail
+            ? [{ label: 'Customer Email', value: String(payload.customerEmail) }]
+            : []),
         { label: 'Scheduled Date', value: payload.scheduledDate || 'N/A' },
         { label: 'Scheduled Time', value: payload.scheduledTime || 'N/A' },
         { label: 'Address', value: payload.customerAddress || 'N/A' },
@@ -375,6 +391,9 @@ export const buildPaymentInvoice = (payload: {
     technicianName?: string;
     scheduledDate?: string;
     status?: string;
+    customerName?: string;
+    customerPhone?: string | null;
+    technicianPhone?: string | null;
 }): PdfInvoiceData => ({
     title: 'Payment Receipt',
     subtitle: 'Paid',
@@ -383,6 +402,15 @@ export const buildPaymentInvoice = (payload: {
         { label: 'Booking ID', value: payload.bookingId },
         { label: 'Service', value: payload.serviceTitle || 'N/A' },
         { label: 'Technician', value: payload.technicianName || 'N/A' },
+        ...(payload.technicianPhone
+            ? [{ label: 'Technician Phone', value: String(payload.technicianPhone) }]
+            : []),
+        ...(payload.customerName
+            ? [{ label: 'Customer', value: payload.customerName }]
+            : []),
+        ...(payload.customerPhone
+            ? [{ label: 'Customer Phone', value: String(payload.customerPhone) }]
+            : []),
         { label: 'Date', value: payload.scheduledDate || 'N/A' },
         { label: 'Status', value: payload.status || 'Successful' },
     ],

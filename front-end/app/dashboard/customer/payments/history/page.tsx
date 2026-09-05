@@ -101,21 +101,27 @@ export default function PaymentHistoryPage() {
     ["PAID", "COMPLETED"].includes(p.status?.toUpperCase()),
   ).length;
 
-  // Filter Search
-  const filteredPayments = payments.filter((p) => {
-    const query = searchQuery.toLowerCase();
-    const serviceTitle = p.booking?.service?.title || "";
-    const transactionId = p.transactionId || "";
-    const id = p.id || "";
-    const status = p.status || "";
+  // Filter Search (newest payments first)
+  const filteredPayments = [...payments]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt || 0).getTime() -
+        new Date(a.createdAt || 0).getTime(),
+    )
+    .filter((p) => {
+      const query = searchQuery.toLowerCase();
+      const serviceTitle = p.booking?.service?.title || "";
+      const transactionId = p.transactionId || "";
+      const id = p.id || "";
+      const status = p.status || "";
 
-    return (
-      serviceTitle.toLowerCase().includes(query) ||
-      transactionId.toLowerCase().includes(query) ||
-      id.toLowerCase().includes(query) ||
-      status.toLowerCase().includes(query)
-    );
-  });
+      return (
+        serviceTitle.toLowerCase().includes(query) ||
+        transactionId.toLowerCase().includes(query) ||
+        id.toLowerCase().includes(query) ||
+        status.toLowerCase().includes(query)
+      );
+    });
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">

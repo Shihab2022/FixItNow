@@ -39,6 +39,30 @@
       <td style="padding: 4px 0;"><%= customerAddress %></td>
     </tr>
     <% } %>
+    <% if (typeof customerPhone !== 'undefined' && customerPhone) { %>
+    <tr>
+      <td style="padding: 4px 0; font-weight: 600;">Customer Phone:</td>
+      <td style="padding: 4px 0;"><%= customerPhone %></td>
+    </tr>
+    <% } %>
+    <% if (typeof customerEmail !== 'undefined' && customerEmail) { %>
+    <tr>
+      <td style="padding: 4px 0; font-weight: 600;">Customer Email:</td>
+      <td style="padding: 4px 0;"><%= customerEmail %></td>
+    </tr>
+    <% } %>
+    <% if (typeof technicianPhone !== 'undefined' && technicianPhone) { %>
+    <tr>
+      <td style="padding: 4px 0; font-weight: 600;">Technician Phone:</td>
+      <td style="padding: 4px 0;"><%= technicianPhone %></td>
+    </tr>
+    <% } %>
+    <% if (typeof technicianEmail !== 'undefined' && technicianEmail) { %>
+    <tr>
+      <td style="padding: 4px 0; font-weight: 600;">Technician Email:</td>
+      <td style="padding: 4px 0;"><%= technicianEmail %></td>
+    </tr>
+    <% } %>
     <% if (typeof totalPrice !== 'undefined') { %>
     <tr>
       <td style="padding: 4px 0; font-weight: 600;">Total Price:</td>

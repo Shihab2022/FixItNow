@@ -7,6 +7,7 @@ import ApiError from "../../helpars/ApiError";
 import { prisma } from "../../lib/prisma";
 import { TimeSlot, UpdateAvailabilityPayload } from "../../types";
 import httpStatus from "http-status";
+import { isWithinCancellationWindow } from "../../utils/bookingTime";
 
 const UpdateProfile = async (id: string, payload: any) => {
   const updateData = Object.fromEntries(
@@ -87,7 +88,7 @@ const GetBookingHistory = async (userId: string) => {
       },
     },
     orderBy: {
-      scheduledDate: "asc",
+      createdAt: "desc",
     },
   });
 
@@ -119,6 +120,50 @@ const UpdateBookingStatus = async (
       technicianId: technician.id,
     },
   });
+
+  // --- Status transition guards -------------------------------------------
+  // 1. A job can only be completed when the customer has paid for it.
+  if (
+    status === BookingStatus.COMPLETED &&
+    booking.paymentStatus !== "COMPLETED"
+  ) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "This job cannot be completed because the payment has not been completed yet. Please wait for the customer's payment.",
+    );
+  }
+  // 2. Confirmed bookings (accepted/paid) can only be cancelled until
+  //    2 hours before the scheduled start time.
+  if (
+    status === BookingStatus.CANCELLED &&
+    (booking.status === BookingStatus.ACCEPTED ||
+      booking.status === BookingStatus.PAID) &&
+    isWithinCancellationWindow(booking)
+  ) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Bookings can only be cancelled at least 2 hours before the scheduled start time.",
+    );
+  }
+  // 3. Basic lifecycle validation
+  const allowedTransitions: Partial<Record<BookingStatus, BookingStatus[]>> = {
+    [BookingStatus.ACCEPTED]: [BookingStatus.REQUESTED],
+    [BookingStatus.DECLINED]: [BookingStatus.REQUESTED],
+    [BookingStatus.IN_PROGRESS]: [BookingStatus.ACCEPTED, BookingStatus.PAID],
+    [BookingStatus.COMPLETED]: [BookingStatus.IN_PROGRESS],
+    [BookingStatus.CANCELLED]: [
+      BookingStatus.REQUESTED,
+      BookingStatus.ACCEPTED,
+      BookingStatus.PAID,
+    ],
+  };
+  const allowedFrom = allowedTransitions[status];
+  if (allowedFrom && !allowedFrom.includes(booking.status)) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `Cannot change a ${booking.status.toLowerCase()} booking to ${status.toLowerCase()}.`,
+    );
+  }
 
   const { declineReason, cancellationReason } = extra || {};
 
@@ -179,11 +224,11 @@ async function loadBookingForNotification(bookingId: string): Promise<BookingPay
       scheduledTime: true,
       customerAddress: true,
       totalPrice: true,
-      customer: { select: { email: true, name: true } },
+      customer: { select: { email: true, name: true, phone: true } },
       service: { select: { title: true } },
       technician: {
         include: {
-          user: { select: { email: true, name: true } },
+          user: { select: { email: true, name: true, phone: true } },
         },
       },
     },

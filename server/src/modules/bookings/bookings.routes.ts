@@ -10,6 +10,11 @@ router.get(
   auth(Role.CUSTOMER),
   BookingsController.GetTechnicianAvailability,
 );
+router.patch(
+  "/:id/cancel",
+  auth(Role.CUSTOMER),
+  BookingsController.CancelBookingByCustomer,
+);
 router.get("/:id", auth(Role.CUSTOMER, Role.ADMIN), BookingsController.GetBookingDetails);
 
 export const BookingsRouter = router;

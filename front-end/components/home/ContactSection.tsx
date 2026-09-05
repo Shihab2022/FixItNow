@@ -88,10 +88,10 @@ export default function ContactSection() {
                 Reach our response team anytime.
               </p>
               <a
-                href="mailto:support@fixit.com"
+                href="mailto:support@fixitnow.com"
                 className="text-xs font-bold text-blue-600 hover:underline block"
               >
-                support@fixit.com
+                support@fixitnow.com
               </a>
             </div>
 

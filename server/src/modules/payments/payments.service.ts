@@ -77,11 +77,11 @@ const confirm = async (payload: any) => {
     include: {
       booking: {
         include: {
-          customer: { select: { id: true, name: true, email: true } },
+          customer: { select: { id: true, name: true, email: true, phone: true } },
           service: { select: { id: true, title: true } },
           technician: {
             include: {
-              user: { select: { name: true, email: true } },
+              user: { select: { name: true, email: true, phone: true } },
             },
           },
         },
@@ -152,6 +152,9 @@ const GetPaymentHistory = async (id: string) => {
   const paymentHistory = await prisma.payment.findMany({
     where: {
       customerId: id,
+    },
+    orderBy: {
+      createdAt: "desc", // latest payments first
     },
     include: {
       booking: {

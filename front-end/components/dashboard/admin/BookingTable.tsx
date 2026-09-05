@@ -107,13 +107,21 @@ export const BookingTable: React.FC = () => {
     );
   };
 
-  const filteredBookings = allBookings.filter(
-    (booking) =>
-      booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.technicianId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.serviceId.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  // Always show the newest bookings first (defensive sort — the API returns
+  // them sorted by createdAt desc, this keeps it stable even with filters).
+  const filteredBookings = [...allBookings]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt || 0).getTime() -
+        new Date(a.createdAt || 0).getTime(),
+    )
+    .filter(
+      (booking) =>
+        booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.technicianId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.serviceId.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
 
   return (
     <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">

@@ -19,9 +19,12 @@ import {
   FiCreditCard,
   FiAlertTriangle,
   FiCheckCircle,
+  FiLock,
 } from "react-icons/fi";
-import { getAllBookingsApi } from "@/service/publicApi";
+import { getAllBookingsApi, cancelBookingApi } from "@/service/publicApi";
 import { createPayment } from "@/service/payment";
+import { showToast } from "@/components/toast/toast";
+import { toastTypes } from "@/app/constant";
 
 interface ApiBooking {
   id: string;
@@ -61,6 +64,34 @@ interface ApiBooking {
   };
 }
 
+/** Parse the START of a slot string like "08:00 AM - 04:00 PM" into minutes since midnight */
+const parseSlotStartMinutes = (time?: string): number | null => {
+  if (!time) return null;
+  const firstPart = time.trim().split("-")[0]?.trim() || "";
+  const match = firstPart.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!match) return null;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const period = match[3]?.toUpperCase();
+  if (period === "PM" && hours < 12) hours += 12;
+  if (period === "AM" && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+};
+
+/**
+ * True when more than 2 hours remain before the scheduled start time
+ * (e.g. a 4:00 PM booking can be cancelled until 2:00 PM).
+ * Slot times are local (Bangladesh, UTC+6) wall-clock times.
+ */
+const isMoreThanTwoHoursAway = (booking: ApiBooking): boolean => {
+  const startMinutes = parseSlotStartMinutes(booking.scheduledTime);
+  if (!booking.scheduledDate || startMinutes === null) return true; // cannot determine — let the server decide
+  const dateKey = new Date(booking.scheduledDate).toISOString().slice(0, 10);
+  const utcMidnight = new Date(`${dateKey}T00:00:00.000Z`).getTime();
+  const scheduledInstant = utcMidnight + (startMinutes - 360) * 60000; // UTC+6 → UTC
+  return scheduledInstant - Date.now() > 2 * 60 * 60 * 1000;
+};
+
 export default function CustomerBookingsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -99,32 +130,46 @@ export default function CustomerBookingsPage() {
     }
   };
   const filteredBookings = useMemo(() => {
-    return bookings.filter((booking) => {
-      const serviceTitle = booking.service?.title || "";
-      const techName = booking.service?.technician?.user?.name || "";
-      const bookingId = booking.id || "";
-      const address = booking.customerAddress || "";
+    // Show newest bookings first (defensive sort — the API already sorts desc)
+    return [...bookings]
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt || 0).getTime() -
+          new Date(a.createdAt || 0).getTime(),
+      )
+      .filter((booking) => {
+        const serviceTitle = booking.service?.title || "";
+        const techName = booking.service?.technician?.user?.name || "";
+        const bookingId = booking.id || "";
+        const address = booking.customerAddress || "";
 
-      const matchesSearch =
-        serviceTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        techName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        bookingId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        address.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch =
+          serviceTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          techName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          bookingId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          address.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesStatus =
-        statusFilter === "all" ||
-        booking.status?.toUpperCase() === statusFilter.toUpperCase();
+        const matchesStatus =
+          statusFilter === "all" ||
+          booking.status?.toUpperCase() === statusFilter.toUpperCase();
 
-      return matchesSearch && matchesStatus;
-    });
+        return matchesSearch && matchesStatus;
+      });
   }, [bookings, searchQuery, statusFilter]);
 
   // Handle Action Trigger for Cancellation
   const handleInitiateCancel = (booking: ApiBooking) => {
     const isCompleted = booking.status?.toUpperCase() === "COMPLETED";
-    const isPaid = booking.paymentStatus?.toUpperCase() === "PAID";
+    const isCancelled = booking.status?.toUpperCase() === "CANCELLED";
+    const isPaid = booking.paymentStatus?.toUpperCase() === "COMPLETED";
 
-    if (isCompleted && isPaid) {
+    if (isCancelled) {
+      setCancelNotice("This booking has already been cancelled.");
+      setSelectedBookingForCancel(booking);
+      return;
+    }
+
+    if (isCompleted || isPaid) {
       setCancelNotice(
         "This service has been completed and payment has been processed. Completed bookings cannot be cancelled.",
       );
@@ -132,9 +177,10 @@ export default function CustomerBookingsPage() {
       return;
     }
 
-    if (isCompleted) {
+    // Cancellation window: allowed only until 2 hours before the appointment
+    if (!isMoreThanTwoHoursAway(booking)) {
       setCancelNotice(
-        "This service is already marked as completed and cannot be cancelled.",
+        "Bookings can only be cancelled at least 2 hours before the scheduled start time. For example, a 4:00 PM booking can be cancelled until 2:00 PM.",
       );
       setSelectedBookingForCancel(booking);
       return;
@@ -144,18 +190,38 @@ export default function CustomerBookingsPage() {
     setSelectedBookingForCancel(booking);
   };
 
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = async () => {
     if (!selectedBookingForCancel) return;
+    const bookingId = selectedBookingForCancel.id;
 
-    // Execute cancellation state update locally (replace with your cancel booking API call)
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === selectedBookingForCancel.id
-          ? { ...b, status: "CANCELLED" }
-          : b,
-      ),
-    );
-    setSelectedBookingForCancel(null);
+    try {
+      const res = await cancelBookingApi(bookingId, {
+        cancellationReason: "Cancelled by customer via dashboard.",
+      });
+
+      if (res?.data?.success) {
+        showToast(toastTypes.SUCCESS, "Booking cancelled successfully");
+        setBookings((prev) =>
+          prev.map((b) =>
+            b.id === bookingId ? { ...b, status: "CANCELLED" } : b,
+          ),
+        );
+        setSelectedBookingForCancel(null);
+        // Refresh the list from the server to get the latest state
+        getBooking();
+      } else {
+        // Server rejected (e.g. inside the 2-hour window) — show its message
+        setCancelNotice(
+          res?.message ||
+            "This booking cannot be cancelled. Bookings can only be cancelled at least 2 hours before the scheduled start time.",
+        );
+      }
+    } catch (error) {
+      console.error("Failed to cancel booking:", error);
+      setCancelNotice(
+        "Something went wrong while cancelling the booking. Please try again.",
+      );
+    }
   };
 
   // Status Badge Rendering
@@ -210,7 +276,8 @@ export default function CustomerBookingsPage() {
         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
           {paymentStatus}
         </span>
-        {booking.status?.toUpperCase() !== "CANCELLED" && (
+        {booking.status?.toUpperCase() !== "CANCELLED" &&
+          booking.status?.toUpperCase() !== "DECLINED" && (
           <button
             onClick={() => confirmPayment(booking.id)}
             className="inline-flex  cursor-pointer items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 hover:underline mt-0.5"
@@ -353,7 +420,7 @@ export default function CustomerBookingsPage() {
                       <td className="py-4 px-6">
                         <div className="space-y-1">
                           <Link
-                            href={`/customer/bookings/${booking.id}`}
+                            href={`/booking/customer/${booking.id}`}
                             className="font-bold text-slate-900 hover:text-blue-600 transition-colors block"
                           >
                             {booking.service?.title || "Home Service Request"}
@@ -439,27 +506,46 @@ export default function CustomerBookingsPage() {
                         {getStatusBadge(booking.status)}
                       </td>
 
-                      {/* Actions */}
+                      {/* Actions — hidden once the payment is completed (Req: action field hidden after payment) */}
                       <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link
-                            href={`/booking/customer/${booking.id}`}
-                            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="View Details"
-                          >
-                            <FiEye className="text-lg" />
-                          </Link>
-
-                          {booking.status?.toUpperCase() !== "CANCELLED" && (
-                            <button
-                              onClick={() => handleInitiateCancel(booking)}
-                              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                              title="Cancel Booking"
+                        {booking.paymentStatus?.toUpperCase() ===
+                        "COMPLETED" ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              href={`/booking/customer/${booking.id}`}
+                              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="View Details"
                             >
-                              <FiXCircle className="text-lg" />
-                            </button>
-                          )}
-                        </div>
+                              <FiEye className="text-lg" />
+                            </Link>
+                            <span
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1.5 rounded-lg"
+                              title="Actions are locked after payment"
+                            >
+                              <FiLock className="text-xs" /> Paid
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              href={`/booking/customer/${booking.id}`}
+                              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="View Details"
+                            >
+                              <FiEye className="text-lg" />
+                            </Link>
+
+                            {booking.status?.toUpperCase() !== "CANCELLED" && (
+                              <button
+                                onClick={() => handleInitiateCancel(booking)}
+                                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                title="Cancel Booking"
+                              >
+                                <FiXCircle className="text-lg" />
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );

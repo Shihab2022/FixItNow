@@ -6,6 +6,12 @@ import {
   BookingPayload,
   NotificationService,
 } from "../../services/notification.service";
+import {
+  nowInPlatformTimezone,
+  parseSlotStartMinutes,
+  resolveScheduledInstant,
+  isWithinCancellationWindow,
+} from "../../utils/bookingTime";
 
 /** Statuses that occupy a time slot and should block re-booking */
 const ACTIVE_BOOKING_STATUSES = [
@@ -93,6 +99,18 @@ const CreateNewBooking = async (req: any) => {
     );
   }
 
+  // 2b. Prevent booking a slot that has already started (e.g. today's earlier slots)
+  const scheduledStart = resolveScheduledInstant(
+    scheduledInstant,
+    payload.scheduledTime,
+  );
+  if (scheduledStart && scheduledStart.getTime() <= Date.now()) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "This time slot has already passed. Please choose a future time slot.",
+    );
+  }
+
   // 3. Create booking + pending payment inside a transaction
   const result = await prisma.$transaction(async (tx) => {
     const booking = await tx.booking.create({
@@ -140,11 +158,11 @@ async function loadBookingForNotification(bookingId: string): Promise<BookingPay
       scheduledTime: true,
       customerAddress: true,
       totalPrice: true,
-      customer: { select: { email: true, name: true } },
+      customer: { select: { email: true, name: true, phone: true } },
       service: { select: { title: true } },
       technician: {
         include: {
-          user: { select: { email: true, name: true } },
+          user: { select: { email: true, name: true, phone: true } },
         },
       },
     },
@@ -154,6 +172,9 @@ const GetUserBookings = async (id: string) => {
   const bookings = await prisma.booking.findMany({
     where: {
       customerId: id,
+    },
+    orderBy: {
+      createdAt: "desc", // latest bookings first
     },
     include: {
       service: {
@@ -293,10 +314,85 @@ const GetTechnicianAvailability = async (technicianId: string, date: string) => 
 
   const bookedTimeRanges = new Set(booked.map((b) => b.scheduledTime));
 
+  // Hide slots that have already started when the requested date is TODAY
+  // (e.g. at 4:00 PM the customer should not see 08:00 AM - 04:00 PM anymore)
+  const { dateKey: todayKey, minutes: nowMinutes } = nowInPlatformTimezone();
+  const requestedDateKey = dateObj.toISOString().split("T")[0];
+
   return daySlots.filter((slot) => {
     const rangeStr = formatSlotRange(slot);
-    return !bookedTimeRanges.has(rangeStr);
+    if (bookedTimeRanges.has(rangeStr)) return false;
+    if (requestedDateKey === todayKey) {
+      const startMinutes = parseSlotStartMinutes(slot.start);
+      if (startMinutes !== null && startMinutes < nowMinutes) {
+        return false; // slot time is gone for today
+      }
+    }
+    return true;
   });
+};
+
+/**
+ * Customer cancels their own booking.
+ * Allowed until 2 hours before the scheduled start time (e.g. a 4:00 PM
+ * booking can be cancelled until 2:00 PM).
+ */
+const CancelBookingByCustomer = async (
+  userId: string,
+  bookingId: string,
+  reason?: string,
+) => {
+  const booking = await prisma.booking.findFirst({
+    where: { id: bookingId, customerId: userId },
+  });
+  if (!booking) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Booking not found.");
+  }
+  if (
+    booking.status === BookingStatus.CANCELLED ||
+    booking.status === BookingStatus.COMPLETED ||
+    booking.status === BookingStatus.DECLINED
+  ) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `This booking is already ${booking.status.toLowerCase()} and cannot be cancelled.`,
+    );
+  }
+  if (booking.status === BookingStatus.IN_PROGRESS) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "A booking that is already in progress cannot be cancelled. Please contact support.",
+    );
+  }
+  if (isWithinCancellationWindow(booking)) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Bookings can only be cancelled at least 2 hours before the scheduled start time.",
+    );
+  }
+
+  const cancellationReason =
+    reason || "Cancelled by customer via dashboard.";
+
+  const result = await prisma.booking.update({
+    where: { id: booking.id },
+    data: {
+      status: BookingStatus.CANCELLED,
+      cancellationReason,
+    },
+  });
+
+  await safeNotify(async () => {
+    const notifyBooking = await loadBookingForNotification(booking.id);
+    if (notifyBooking) {
+      await NotificationService.sendBookingCancelled(
+        notifyBooking,
+        cancellationReason,
+      );
+    }
+  });
+
+  return result;
 };
 
 export const BookingsService = {
@@ -304,4 +400,5 @@ export const BookingsService = {
   GetUserBookings,
   GetBookingDetails,
   GetTechnicianAvailability,
+  CancelBookingByCustomer,
 };

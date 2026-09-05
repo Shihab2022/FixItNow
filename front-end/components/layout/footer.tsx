@@ -62,49 +62,49 @@ export function Footer() {
             <h4 className="font-semibold text-white">Company</h4>
             <ul className="mt-4 space-y-2 text-sm">
               <li>
-                <Link href="#" className="transition hover:text-white">
+                <Link href="/about" className="transition hover:text-white">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="#" className="transition hover:text-white">
-                  Careers
+                <Link href="/support" className="transition hover:text-white">
+                  Contact
                 </Link>
               </li>
               <li>
-                <Link href="#" className="transition hover:text-white">
-                  Press
+                <Link href="/#faq" className="transition hover:text-white">
+                  FAQ
                 </Link>
               </li>
               <li>
-                <Link href="#" className="transition hover:text-white">
-                  Blog
+                <Link href="/services" className="transition hover:text-white">
+                  Browse Services
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold text-white">Services</h4>
+            <h4 className="font-semibold text-white">Top Services</h4>
             <ul className="mt-4 space-y-2 text-sm">
               <li>
-                <Link href="#" className="transition hover:text-white">
-                  Electrical
+                <Link href="/services" className="transition hover:text-white">
+                  All Services
                 </Link>
               </li>
               <li>
-                <Link href="#" className="transition hover:text-white">
-                  Plumbing
+                <Link href="/technicians" className="transition hover:text-white">
+                  Find Technicians
                 </Link>
               </li>
               <li>
-                <Link href="#" className="transition hover:text-white">
-                  Cleaning
+                <Link href="/map" className="transition hover:text-white">
+                  Nearby Map
                 </Link>
               </li>
               <li>
-                <Link href="#" className="transition hover:text-white">
-                  AC Repair
+                <Link href="/tasks" className="transition hover:text-white">
+                  Task Marketplace
                 </Link>
               </li>
             </ul>
@@ -114,22 +114,22 @@ export function Footer() {
             <h4 className="font-semibold text-white">Support</h4>
             <ul className="mt-4 space-y-2 text-sm">
               <li>
-                <Link href="#" className="transition hover:text-white">
+                <Link href="/support" className="transition hover:text-white">
                   Help Center
                 </Link>
               </li>
               <li>
-                <Link href="#" className="transition hover:text-white">
+                <Link href="/support" className="transition hover:text-white">
                   Safety Center
                 </Link>
               </li>
               <li>
-                <Link href="#" className="transition hover:text-white">
+                <Link href="/terms" className="transition hover:text-white">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="#" className="transition hover:text-white">
+                <Link href="/privacy" className="transition hover:text-white">
                   Privacy Policy
                 </Link>
               </li>

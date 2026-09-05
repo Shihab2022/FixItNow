@@ -85,6 +85,18 @@ export const getSingleBookingApi = async (id: string) => {
   return res;
 };
 
+/** Customer cancels their own booking (allowed until 2 hours before the slot) */
+export const cancelBookingApi = async (id: string, params: any) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `bookings/${id}/cancel`,
+    method: apiMethods.PATCH as keyof typeof apiMethods,
+    formData: false,
+    params,
+  });
+  return res;
+};
+
 /** Fetch all technicians that offer services in a given category */
 export const getCategoryTechnicians = async (categoryId: string) => {
   const res = await apiHandler({

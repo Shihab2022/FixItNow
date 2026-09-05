@@ -1,0 +1,25 @@
+<%- include('layouts/emailHeader', { title: 'FixItNow Platform Alert', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hello Admin,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  <strong><%= event %></strong> — here are the details:
+</p>
+
+<%- include('components/bookingDetails', {
+  serviceTitle: serviceTitle,
+  customerName: customerName,
+  customerEmail: customerEmail,
+  technicianName: technicianName,
+  scheduledDate: scheduledDate,
+  scheduledTime: scheduledTime,
+  customerAddress: customerAddress,
+  totalPrice: totalPrice,
+  bookingId: bookingId
+}) %>
+
+<%- include('components/button', { text: 'Open Admin Bookings', url: bookingsUrl }) %>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

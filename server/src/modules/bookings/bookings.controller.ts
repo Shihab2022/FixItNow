@@ -59,9 +59,30 @@ const GetTechnicianAvailability = catchAsync(
   },
 );
 
+const CancelBookingByCustomer = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    if (!req.user) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, "Unauthorized");
+    }
+    const data = await BookingsService.CancelBookingByCustomer(
+      req.user.id as string,
+      req.params.id as string,
+      req.body?.cancellationReason as string | undefined,
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Booking cancelled successfully!",
+      data,
+    });
+  },
+);
+
 export const BookingsController = {
   CreateNewBooking,
   GetUserBookings,
   GetBookingDetails,
   GetTechnicianAvailability,
+  CancelBookingByCustomer,
 };

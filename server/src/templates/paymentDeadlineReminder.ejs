@@ -1,0 +1,36 @@
+<%- include('layouts/emailHeader', { title: 'Payment Due — Action Required', baseUrl: baseUrl }) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 16px;">
+  Hi <strong><%= customerName %></strong>,
+</p>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 8px;">
+  You created a booking but haven't completed the payment yet.
+</p>
+
+<div style="background-color:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:14px 18px; margin:0 0 20px; color:#991b1b; font-size:14px; font-weight:600;">
+  ⏰ Your booking will be automatically cancelled in approximately <strong><%= minutesRemaining %> minute(s)</strong> if the payment is not completed.
+</div>
+
+<%- include('components/bookingDetails', {
+  serviceTitle: serviceTitle,
+  technicianName: technicianName,
+  scheduledDate: scheduledDate,
+  scheduledTime: scheduledTime,
+  customerAddress: customerAddress,
+  totalPrice: totalPrice,
+  bookingId: bookingId,
+  status: 'Awaiting Payment'
+}) %>
+
+<p style="color:#334155; font-size:15px; line-height:24px; margin:0 0 24px;">
+  Complete your payment now to keep this booking confirmed.
+</p>
+
+<%- include('components/button', { text: 'Complete Payment Now', url: ctaUrl, color: '#dc2626' }) %>
+
+<p style="color:#64748b; font-size:13px; line-height:20px; margin:0;">
+  If you no longer need this service, no action is required — the booking will be cancelled automatically.
+</p>
+
+<%- include('layouts/emailFooter', { baseUrl: baseUrl }) %>

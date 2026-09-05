@@ -19,6 +19,7 @@ import {
   FiPhone,
   FiPlay,
   FiAlertTriangle,
+  FiXCircle,
 } from "react-icons/fi";
 
 export type BookingStatus =
@@ -56,6 +57,7 @@ export interface Booking {
   customerAddress?: string;
   notes?: string;
   paymentStatus: "PENDING" | "COMPLETED";
+  cancellationReason?: string;
   customerId: string;
   technicianId?: string;
   serviceId: string;
@@ -66,18 +68,49 @@ export interface Booking {
 }
 
 export default function BookingsPage({ bookingsData }: any) {
-  const [bookings, setBookings] = useState<Booking[]>(bookingsData || []);
+  // Always show the newest bookings first (defensive sort — the API already
+  // returns them sorted by createdAt desc).
+  const [bookings, setBookings] = useState<Booking[]>(
+    [...(bookingsData || [])].sort(
+      (a, b) =>
+        new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
+    ),
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const [declineBookingId, setDeclineBookingId] = useState<string | null>(null);
 
-  const updateStatus = async (id: string, newStatus: BookingStatus) => {
-    const res = await updateBookingStatus({ id, status: newStatus });
+  // Cancellation (both customer & technician can cancel up to 2 hours before)
+  const [cancelBookingId, setCancelBookingId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+
+  const updateStatus = async (
+    id: string,
+    newStatus: BookingStatus,
+    extra: { cancellationReason?: string } = {},
+  ) => {
+    const res = await updateBookingStatus({ id, status: newStatus, ...extra });
     if (res?.data?.success) {
       showToast(toastTypes.SUCCESS, `Booking status updated to ${newStatus}`);
       setBookings((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b)),
+        prev.map((b) =>
+          b.id === id
+            ? {
+                ...b,
+                status: newStatus,
+                cancellationReason:
+                  extra.cancellationReason ?? b.cancellationReason,
+              }
+            : b,
+        ),
+      );
+    } else {
+      // Surface server-side validation errors (e.g. payment not completed,
+      // cancellation window) so the technician knows why the action failed
+      showToast(
+        toastTypes.FAILED,
+        res?.message || `Failed to update booking status to ${newStatus}`,
       );
     }
   };
@@ -87,6 +120,17 @@ export default function BookingsPage({ bookingsData }: any) {
       updateStatus(declineBookingId, "CANCELLED");
       setDeclineBookingId(null);
     }
+  };
+
+  const handleConfirmCancel = () => {
+    if (!cancelBookingId) return;
+    updateStatus(cancelBookingId, "CANCELLED", {
+      cancellationReason:
+        cancelReason.trim() ||
+        "Cancelled by technician via dashboard.",
+    });
+    setCancelBookingId(null);
+    setCancelReason("");
   };
 
   const toggleExpand = (id: string) => {
@@ -297,24 +341,51 @@ export default function BookingsPage({ bookingsData }: any) {
                         </div>
                       )}
 
-                      {booking.status === "ACCEPTED" && (
-                        <button
-                          onClick={() =>
-                            updateStatus(booking.id, "IN_PROGRESS")
-                          }
-                          className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1 transition-colors shadow-sm"
-                        >
-                          <FiPlay className="w-3.5 h-3.5" /> Start Job
-                        </button>
+                      {(booking.status === "ACCEPTED" ||
+                        booking.status === "PAID") && (
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() =>
+                              updateStatus(booking.id, "IN_PROGRESS")
+                            }
+                            className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1 transition-colors shadow-sm"
+                          >
+                            <FiPlay className="w-3.5 h-3.5" /> Start Job
+                          </button>
+                          <button
+                            onClick={() => setCancelBookingId(booking.id)}
+                            className="px-3 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 hover:border-rose-200 rounded-lg text-xs font-semibold inline-flex items-center gap-1 transition-colors"
+                          >
+                            <FiX className="w-3.5 h-3.5" /> Cancel Booking
+                          </button>
+                        </div>
                       )}
 
                       {booking.status === "IN_PROGRESS" && (
-                        <button
-                          onClick={() => updateStatus(booking.id, "COMPLETED")}
-                          className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1 transition-colors shadow-sm"
-                        >
-                          <FiCheckCircle className="w-3.5 h-3.5" /> Complete Job
-                        </button>
+                        <div className="flex flex-col items-end gap-1">
+                          <button
+                            onClick={() => updateStatus(booking.id, "COMPLETED")}
+                            disabled={booking.paymentStatus !== "COMPLETED"}
+                            title={
+                              booking.paymentStatus !== "COMPLETED"
+                                ? "The customer's payment must be completed before this job can be marked as completed"
+                                : "Mark this job as completed"
+                            }
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1 transition-colors shadow-sm ${
+                              booking.paymentStatus !== "COMPLETED"
+                                ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                                : "bg-purple-600 hover:bg-purple-500 text-white"
+                            }`}
+                          >
+                            <FiCheckCircle className="w-3.5 h-3.5" /> Complete
+                            Job
+                          </button>
+                          {booking.paymentStatus !== "COMPLETED" && (
+                            <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
+                              Waiting for customer payment
+                            </span>
+                          )}
+                        </div>
                       )}
 
                       {booking.status === "COMPLETED" && (
@@ -375,6 +446,62 @@ export default function BookingsPage({ bookingsData }: any) {
                 className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-lg transition-colors shadow-sm"
               >
                 Confirm Decline
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal for Cancelling an Accepted/Paid Booking */}
+      {cancelBookingId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4 border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 bg-rose-100 text-rose-600 rounded-full shrink-0">
+                <FiXCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Cancel This Booking?
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Are you sure you want to cancel booking (Ref: #
+                  {cancelBookingId.slice(0, 8)})? You can only cancel at least{" "}
+                  <strong>2 hours before</strong> the scheduled start time —
+                  otherwise the system will reject it. The customer will be
+                  notified.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Cancellation Reason (optional)
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={2}
+                placeholder="e.g. Emergency, equipment unavailable..."
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-300 resize-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+              <button
+                onClick={() => {
+                  setCancelBookingId(null);
+                  setCancelReason("");
+                }}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+              >
+                Keep Booking
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-lg transition-colors shadow-sm"
+              >
+                Confirm Cancellation
               </button>
             </div>
           </div>

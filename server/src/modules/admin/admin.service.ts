@@ -4,6 +4,9 @@ import { CreateCategorySchema } from "../validation";
 
 const GetAllUsers = async () => {
   const users = await prisma.user.findMany({
+    orderBy: {
+      createdAt: "desc", // latest users first
+    },
     select: {
       id: true,
       name: true,
@@ -34,11 +37,19 @@ const UpdateUserStatus = async (payload: {
 };
 
 const GetAllBookings = async () => {
-  const bookings = await prisma.booking.findMany({});
+  const bookings = await prisma.booking.findMany({
+    orderBy: {
+      createdAt: "desc", // latest bookings first
+    },
+  });
   return bookings;
 };
 const GetAllCategories = async () => {
-  const categories = await prisma.category.findMany({});
+  const categories = await prisma.category.findMany({
+    orderBy: {
+      createdAt: "desc", // latest categories first
+    },
+  });
   return categories;
 };
 const GetOverview = async () => {
