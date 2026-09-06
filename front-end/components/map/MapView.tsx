@@ -25,6 +25,8 @@ import {
   User as UserIcon,
   Star,
   Clock,
+  ChevronDown,
+  HelpCircle,
 } from "lucide-react";
 import {
   Map,
@@ -116,6 +118,9 @@ const DEFAULT_CENTER = { latitude: 23.8103, longitude: 90.4125, zoom: 12 };
 
 /** Base-map styles the user can switch between (vector + raster). */
 const STYLE_STORAGE_KEY = "fixitnow:map-style";
+
+/** localStorage flag so the "how the map works" guide only shows once. */
+const GUIDE_STORAGE_KEY = "fixitnow:map-guide-seen";
 
 const RASTER_STREETS: StyleSpecification = {
   version: 8,
@@ -413,6 +418,9 @@ export default function MapView({ user }: { user: User }) {
   );
   const [nearbyUsers, setNearbyUsers] = useState<NearbyMapUser[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [listExpanded, setListExpanded] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   /** Resolve the selected style definition (URL string or inline style object). */
   const currentMapStyle = useMemo(
@@ -590,6 +598,26 @@ export default function MapView({ user }: { user: User }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Show the "how this map works" guide once per browser (first visit).
+  useEffect(() => {
+    try {
+      if (!window.localStorage.getItem(GUIDE_STORAGE_KEY)) {
+        setShowGuide(true);
+      }
+    } catch {
+      setShowGuide(true);
+    }
+  }, []);
+
+  const closeGuide = () => {
+    setShowGuide(false);
+    try {
+      window.localStorage.setItem(GUIDE_STORAGE_KEY, "1");
+    } catch {
+      /* storage unavailable — non-blocking */
+    }
+  };
+
   /** Reverse-geocode coordinates to a human-readable address via Nominatim */
   const reverseGeocode = async (
     lat: number,
@@ -724,12 +752,43 @@ export default function MapView({ user }: { user: User }) {
     }
   };
 
+  /**
+   * "My Location" always re-reads the device GPS so the map returns to the
+   * user's real current position — even after they searched for another
+   * place. Falls back to the last saved location if permission is denied.
+   */
   const centerOnUser = () => {
-    if (userLocation) {
-      flyTo(userLocation.latitude, userLocation.longitude, 14);
-    } else {
-      requestLocationPermission();
+    if (!navigator.geolocation) {
+      showToast(
+        toastTypes.FAILED,
+        "Geolocation is not supported by your browser",
+      );
+      return;
     }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        setShowPermissionModal(false);
+        fitRadiusToView(lat, lon, radiusKm);
+        const address = await reverseGeocode(lat, lon);
+        await saveNewLocation(lat, lon, address);
+        setLocating(false);
+        showToast(toastTypes.SUCCESS, "Centered on your current location!");
+      },
+      () => {
+        setLocating(false);
+        showToast(
+          toastTypes.WARNING,
+          "Could not access your location. Showing the last saved one.",
+        );
+        if (userLocation) {
+          flyTo(userLocation.latitude, userLocation.longitude, 14);
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
   };
 
   const handleItemClick = useCallback(
@@ -746,6 +805,22 @@ export default function MapView({ user }: { user: User }) {
       setSelectedUser(item);
       setSelectedItem(null);
       flyTo(item.latitude, item.longitude, 13);
+    },
+    [flyTo],
+  );
+
+  /** Zoom straight to a marker from the results list and open its popup. */
+  const handleFocusItem = useCallback(
+    (item: any, isUser: boolean) => {
+      if (isUser) {
+        setSelectedUser(item);
+        setSelectedItem(null);
+      } else {
+        setSelectedItem(item);
+        setSelectedUser(null);
+      }
+      setListExpanded(false);
+      flyTo(item.latitude, item.longitude, 15);
     },
     [flyTo],
   );
@@ -794,6 +869,89 @@ export default function MapView({ user }: { user: User }) {
                 Set Location Manually Later
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* "How this map works" guide — shown on first visit, reopenable via the ? button */}
+      {showGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-7 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                  <MapPin className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    How this map works
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Find work &amp; people near you in a few clicks.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={closeGuide}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <ol className="space-y-3">
+              {[
+                "Set your location — allow GPS access or search any place in Bangladesh.",
+                "Use Filters to adjust the search radius (1–50 km) and service category.",
+                "Click any marker on the map to open its details popup.",
+                "Expand the results panel (bottom-left) and click a name to zoom straight to it.",
+              ].map((step, idx) => (
+                <li key={idx} className="flex gap-3 text-sm text-slate-600">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white">
+                    {idx + 1}
+                  </span>
+                  <span className="pt-0.5">{step}</span>
+                </li>
+              ))}
+            </ol>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2.5 text-xs text-slate-600">
+              {isCustomer ? (
+                <p className="flex items-start gap-2">
+                  <Briefcase className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                  <span>
+                    Blue markers are technicians who are on duty right now.
+                    Click one and hit &ldquo;View Profile &amp; Book&rdquo; to
+                    hire them.
+                  </span>
+                </p>
+              ) : (
+                <>
+                  <p className="flex items-start gap-2">
+                    <MapIcon className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <span>
+                      Amber markers are open tasks. Click one and hit
+                      &ldquo;View Task &amp; Apply&rdquo; to send an
+                      application.
+                    </span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="mt-1 w-2.5 h-2.5 rounded-full bg-violet-500 shrink-0" />
+                    <span>
+                      Violet markers are customers who posted a task — they
+                      only appear while their task is still open.
+                    </span>
+                  </p>
+                </>
+              )}
+            </div>
+
+            <button
+              onClick={closeGuide}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all"
+            >
+              Got it, let&apos;s explore
+            </button>
           </div>
         </div>
       )}
@@ -913,10 +1071,22 @@ export default function MapView({ user }: { user: User }) {
         </button>
         <button
           onClick={centerOnUser}
-          className="flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-medium text-sm transition-all"
+          disabled={locating}
+          className="flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-medium text-sm transition-all disabled:opacity-60"
         >
-          <Navigation className="w-4 h-4" />
+          {locating ? (
+            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+          ) : (
+            <Navigation className="w-4 h-4" />
+          )}
           My Location
+        </button>
+        <button
+          onClick={() => setShowGuide(true)}
+          title="How this map works"
+          className="flex items-center px-3 py-3 rounded-xl shadow-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition-all"
+        >
+          <HelpCircle className="w-4 h-4" />
         </button>
         <div className="relative">
           <button
@@ -1018,34 +1188,127 @@ export default function MapView({ user }: { user: User }) {
         </div>
       )}
 
-      <div className="absolute bottom-6 left-4 z-10 bg-white rounded-xl shadow-lg border border-slate-200 px-4 py-2.5 flex items-center gap-2">
-        {loading ? (
-          <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
-        ) : isCustomer ? (
-          <Briefcase className="w-4 h-4 text-blue-600" />
-        ) : (
-          <MapIcon className="w-4 h-4 text-emerald-600" />
-        )}
-        <span className="text-sm font-medium text-slate-700">
-          {loading
-            ? "Searching..."
-            : isCustomer
-              ? `${items.length} ${
-                  items.length !== 1 ? "technicians" : "technician"
-                } found within ${radiusKm} km`
-              : `${items.length} task${items.length !== 1 ? "s" : ""} • ${nearbyUsers.length} user${nearbyUsers.length !== 1 ? "s" : ""} within ${radiusKm} km`}
-        </span>
-        {!isCustomer && !loading && (
-          <>
-            <span className="inline-flex items-center gap-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-              <span className="text-[11px] text-slate-500">Task</span>
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-violet-500" />
-              <span className="text-[11px] text-slate-500">User</span>
-            </span>
-          </>
+      <div className="absolute bottom-6 left-4 z-10 bg-white rounded-xl shadow-lg border border-slate-200 w-72 sm:w-80 overflow-hidden">
+        <button
+          onClick={() => setListExpanded((v) => !v)}
+          className="w-full px-4 py-2.5 flex items-center gap-2 text-left hover:bg-slate-50 transition-colors"
+        >
+          {loading ? (
+            <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+          ) : isCustomer ? (
+            <Briefcase className="w-4 h-4 text-blue-600" />
+          ) : (
+            <MapIcon className="w-4 h-4 text-emerald-600" />
+          )}
+          <span className="text-sm font-medium text-slate-700 flex-1 min-w-0 truncate">
+            {loading
+              ? "Searching..."
+              : isCustomer
+                ? `${items.length} ${
+                    items.length !== 1 ? "technicians" : "technician"
+                  } within ${radiusKm} km`
+                : `${items.length} task${items.length !== 1 ? "s" : ""} • ${nearbyUsers.length} user${nearbyUsers.length !== 1 ? "s" : ""}`}
+          </span>
+          <ChevronDown
+            className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${
+              listExpanded ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+
+        {listExpanded && !loading && (
+          <div className="max-h-72 overflow-y-auto border-t border-slate-100 divide-y divide-slate-100">
+            {isCustomer ? (
+              items.length === 0 ? (
+                <p className="px-4 py-4 text-xs text-slate-400">
+                  No technicians found in this radius. Try increasing the
+                  radius.
+                </p>
+              ) : (
+                items.map((item: any) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleFocusItem(item, false)}
+                    className="w-full px-4 py-2.5 flex items-start gap-2.5 hover:bg-blue-50 text-left transition-colors"
+                  >
+                    <span className="mt-1.5 w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs font-semibold text-slate-800 truncate">
+                        {item.user?.name || "Technician"}
+                      </span>
+                      <span className="block text-[11px] text-slate-500 truncate">
+                        {(item.skills?.length && item.skills.join(", ")) ||
+                          item.categories
+                            ?.map((c: any) => c.name)
+                            .join(", ") ||
+                          "General"}{" "}
+                        • ★ {item.rating ?? 5} • {item.distanceKm} km
+                      </span>
+                    </span>
+                  </button>
+                ))
+              )
+            ) : (
+              <>
+                <p className="px-4 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  Tasks
+                </p>
+                {items.length === 0 ? (
+                  <p className="px-4 pb-2 text-xs text-slate-400">
+                    No open tasks in this radius.
+                  </p>
+                ) : (
+                  items.map((item: any) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleFocusItem(item, false)}
+                      className="w-full px-4 py-2.5 flex items-start gap-2.5 hover:bg-amber-50 text-left transition-colors"
+                    >
+                      <span className="mt-1.5 w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-xs font-semibold text-slate-800 truncate">
+                          {item.title}
+                        </span>
+                        <span className="block text-[11px] text-slate-500 truncate">
+                          {item.category?.name || "General"} •{" "}
+                          {item.budget ? `$${item.budget}` : "Budget N/A"} •{" "}
+                          {item.distanceKm} km
+                        </span>
+                      </span>
+                    </button>
+                  ))
+                )}
+                <p className="px-4 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-violet-500" />
+                  Users with open tasks
+                </p>
+                {nearbyUsers.length === 0 ? (
+                  <p className="px-4 pb-3 text-xs text-slate-400">
+                    No nearby customers with open tasks.
+                  </p>
+                ) : (
+                  nearbyUsers.map((u) => (
+                    <button
+                      key={`user-${u.id}`}
+                      onClick={() => handleFocusItem(u, true)}
+                      className="w-full px-4 py-2.5 flex items-start gap-2.5 hover:bg-violet-50 text-left transition-colors"
+                    >
+                      <span className="mt-1.5 w-2.5 h-2.5 rounded-full bg-violet-500 shrink-0" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-xs font-semibold text-slate-800 truncate">
+                          {u.name}
+                        </span>
+                        <span className="block text-[11px] text-slate-500 truncate">
+                          {u.task?.title || "Open task"} • {u.distanceKm} km
+                        </span>
+                      </span>
+                    </button>
+                  ))
+                )}
+              </>
+            )}
+          </div>
         )}
       </div>
 

@@ -7,6 +7,7 @@ import {
   Role,
   JobRequestStatus,
   JobRequestApplicationStatus,
+  BookingStatus,
 } from "../../../generated/prisma/enums";
 
 const createJobRequest = async (authUser: NonNullable<IAuthUser>, payload: any) => {
@@ -282,7 +283,15 @@ const acceptApplication = async (
 ) => {
   const job = await prisma.jobRequest.findUnique({
     where: { id: jobRequestId },
-    select: { id: true, customerId: true, title: true },
+    select: {
+      id: true,
+      customerId: true,
+      title: true,
+      description: true,
+      budget: true,
+      address: true,
+      categoryId: true,
+    },
   });
   if (!job || job.customerId !== authUser.id) {
     throw new ApiError(
@@ -307,24 +316,65 @@ const acceptApplication = async (
     );
   }
 
-  await prisma.$transaction([
-    prisma.jobRequestApplication.update({
+  // Both sides have now agreed (the customer accepted the technician's
+  // application), so the task is converted into a real row in the Booking
+  // table. A matching internal Service record is created for the technician
+  // so every downstream flow that expects booking.service (payment, invoice
+  // PDF, emails, reviews) keeps working — status:false keeps it out of the
+  // public service listings.
+  const booking = await prisma.$transaction(async (tx) => {
+    const service = await tx.service.create({
+      data: {
+        title: job.title,
+        description: job.description || job.title,
+        price: job.budget ?? 0,
+        location: job.address,
+        categoryId: job.categoryId,
+        technicianId: app.technicianId,
+        status: false,
+      },
+    });
+
+    await tx.jobRequestApplication.update({
       where: { id: app.id },
       data: { status: JobRequestApplicationStatus.ACCEPTED },
-    }),
-    prisma.jobRequestApplication.updateMany({
+    });
+    await tx.jobRequestApplication.updateMany({
       where: {
         jobRequestId,
         id: { not: app.id },
         status: JobRequestApplicationStatus.PENDING,
       },
       data: { status: JobRequestApplicationStatus.DECLINED },
-    }),
-    prisma.jobRequest.update({
+    });
+    await tx.jobRequest.update({
       where: { id: jobRequestId },
       data: { status: JobRequestStatus.BOOKED },
-    }),
-  ]);
+    });
+
+    // Job requests don't carry a schedule — book it from today with a
+    // full-day placeholder slot (parses correctly for reminders/cancellations).
+    const now = new Date();
+    const scheduledDate = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    );
+
+    return tx.booking.create({
+      data: {
+        // Both parties already agreed through the application flow, so the
+        // booking starts as ACCEPTED and the customer can pay right away.
+        status: BookingStatus.ACCEPTED,
+        scheduledDate,
+        scheduledTime: "09:00 AM - 05:00 PM",
+        totalPrice: job.budget ?? 0,
+        customerAddress: job.address,
+        notes: `Job request: ${job.title}`,
+        customerId: job.customerId,
+        technicianId: app.technicianId,
+        serviceId: service.id,
+      },
+    });
+  });
 
   try {
     await NotificationService.sendJobRequestApplicationAccepted({
@@ -338,7 +388,7 @@ const acceptApplication = async (
     console.error("[JobRequest] Acceptance email could not be sent:", emailErr);
   }
 
-  return app;
+  return { application: app, booking };
 };
 
 const getMyApplications = async (authUser: NonNullable<IAuthUser>) => {
