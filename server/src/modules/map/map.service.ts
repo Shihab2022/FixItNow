@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import { Role } from "../../../generated/prisma/enums";
+import { Role, JobRequestStatus } from "../../../generated/prisma/enums";
 
 const EARTH_RADIUS_KM = 6371;
 const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -29,6 +29,55 @@ interface NearQuery {
 const clampRadius = (radius: unknown) => {
   const r = Number(radius);
   return Number.isFinite(r) && r > 0 ? Math.min(r, 500) : 10;
+};
+
+const DAY_NAMES = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+];
+
+/** "HH:MM" → minutes since midnight for time comparisons. */
+const toMinutes = (time: string): number => {
+  const [h, m] = time.split(":");
+  return Number(h) * 60 + Number(m || 0);
+};
+
+/**
+ * Returns true only when the technician has a working slot that covers the
+ * current day AND the current time. This hides technicians who are off-duty
+ * or whose last slot has already ended (e.g. last slot ends 5 PM → hidden
+ * after 5 PM).
+ *
+ * Supports both stored formats:
+ *  - `{ "monday": [{ start: "09:00", end: "17:00" }] }` (backend)
+ *  - `{ "monday": ["09:00-17:00"] }` (legacy/seed data)
+ */
+const isAvailableNow = (availability: unknown): boolean => {
+  if (!availability) return false;
+  const map = availability as Record<string, unknown>;
+  // getDay() is always 0-6 and DAY_NAMES has 7 entries, so the cast is safe.
+  const dayKey = DAY_NAMES[new Date().getDay()] as string;
+  const slots = map[dayKey];
+  if (!Array.isArray(slots) || slots.length === 0) return false;
+
+  const now = new Date();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  return slots.some((raw) => {
+    const slot =
+      typeof raw === "string"
+        ? { start: raw.split("-")[0] ?? "", end: raw.split("-")[1] ?? "" }
+        : (raw as { start?: string; end?: string });
+    if (!slot.start || !slot.end) return false;
+    return (
+      toMinutes(slot.start) <= nowMinutes && nowMinutes < toMinutes(slot.end)
+    );
+  });
 };
 
 const listNearbyTechnicians = async (query: NearQuery) => {
@@ -79,6 +128,7 @@ const listNearbyTechnicians = async (query: NearQuery) => {
   });
 
   const mapped = technicians
+    .filter((t) => isAvailableNow(t.availability))
     .map((t) => {
       const u = t.user;
       const lat = u.latitude as number;
@@ -186,8 +236,11 @@ const getLocationHistory = async (userId: string) => {
 };
 
 /**
- * For technicians: list nearby users (customers) who have a location set,
- * sorted by distance (Haversine).
+ * For technicians: list nearby customers who currently have an OPEN task.
+ * Only users who raised a task appear on the map, and their marker/distance is
+ * based on the task's location (not the customer's profile location). The task
+ * details are included so the frontend can render a "View As Task & Apply"
+ * popup without exposing the customer's email/phone.
  */
 const listNearbyUsers = async (query: NearQuery) => {
   const { latitude, longitude } = query;
@@ -196,26 +249,39 @@ const listNearbyUsers = async (query: NearQuery) => {
   const users = await prisma.user.findMany({
     where: {
       role: Role.CUSTOMER,
-      latitude: { not: null },
-      longitude: { not: null },
+      jobRequests: { some: { status: JobRequestStatus.OPEN } },
     },
     select: {
       id: true,
       name: true,
-      email: true,
-      phone: true,
       imageUrl: true,
-      address: true,
       latitude: true,
       longitude: true,
+      jobRequests: {
+        where: { status: JobRequestStatus.OPEN },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          budget: true,
+          address: true,
+          latitude: true,
+          longitude: true,
+          category: { select: { id: true, name: true } },
+        },
+      },
       reviewsReceived: { select: { rating: true } },
     },
   });
 
   const mapped = users
+    .filter((u) => u.jobRequests.length > 0)
     .map((u) => {
-      const lat = u.latitude as number;
-      const lng = u.longitude as number;
+      const job = u.jobRequests[0] as NonNullable<(typeof u.jobRequests)[0]>;
+      const lat = job.latitude;
+      const lng = job.longitude;
       const distanceKm = haversineKm(latitude, longitude, lat, lng);
       const rating =
         u.reviewsReceived.length
@@ -223,9 +289,24 @@ const listNearbyUsers = async (query: NearQuery) => {
             u.reviewsReceived.length
           : 5;
       return {
-        ...u,
+        id: u.id,
+        name: u.name,
+        imageUrl: u.imageUrl,
+        // The task is where the technician will go, so the marker and distance
+        // follow the task's coordinates/address rather than the user profile.
+        address: job.address,
+        latitude: lat,
+        longitude: lng,
         distanceKm: Number(distanceKm.toFixed(2)),
         rating: Number(rating.toFixed(1)),
+        task: {
+          id: job.id,
+          title: job.title,
+          description: job.description,
+          budget: job.budget,
+          address: job.address,
+          category: job.category,
+        },
       };
     })
     .filter((u) => u.distanceKm <= radiusKm)

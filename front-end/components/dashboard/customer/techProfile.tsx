@@ -11,8 +11,6 @@ import {
   Clock,
   CalendarCheck,
   DollarSign,
-  Phone,
-  Mail,
   Calendar,
   Award,
   ArrowLeft,
@@ -508,40 +506,56 @@ export default function TechProfile({
           <div className="space-y-6">
             <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs sm:p-8">
               <h3 className="text-base font-bold text-slate-900">
-                Contact Information
+                Task &amp; Performance
               </h3>
 
-                          <div className="mt-5 space-y-4 text-sm">
+              <div className="mt-5 space-y-4 text-sm">
                 <div className="flex items-center gap-3 text-slate-600">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-                    <Mail className="h-4 w-4" />
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="text-[11px] font-medium text-slate-400">
-                      Email
-                    </p>
-                    <p className="truncate font-semibold text-slate-800">
-                      ••••••
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 text-slate-600">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-                    <Phone className="h-4 w-4" />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <Briefcase className="h-4 w-4" />
                   </div>
                   <div>
                     <p className="text-[11px] font-medium text-slate-400">
-                      Phone
+                      Tasks Completed
                     </p>
                     <p className="font-semibold text-slate-800">
-                      ••••••
+                      {technician.completedJobs}{" "}
+                      {technician.completedJobs === 1 ? "Job" : "Jobs"}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 text-slate-600">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
+                    <Star className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-medium text-slate-400">
+                      Rating
+                    </p>
+                    <p className="font-semibold text-slate-800">
+                      {rating} / 5.0
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-slate-600">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <Wrench className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-medium text-slate-400">
+                      Active Services
+                    </p>
+                    <p className="font-semibold text-slate-800">
+                      {services.length}{" "}
+                      {services.length === 1 ? "Service" : "Services"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-slate-600">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
                     <Calendar className="h-4 w-4" />
                   </div>
                   <div>
@@ -558,14 +572,6 @@ export default function TechProfile({
                       )}
                     </p>
                   </div>
-                </div>
-
-                <div className="pt-2 border-t border-slate-100 mt-2 text-xs text-slate-500 italic flex items-start gap-2">
-                  <Clock className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
-                  <span>
-                    Contact details are revealed after a booking is
-                    confirmed and paid for.
-                  </span>
                 </div>
               </div>
             </div>

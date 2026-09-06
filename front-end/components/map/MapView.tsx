@@ -24,7 +24,6 @@ import {
   Layers,
   User as UserIcon,
   Star,
-  Phone,
   Clock,
 } from "lucide-react";
 import {
@@ -96,14 +95,21 @@ interface LocationHistoryEntry {
 interface NearbyMapUser {
   id: string;
   name: string;
-  email?: string;
-  phone?: string;
   imageUrl?: string | null;
   address?: string | null;
   latitude: number;
   longitude: number;
   distanceKm: number;
   rating?: number;
+  /** The customer's most-recent OPEN task (location + details for the popup). */
+  task?: {
+    id: string;
+    title: string;
+    description: string;
+    budget?: number | null;
+    address?: string | null;
+    category?: { id: string; name: string };
+  } | null;
 }
 
 const DEFAULT_CENTER = { latitude: 23.8103, longitude: 90.4125, zoom: 12 };
@@ -325,11 +331,6 @@ const MapCanvas = memo(function MapCanvas({
       <AttributionControl compact />
       {userLocation && circle && (
         <Source id="radius-circle" type="geojson" data={circle.geoJson}>
-          <Layer
-            id="radius-fill"
-            type="fill"
-            paint={{ "fill-color": "#2563eb", "fill-opacity": 0.12 }}
-          />
           <Layer
             id="radius-line"
             type="line"
@@ -674,7 +675,7 @@ export default function MapView({ user }: { user: User }) {
     searchTimerRef.current = setTimeout(async () => {
       setGeocoding(true);
       try {
-        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(value)}&limit=5`;
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(value)}&limit=5&countrycodes=bd&viewbox=88.01%2C26.63%2C92.68%2C20.74&bounded=1`;
         const res = await fetch(url, {
           headers: { "Accept-Language": "en" },
         });
@@ -1132,17 +1133,47 @@ export default function MapView({ user }: { user: User }) {
             </button>
           </div>
           <div className="space-y-1.5 text-xs text-slate-600">
-            <p className="flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5 text-slate-400" />
-              <span>{selectedUser.phone || "N/A"}</span>
-            </p>
-            <p className="flex items-center gap-1.5">
-              <Star className="w-3.5 h-3.5 text-amber-400" />
-              <span>{selectedUser.rating ?? 5} rating</span>
-            </p>
+            {selectedUser.task ? (
+              <>
+                <p className="font-semibold text-slate-800 line-clamp-1">
+                  {selectedUser.task.title}
+                </p>
+                <p className="line-clamp-2">{selectedUser.task.description}</p>
+                <p>
+                  <span className="font-semibold">Budget:</span> $
+                  {selectedUser.task.budget ?? "N/A"}
+                </p>
+                <p>
+                  <span className="font-semibold">Category:</span>{" "}
+                  {selectedUser.task.category?.name}
+                </p>
+                {selectedUser.task.address ? (
+                  <p className="flex items-start gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                    <span className="line-clamp-1">
+                      {selectedUser.task.address}
+                    </span>
+                  </p>
+                ) : null}
+                <p className="flex items-center gap-1.5">
+                  <Star className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{selectedUser.rating ?? 5} rating</span>
+                </p>
+              </>
+            ) : (
+              <p className="text-slate-400">
+                This customer has no open task right now.
+              </p>
+            )}
           </div>
           <button
-            onClick={() => router.push("/tasks")}
+            onClick={() =>
+              router.push(
+                selectedUser.task?.id
+                  ? `/tasks/${selectedUser.task.id}`
+                  : "/map",
+              )
+            }
             className="w-full py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-lg text-sm transition-all"
           >
             View As Task & Apply

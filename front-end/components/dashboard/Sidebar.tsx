@@ -13,6 +13,7 @@ import {
   FiSettings,
   FiBriefcase,
   FiMapPin,
+  FiList,
 } from "react-icons/fi";
 import { CgProfile } from "react-icons/cg";
 import { TbBrandBooking } from "react-icons/tb";
@@ -40,6 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       { name: "Profile", href: "/", icon: CgProfile },
       // { name: "Overview", href: "/customer", icon: FiHome },
       { name: "Bookings", href: "/customer/bookings", icon: FiCalendar },
+      { name: "My Tasks", href: "/customer/tasks", icon: FiList },
       {
         name: "Payment History",
         href: "/customer/payments/history",
