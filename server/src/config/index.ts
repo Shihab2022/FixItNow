@@ -38,15 +38,20 @@ export default {
     cancel_url: process.env.CANCEL_URL,
     sslValidationApi: process.env.SSL_VALIDATION_API,
   },
-  smtp: {
+    smtp: {
     user_name: process.env.SMTP_USERNAME,
     password: process.env.SMTP_PASSWORD,
     port: Number(process.env.SMTP_PORT) || 2525,
     host: process.env.SMTP_HOST || 'smtp.mailtrap.io',
-    email_from: process.env.EMAIL_FROM,
+    // Dynamic "From" header: uses EMAIL_FROM env var when set, otherwise falls
+    // back to a properly-formatted display name + the SMTP username so emails
+    // always render from a recognizable, consistent sender address.
+    email_from: process.env.EMAIL_FROM || `FixItNow <${process.env.SMTP_USERNAME || 'noreply@fixitnow.com'}>`,
     currency_locale: process.env.CURRENCY_LOCALE,
     currency_code: process.env.CURRENCY_CODE,
-    timezone: process.env.TIMEZONE || 'UTC',
+    // Asia/Dhaka by default so dates/times in emails (bookings) render in the
+    // platform timezone instead of UTC (which was shifting dates by a day).
+    timezone: process.env.TIMEZONE || 'Asia/Dhaka',
   },
   cloudinary: {
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

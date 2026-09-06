@@ -78,8 +78,14 @@ export class NotificationService {
         templateData: Record<string, any>,
         attachments?: EmailAttachment[]
     ) {
+        // If the recipient's email address is missing/empty, skip the send so we
+        // never throw on a bad address and never block the other party's email.
+        if (!to || typeof to !== 'string' || !to.trim()) {
+            console.warn(`[Notification] Skipping "${templateName}" — recipient email is missing (booking context key: ${idempotencyKey}).`);
+            return;
+        }
         try {
-            await enqueueEmail({ idempotencyKey, to, subject, templateName, templateData, attachments });
+            await enqueueEmail({ idempotencyKey: idempotencyKey.trim(), to: to.trim(), subject, templateName, templateData, attachments });
         } catch (err) {
             console.error(
                 `[Notification] Email "${templateName}" to ${to} could not be sent:`,

@@ -3,8 +3,8 @@
 
 import { toastTypes } from "@/app/constant";
 import { showToast } from "@/components/toast/toast";
-import { updateBookingStatus } from "@/service/technician";
-import { useState } from "react";
+import { updateBookingStatus, getTechnicianBookings } from "@/service/technician";
+import { useState, useEffect } from "react";
 import {
   FiCheck,
   FiX,
@@ -13,6 +13,7 @@ import {
   FiSearch,
   FiClock,
   FiUser,
+  FiRefreshCw,
   FiMapPin,
   FiChevronDown,
   FiChevronUp,
@@ -137,6 +138,36 @@ export default function BookingsPage({ bookingsData }: any) {
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
+  // Manually refresh the bookings list (fetches fresh data from the server,
+  // ensuring payment-status / status changes made by the customer are visible).
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refreshBookings = async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await getTechnicianBookings({});
+      if (res?.data?.success) {
+        const sorted = (res.data.data || []).sort(
+          (a: any, b: any) =>
+            new Date(b.createdAt || 0).getTime() -
+            new Date(a.createdAt || 0).getTime(),
+        );
+        setBookings(sorted);
+      }
+    } catch (err) {
+      console.error("Failed to refresh bookings:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Auto-refresh every 60 s so the technician immediately sees payment status
+  // changes (e.g. after the customer pays, the "Complete Job" button becomes
+  // enabled without requiring a manual page reload).
+  useEffect(() => {
+    const interval = setInterval(refreshBookings, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const filteredBookings = bookings.filter((b) => {
     const term = searchTerm.toLowerCase();
     return (
@@ -181,9 +212,20 @@ export default function BookingsPage({ bookingsData }: any) {
           </p>
         </div>
 
-        <div className="relative w-full sm:w-80">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-          <input
+        <div className="flex items-center gap-3">
+          <button
+            onClick={refreshBookings}
+            disabled={isRefreshing}
+            className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 rounded-xl transition-all shadow-2xs cursor-pointer"
+            title="Refresh Bookings"
+          >
+            <FiRefreshCw
+              className={`text-sm ${isRefreshing ? "animate-spin" : ""}`}
+            />
+          </button>
+                    <div className="relative w-full sm:w-80">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <input
             type="text"
             placeholder="Search ID, customer, location..."
             value={searchTerm}
@@ -191,6 +233,7 @@ export default function BookingsPage({ bookingsData }: any) {
             className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           />
         </div>
+      </div>
       </div>
 
       {/* Main Table Container */}

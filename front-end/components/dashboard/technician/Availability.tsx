@@ -55,6 +55,40 @@ function DayAvailabilityCard({
     name: "slots",
   });
   const onSubmit = async (data: DayPayload) => {
+    // Client-side overlap validation — prevents technicians from submitting
+    // conflicting slots (e.g. 09:00-17:00 AND 15:00-17:00 on the same day).
+    // The backend also validates, but catching it here gives instant feedback.
+    if (Array.isArray(data.slots) && data.slots.length > 0) {
+      const toMin = (t: string) => {
+        const [h, m] = t.split(':');
+        return Number(h) * 60 + Number(m || 0);
+      };
+      const sorted = [...data.slots].sort(
+        (a, b) => toMin(a.start) - toMin(b.start),
+      );
+      for (let i = 1; i < sorted.length; i++) {
+        if (toMin(sorted[i - 1].end) > toMin(sorted[i].start)) {
+          showToast(
+            toastTypes.FAILED,
+            `Overlapping slots: ${sorted[i - 1].start}-${sorted[i - 1].end} and ${sorted[i].start}-${sorted[i].end}. Please fix before saving.`,
+          );
+          setIsUpdating(false);
+          return;
+        }
+      }
+      // Also validate start < end for each slot
+      for (const slot of sorted) {
+        if (toMin(slot.start) >= toMin(slot.end)) {
+          showToast(
+            toastTypes.FAILED,
+            `Slot ${slot.start}-${slot.end} has start time >= end time.`,
+          );
+          setIsUpdating(false);
+          return;
+        }
+      }
+    }
+
     setIsUpdating(true);
     try {
       const res = await updateSlot(data);

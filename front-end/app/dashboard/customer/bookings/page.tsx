@@ -117,8 +117,18 @@ export default function CustomerBookingsPage() {
     }
   };
 
-  useEffect(() => {
+    useEffect(() => {
     getBooking();
+
+    // Refresh the bookings list when the user returns to this tab after
+    // completing a payment on the payment-gateway page. This ensures the
+    // payment status (and the appearance of the "Make Payment" button) is
+    // immediately up-to-date instead of showing stale cached data.
+    const handleFocus = () => {
+      getBooking();
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
   const confirmPayment = async (bookingId: string) => {
     const bookingRes = await createPayment({ bookingId });

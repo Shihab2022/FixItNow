@@ -24,11 +24,70 @@ const UpdateProfile = async (id: string, payload: any) => {
   return result;
 };
 
+/** Convert "HH:MM" → minutes since midnight for easy comparison */
+const toMinutes = (time: string): number => {
+  const [h, m] = time.split(':');
+  return Number(h) * 60 + Number(m || 0);
+};
+
+/**
+ * Validate the new slots for the given day:
+ *  - each slot must have start < end
+ *  - no two slots may overlap (so e.g. 09:00-17:00 and 15:00-17:00 are rejected)
+ * Throws ApiError if any problem is found.
+ */
+const validateTimeSlots = (day: string, slots: TimeSlot[]): void => {
+  if (!Array.isArray(slots) || slots.length === 0) return;
+
+  // 1. Every slot must have start < end
+  for (const slot of slots) {
+    if (!slot.start || !slot.end) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        `Each time slot for ${day} must have a start and end time.`,
+      );
+    }
+    const startMin = toMinutes(slot.start);
+    const endMin = toMinutes(slot.end);
+    if (startMin >= endMin) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        `Slot ${slot.start}-${slot.end} for ${day} has start time >= end time.`,
+      );
+    }
+  }
+
+  // 2. Sort by start time so we can detect overlaps linearly
+  const sorted = [...slots].sort(
+    (a, b) => toMinutes(a.start) - toMinutes(b.start),
+  );
+
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1];
+    const curr = sorted[i];
+    if (!prev || !curr) continue;
+    // Overlap = current slot starts before the previous slot ends
+    if (toMinutes(prev.end) > toMinutes(curr.start)) {
+      throw new ApiError(
+        httpStatus.CONFLICT,
+        `Overlapping time slots detected for ${day}: ` +
+          `${prev.start}-${prev.end} overlaps with ${curr.start}-${curr.end}. ` +
+          'Please remove or adjust the overlapping slot.',
+      );
+    }
+  }
+};
+
 const UpdateAvailability = async (
   userId: string,
   payload: UpdateAvailabilityPayload,
 ) => {
   const { day, slots } = payload;
+
+  // Reject overlapping / invalid slots before persisting — prevents technicians
+  // from creating schedules that allow double-booking (e.g. 09:00-17:00 AND
+  // 15:00-17:00 on the same day).
+  validateTimeSlots(day, slots);
 
   const technician = await prisma.technicianProfile.findUniqueOrThrow({
     where: { userId },
@@ -42,7 +101,11 @@ const UpdateAvailability = async (
   const availability =
     (technician.availability as unknown as Record<string, TimeSlot[]>) || {};
 
-  availability[day] = slots;
+  // Sort slots chronologically (morning → night) before saving so the UI and
+  // any future rendering logic always receives them in a predictable order.
+  availability[day] = [...(slots || [])].sort(
+    (a, b) => toMinutes(a.start) - toMinutes(b.start),
+  );
 
   const result = await prisma.technicianProfile.update({
     where: {

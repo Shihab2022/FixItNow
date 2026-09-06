@@ -19,8 +19,9 @@ import {
   FiTool,
   FiShield,
   FiHelpCircle,
-  FiDollarSign,
+    FiDollarSign,
   FiAlertCircle,
+  FiLock,
 } from "react-icons/fi";
 import { getSingleBookingApi } from "@/service/publicApi";
 import { createPayment } from "@/service/payment";
@@ -79,22 +80,33 @@ export default function BookingDetailPage() {
   const router = useRouter();
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  useEffect(() => {
-    const fetchBookingDetails = async () => {
-      setLoading(true);
-      try {
-        const res = await getSingleBookingApi(params.id as string);
-        if (res?.data?.success) {
-          setBooking(res.data.data);
-        }
-      } catch (err) {
-        console.error("Error fetching booking detail:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
 
+  const fetchBookingDetails = async () => {
+    setLoading(true);
+    try {
+      const res = await getSingleBookingApi(params.id as string);
+      if (res?.data?.success) {
+        setBooking(res.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching booking detail:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchBookingDetails();
+
+    // Re-fetch booking details when the user returns to this tab after
+    // completing a payment on the payment-gateway page. This ensures the
+    // payment status — and the technician contact info reveal — updates
+    // immediately rather than showing stale cached data.
+    const handleFocus = () => {
+      fetchBookingDetails();
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, [params.id]);
   const confirmPayment = async (bookingId: string) => {
     const bookingRes = await createPayment({ bookingId });
@@ -376,21 +388,33 @@ export default function BookingDetailPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-slate-100">
-                <a
-                  href={`tel:${techUser.phone}`}
-                  className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 transition-all"
-                >
-                  <FiPhone className="text-blue-600 text-sm" />
-                  <span>{techUser.phone}</span>
-                </a>
-                <a
-                  href={`mailto:${techUser.email}`}
-                  className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 transition-all truncate"
-                >
-                  <FiMail className="text-blue-600 text-sm shrink-0" />
-                  <span className="truncate">{techUser.email}</span>
-                </a>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-slate-100">
+                {isPaymentComplete ? (
+                  <>
+                    <a
+                      href={`tel:${techUser.phone}`}
+                      className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 transition-all"
+                    >
+                      <FiPhone className="text-blue-600 text-sm" />
+                      <span>{techUser.phone}</span>
+                    </a>
+                    <a
+                      href={`mailto:${techUser.email}`}
+                      className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 transition-all truncate"
+                    >
+                      <FiMail className="text-blue-600 text-sm shrink-0" />
+                      <span className="truncate">{techUser.email}</span>
+                    </a>
+                  </>
+                ) : (
+                  <div className="col-span-2 flex items-center gap-3 p-3.5 rounded-xl bg-amber-50/50 border border-amber-100 text-xs text-amber-700">
+                    <FiLock className="text-amber-500 text-sm shrink-0" />
+                    <span>
+                      Technician contact details will be revealed once your
+                      payment is completed.
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}

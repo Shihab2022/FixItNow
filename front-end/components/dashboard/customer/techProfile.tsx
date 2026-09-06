@@ -100,6 +100,12 @@ const getUniqueSlots = (slots: TimeSlot[]) => {
   });
 };
 
+/** Convert "HH:MM" → minutes since midnight (used for chronological sorting) */
+const toMinutes = (time: string): number => {
+  const [h, m] = time.split(':');
+  return Number(h) * 60 + Number(m || 0);
+};
+
 const getAvatarUrl = (id: string) => {
   const hash = id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const imgNum = (hash % 70) + 1;
@@ -433,9 +439,14 @@ export default function TechProfile({
               {isObjectAvailability ? (
                 <div className="mt-5 divide-y divide-slate-100 rounded-2xl border border-slate-100 bg-slate-50/50 p-2 sm:p-4">
                   {DAYS_ORDER.map((day) => {
-                    const rawSlots = (availability as AvailabilityMap)[day];
+                                        const rawSlots = (availability as AvailabilityMap)[day];
+                    // Deduce unique slots and sort them chronologically
+                    // (morning → night) so they always display in order.
                     const slots = Array.isArray(rawSlots)
-                      ? getUniqueSlots(rawSlots)
+                      ? getUniqueSlots(rawSlots).sort(
+                          (a, b) =>
+                            toMinutes(a.start) - toMinutes(b.start),
+                        )
                       : [];
                     const isToday = currentDayName === day;
                     const hasSlots = slots.length > 0;
@@ -500,7 +511,7 @@ export default function TechProfile({
                 Contact Information
               </h3>
 
-              <div className="mt-5 space-y-4 text-sm">
+                          <div className="mt-5 space-y-4 text-sm">
                 <div className="flex items-center gap-3 text-slate-600">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
                     <Mail className="h-4 w-4" />
@@ -510,7 +521,7 @@ export default function TechProfile({
                       Email
                     </p>
                     <p className="truncate font-semibold text-slate-800">
-                      {technician.user?.email || "N/A"}
+                      ••••••
                     </p>
                   </div>
                 </div>
@@ -524,7 +535,7 @@ export default function TechProfile({
                       Phone
                     </p>
                     <p className="font-semibold text-slate-800">
-                      {technician.user?.phone || "N/A"}
+                      ••••••
                     </p>
                   </div>
                 </div>
@@ -547,6 +558,14 @@ export default function TechProfile({
                       )}
                     </p>
                   </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 mt-2 text-xs text-slate-500 italic flex items-start gap-2">
+                  <Clock className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
+                  <span>
+                    Contact details are revealed after a booking is
+                    confirmed and paid for.
+                  </span>
                 </div>
               </div>
             </div>
