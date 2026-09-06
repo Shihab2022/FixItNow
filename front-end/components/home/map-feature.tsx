@@ -1,28 +1,53 @@
-import { MapPin, Radar, ClipboardList, UserCheck, ArrowRight } from "lucide-react";
+"use client";
+
+import dynamic from "next/dynamic";
 import Link from "next/link";
+import {
+  MapPin,
+  Radar,
+  ClipboardList,
+  UserCheck,
+  ArrowRight,
+  Loader2,
+} from "lucide-react";
+
+/**
+ * The live map preview is loaded client-side only (it needs WebGL), with a
+ * lightweight spinner shown until the tiles are ready.
+ */
+const MapPreview = dynamic(() => import("./map-preview"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-slate-100">
+      <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+    </div>
+  ),
+});
 
 const MAP_FEATURES = [
   {
     icon: Radar,
     title: "Nearest-Match Radar",
-    desc: "Set your location and a 1–50 km radius to instantly see technicians or open tasks around you, sorted by distance.",
+    desc: "Set a 1–50 km radius and instantly see technicians or open tasks around you, sorted by real distance.",
   },
   {
     icon: UserCheck,
     title: "Availability-Aware",
-    desc: "Technicians appear on the map only during their working slots — once their shift ends, they're hidden until back on duty.",
+    desc: "Technicians appear only during their working slots — when their shift ends, they're hidden until back on duty.",
   },
   {
     icon: ClipboardList,
     title: "Post a Task & Get Hired",
-    desc: "Customers drop a task on the map, nearby technicians apply, and accepting one application instantly creates a booking.",
+    desc: "Customers drop a task on the map, technicians apply, and accepting one creates a booking instantly.",
   },
   {
     icon: MapPin,
     title: "Bangladesh-First Search",
-    desc: "Location search is tuned for Bangladesh — find local areas fast, from Dhanmondi and Uttara to Chattogram and Sylhet.",
+    desc: "Location search is tuned for Bangladesh — find local areas fast, from Dhanmondi to Chattogram.",
   },
 ];
+
+const HIGHLIGHTS = ["1–50 km radius", "Live availability", "BD-wide coverage"];
 
 export function MapFeature() {
   return (
@@ -42,35 +67,61 @@ export function MapFeature() {
           </p>
         </div>
 
-        <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {MAP_FEATURES.map((feature) => {
-            const Icon = feature.icon;
-            return (
-              <div
-                key={feature.title}
-                className="rounded-3xl border border-slate-100 bg-slate-50 p-6 transition hover:border-blue-200 hover:bg-blue-50/40"
-              >
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/10 text-blue-600">
-                  <Icon className="h-6 w-6" />
-                </div>
-                <h3 className="font-semibold text-lg text-slate-900">
-                  {feature.title}
-                </h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                  {feature.desc}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+        <div className="mt-14 grid grid-cols-1 items-stretch gap-8 lg:grid-cols-5">
+          {/* Live map preview */}
+          <div className="relative h-[360px] overflow-hidden rounded-3xl border border-slate-200 shadow-lg sm:h-[440px] lg:col-span-3">
+            <MapPreview />
+          </div>
 
-        <div className="mt-10 text-center">
-          <Link
-            href="/map"
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-700"
-          >
-            Open the Live Map <ArrowRight className="h-4 w-4" />
-          </Link>
+          {/* Related information */}
+          <div className="flex flex-col rounded-3xl border border-slate-100 bg-slate-50 p-7 sm:p-8 lg:col-span-2">
+            <h3 className="font-bold text-xl text-slate-900">See it in action</h3>
+            <p className="mt-1.5 text-xs text-slate-500">
+              A live preview of the FixItNow map — drag it around, then jump
+              into the real thing.
+            </p>
+
+            <ul className="mt-6 space-y-5">
+              {MAP_FEATURES.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <li key={feature.title} className="flex gap-3.5">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-semibold text-slate-900">
+                        {feature.title}
+                      </h4>
+                      <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                        {feature.desc}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              {HIGHLIGHTS.map((chip) => (
+                <span
+                  key={chip}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-medium text-slate-600"
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-auto pt-7">
+              <Link
+                href="/map"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-700"
+              >
+                Open the Live Map <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </section>
