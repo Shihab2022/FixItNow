@@ -173,9 +173,21 @@ const updateMe = async (user: IAuthUser, payload: any) => {
   const updateData = Object.fromEntries(
     Object.entries(payload).filter(([_, value]) => value !== undefined),
   );
+
+  // If latitude/longitude are being updated, also record them in the
+  // location-history table so we can show the user's last-searched location.
+  const { latitude, longitude, ...rest } = updateData;
+  const hasCoords = latitude !== undefined && longitude !== undefined;
+  const address = typeof updateData.address === "string"
+    ? updateData.address
+    : undefined;
+
   const result = await prisma.user.update({
     where: { id: user?.id },
-    data: updateData,
+    data: {
+      ...rest,
+      ...(hasCoords ? { latitude, longitude } : {}),
+    },
     select: {
       id: true,
       email: true,
@@ -192,6 +204,23 @@ const updateMe = async (user: IAuthUser, payload: any) => {
       updatedAt: true,
     },
   });
+
+  if (hasCoords && user) {
+    // Non-blocking: persist a history entry for the new coordinates.
+    prisma.locationHistory
+      .create({
+        data: {
+          userId: user.id,
+          latitude: Number(latitude),
+          longitude: Number(longitude),
+          address,
+        },
+      })
+      .catch((err) =>
+        console.error("[Auth] Failed to record location history:", err),
+      );
+  }
+
   return result;
 };
 

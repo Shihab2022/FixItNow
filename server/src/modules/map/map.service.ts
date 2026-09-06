@@ -92,6 +92,10 @@ const listNearbyTechnicians = async (query: NearQuery) => {
       const categories = t.services.map((s) => s.category);
       return {
         ...t,
+        // Top-level coordinates so the frontend marker/renderer can place
+        // them on the map without digging into the nested user object.
+        latitude: lat,
+        longitude: lng,
         distanceKm: Number(distanceKm.toFixed(2)),
         rating: Number(rating.toFixed(1)),
         categories,
@@ -105,6 +109,126 @@ const listNearbyTechnicians = async (query: NearQuery) => {
       };
     })
     .filter((t) => t.distanceKm <= radiusKm)
+    .sort((a, b) => a.distanceKm - b.distanceKm);
+
+  return {
+    meta: { total: mapped.length, radiusKm },
+    data: mapped,
+  };
+};
+
+/**
+ * Save a location for the user — creates a LocationHistory entry and
+ * updates the user's current latitude/longitude so the map can centre
+ * on their last-shared position next time.
+ */
+const saveLocation = async (params: {
+  userId: string;
+  latitude: number;
+  longitude: number;
+  address?: string;
+  label?: string;
+}) => {
+  const { userId, latitude, longitude, address, label } = params;
+
+  // 1. Update the user's current lat/lng (so the map centres on this next visit)
+  await prisma.user.update({
+    where: { id: userId },
+    data: { latitude, longitude },
+  });
+
+  // 2. Append to the location history table (all searches & shared locations)
+  return await prisma.locationHistory.create({
+    data: {
+      userId,
+      latitude,
+      longitude,
+      address,
+      label,
+    },
+  });
+};
+
+/**
+ * Returns the user's most-recent saved location (or null if none exists).
+ */
+const getLastLocation = async (userId: string) => {
+  return await prisma.locationHistory.findFirst({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      latitude: true,
+      longitude: true,
+      address: true,
+      label: true,
+      createdAt: true,
+    },
+  });
+};
+
+/**
+ * Returns the full location history for a user (most-recent first).
+ */
+const getLocationHistory = async (userId: string) => {
+  return await prisma.locationHistory.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      latitude: true,
+      longitude: true,
+      address: true,
+      label: true,
+      createdAt: true,
+    },
+  });
+};
+
+/**
+ * For technicians: list nearby users (customers) who have a location set,
+ * sorted by distance (Haversine).
+ */
+const listNearbyUsers = async (query: NearQuery) => {
+  const { latitude, longitude } = query;
+  const radiusKm = clampRadius(query.radiusKm);
+
+  const users = await prisma.user.findMany({
+    where: {
+      role: Role.CUSTOMER,
+      latitude: { not: null },
+      longitude: { not: null },
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      imageUrl: true,
+      address: true,
+      latitude: true,
+      longitude: true,
+      reviewsReceived: { select: { rating: true } },
+    },
+  });
+
+  const mapped = users
+    .map((u) => {
+      const lat = u.latitude as number;
+      const lng = u.longitude as number;
+      const distanceKm = haversineKm(latitude, longitude, lat, lng);
+      const rating =
+        u.reviewsReceived.length
+          ? u.reviewsReceived.reduce((sum, r) => sum + r.rating, 0) /
+            u.reviewsReceived.length
+          : 5;
+      return {
+        ...u,
+        distanceKm: Number(distanceKm.toFixed(2)),
+        rating: Number(rating.toFixed(1)),
+      };
+    })
+    .filter((u) => u.distanceKm <= radiusKm)
     .sort((a, b) => a.distanceKm - b.distanceKm);
 
   return {
@@ -157,4 +281,8 @@ const listNearbyTasks = async (query: NearQuery) => {
 export const MapService = {
   listNearbyTechnicians,
   listNearbyTasks,
+  listNearbyUsers,
+  saveLocation,
+  getLastLocation,
+  getLocationHistory,
 };

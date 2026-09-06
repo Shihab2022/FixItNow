@@ -140,3 +140,61 @@ export const getAllCategories = async () => {
   });
   return res;
 };
+
+/** Save a location to the user's history and update their profile lat/lng */
+export const saveLocationHistory = async (params: {
+  latitude: number;
+  longitude: number;
+  address?: string;
+  label?: string;
+}) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `map/locations`,
+    method: apiMethods.POST as keyof typeof apiMethods,
+    formData: false,
+    params,
+  });
+  return res;
+};
+
+/** Get the user's most-recent saved location */
+export const getLastLocationApi = async () => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `map/locations/last`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+  return res;
+};
+
+/** Get the full location history for the user */
+export const getLocationHistoryApi = async () => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `map/locations`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params: {},
+  });
+  return res;
+};
+
+/** For technicians: fetch nearby users (customers) on the map */
+export const getNearbyUsers = async (params: {
+  latitude: number;
+  longitude: number;
+  radiusKm?: number;
+  categoryId?: string;
+}) => {
+  const res = await apiHandler({
+    baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+    path: `map/users`,
+    method: apiMethods.GET as keyof typeof apiMethods,
+    formData: false,
+    params,
+  });
+  return res;
+};

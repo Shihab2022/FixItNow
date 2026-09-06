@@ -24,6 +24,8 @@ model User {
 
   payments Payment[]
 
+  locationHistory LocationHistory[]
+
   reviewsGiven    Review[] @relation("CustomerReviews")
   reviewsReceived Review[] @relation("TechnicianReviews")
 

@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import {
@@ -20,6 +22,10 @@ import {
   Map as MapIcon,
   Briefcase,
   Layers,
+  User as UserIcon,
+  Star,
+  Phone,
+  Clock,
 } from "lucide-react";
 import {
   Map,
@@ -33,9 +39,12 @@ import {
 import type { StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
+  saveLocationHistory,
+  getLastLocationApi,
+  getLocationHistoryApi,
+  getNearbyUsers,
   getMapTechnicians,
   getMapTasks,
-  saveUserLocation,
   getAllCategories,
 } from "@/service/map";
 import { showToast } from "@/components/toast/toast";
@@ -60,6 +69,41 @@ interface MapMarkerItem {
   id: string;
   latitude: number;
   longitude: number;
+}
+
+/** One autocomplete suggestion returned by the Nominatim geocoder. */
+interface SearchSuggestion {
+  place_id: number;
+  osm_type?: string;
+  lat: string;
+  lon: string;
+  display_name: string;
+  type?: string;
+  category?: string;
+}
+
+/** A saved location entry stored in the user's location history. */
+interface LocationHistoryEntry {
+  id: string;
+  latitude: number;
+  longitude: number;
+  address?: string | null;
+  label?: string | null;
+  createdAt?: string;
+}
+
+/** A nearby customer returned by GET /map/users (technician view). */
+interface NearbyMapUser {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  imageUrl?: string | null;
+  address?: string | null;
+  latitude: number;
+  longitude: number;
+  distanceKm: number;
+  rating?: number;
 }
 
 const DEFAULT_CENTER = { latitude: 23.8103, longitude: 90.4125, zoom: 12 };
@@ -191,6 +235,8 @@ const MapCanvas = memo(function MapCanvas({
   isCustomer,
   mapStyle,
   onItemClick,
+  nearbyUsers,
+  onUserItemClick,
 }: {
   mapRef: RefObject<MapRef | null>;
   userLocation: { latitude: number; longitude: number } | null;
@@ -199,6 +245,8 @@ const MapCanvas = memo(function MapCanvas({
   isCustomer: boolean;
   mapStyle: string | StyleSpecification;
   onItemClick: (item: MapMarkerItem) => void;
+  nearbyUsers: MapMarkerItem[];
+  onUserItemClick: (item: MapMarkerItem) => void;
 }) {
   // Live radius boundary — regenerated only when the location or radius changes.
   const circle = useMemo(
@@ -238,6 +286,24 @@ const MapCanvas = memo(function MapCanvas({
         </Marker>
       )),
     [items, isCustomer, onItemClick],
+  );
+
+  // Technicians also see nearby customers (users) as purple person markers.
+  const userMarkers = useMemo(
+    () =>
+      nearbyUsers.map((u) => (
+        <Marker
+          key={`user-${u.id}`}
+          latitude={u.latitude}
+          longitude={u.longitude}
+          onClick={() => onUserItemClick(u)}
+        >
+          <div className="cursor-pointer w-8 h-8 rounded-full flex items-center justify-center bg-violet-500 border-2 border-white shadow-lg transition-transform hover:scale-110">
+            <UserIcon className="w-4 h-4 text-white" />
+          </div>
+        </Marker>
+      )),
+    [nearbyUsers, onUserItemClick],
   );
 
   return (
@@ -297,6 +363,7 @@ const MapCanvas = memo(function MapCanvas({
         </Marker>
       )}
       {markers}
+      {!isCustomer && userMarkers}
     </Map>
   );
 });
@@ -323,6 +390,7 @@ export default function MapView({ user }: { user: User }) {
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<NearbyMapUser | null>(null);
   const [geocoding, setGeocoding] = useState(false);
   const [mapStyleId, setMapStyleId] = useState<string>(() => {
     if (typeof window !== "undefined") {
@@ -331,7 +399,19 @@ export default function MapView({ user }: { user: User }) {
     }
     return MAP_STYLES[0].id;
   });
-  const [showStylePicker, setShowStylePicker] = useState(false);
+    const [showStylePicker, setShowStylePicker] = useState(false);
+
+  // --- Autocomplete & location-history state ---
+  const [searchResults, setSearchResults] = useState<SearchSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [locationHistory, setLocationHistory] = useState<LocationHistoryEntry[]>(
+    [],
+  );
+  const [lastLocation, setLastLocation] = useState<LocationHistoryEntry | null>(
+    null,
+  );
+  const [nearbyUsers, setNearbyUsers] = useState<NearbyMapUser[]>([]);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   /** Resolve the selected style definition (URL string or inline style object). */
   const currentMapStyle = useMemo(
@@ -396,20 +476,43 @@ export default function MapView({ user }: { user: User }) {
         radiusKm: debouncedRadius,
         categoryId: selectedCategory || undefined,
       };
-      const res = isCustomer
-        ? await getMapTechnicians({
-            ...base,
-            q: debouncedSearch || undefined,
-          })
-        : await getMapTasks(base);
-      if (res?.data?.success) {
-        setItems(res.data.data.data || []);
+
+      if (isCustomer) {
+        const res = await getMapTechnicians({
+          ...base,
+          q: debouncedSearch || undefined,
+        });
+        if (res?.data?.success) {
+          setItems(res.data.data.data || []);
+        } else {
+          setItems([]);
+        }
       } else {
-        setItems([]);
+        // Technician: show nearby tasks AND nearby users (customers)
+        const [tasksRes, usersRes] = await Promise.all([
+          getMapTasks(base),
+          getNearbyUsers({
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+            radiusKm: debouncedRadius,
+            categoryId: selectedCategory || undefined,
+          }),
+        ]);
+
+        const taskItems = tasksRes?.data?.success
+          ? tasksRes.data.data.data || []
+          : [];
+        const userItems = usersRes?.data?.success
+          ? usersRes.data.data.data || []
+          : [];
+
+        setItems(taskItems);
+        setNearbyUsers(userItems);
       }
     } catch (err) {
       console.error("Failed to fetch map items:", err);
       setItems([]);
+      if (!isCustomer) setNearbyUsers([]);
     } finally {
       setLoading(false);
     }
@@ -444,32 +547,102 @@ export default function MapView({ user }: { user: User }) {
     }
   }, [fetchItems, userLocation]);
 
+  // --- Load last location + history from DB on first mount ---
+  const loadLastLocation = useCallback(async () => {
+    try {
+      const res = await getLastLocationApi();
+      if (res?.data?.success && res.data.data) {
+        const loc = res.data.data;
+        setLastLocation(loc);
+        if (!userLocation && loc.latitude && loc.longitude) {
+          setUserLocation({
+            latitude: Number(loc.latitude),
+            longitude: Number(loc.longitude),
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load last location:", err);
+    }
+
+    try {
+      const histRes = await getLocationHistoryApi();
+      if (histRes?.data?.success && histRes.data.data) {
+        setLocationHistory(histRes.data.data);
+      }
+    } catch (err) {
+      console.warn("Failed to load location history:", err);
+    }
+  }, [userLocation]);
+
+  useEffect(() => {
+    loadLastLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (!user.latitude || !user.longitude) {
-      setShowPermissionModal(true);
+      if (!userLocation) {
+                setShowPermissionModal(true);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const requestLocationPermission = () => {
+  /** Reverse-geocode coordinates to a human-readable address via Nominatim */
+  const reverseGeocode = async (
+    lat: number,
+    lon: number,
+  ): Promise<string | undefined> => {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+      const res = await fetch(url, {
+        headers: { "Accept-Language": "en" },
+      });
+      const data = await res.json();
+      return data?.display_name;
+    } catch {
+      return undefined;
+    }
+  };
+
+  /** Persist a new search/selected location to DB history + user profile */
+  const saveNewLocation = useCallback(
+    async (lat: number, lon: number, address?: string) => {
+      setUserLocation({ latitude: lat, longitude: lon });
+      setShowSuggestions(false);
+      setSearchResults([]);
+
+      try {
+        const res = await saveLocationHistory({
+          latitude: lat,
+          longitude: lon,
+          address,
+        });
+        if (res?.data?.success && res.data.data) {
+          setLastLocation(res.data.data);
+          setLocationHistory((prev) => [res.data.data, ...prev]);
+        }
+      } catch (err) {
+        console.warn("Failed to save location history:", err);
+      }
+    },
+    [],
+  );
+
+    const requestLocationPermission = () => {
     if (!navigator.geolocation) {
       showToast(toastTypes.FAILED, "Geolocation is not supported by your browser");
       return;
     }
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const loc = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
-        setUserLocation(loc);
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
         setShowPermissionModal(false);
-        fitRadiusToView(loc.latitude, loc.longitude, radiusKm);
-        try {
-          await saveUserLocation(loc);
-        } catch {
-          // non-blocking; local state already updated
-        }
+        fitRadiusToView(lat, lon, radiusKm);
+        const address = await reverseGeocode(lat, lon);
+        await saveNewLocation(lat, lon, address);
         showToast(toastTypes.SUCCESS, "Location updated successfully!");
       },
       (error) => {
@@ -488,29 +661,66 @@ export default function MapView({ user }: { user: User }) {
     setShowPermissionModal(false);
   };
 
-  const handleSearch = (value: string) => {
+  const handleSearch = async (value: string) => {
     setSearchQuery(value);
+
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    if (!value.trim()) return;
+    if (!value.trim()) {
+      setSearchResults([]);
+      setShowSuggestions(false);
+      return;
+    }
+
     searchTimerRef.current = setTimeout(async () => {
       setGeocoding(true);
       try {
-        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(value)}&limit=1`;
+        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(value)}&limit=5`;
         const res = await fetch(url, {
           headers: { "Accept-Language": "en" },
         });
         const data = await res.json();
-        if (data?.length) {
-          const lat = parseFloat(data[0].lat);
-          const lon = parseFloat(data[0].lon);
-          flyTo(lat, lon, 13);
+        if (Array.isArray(data)) {
+          setSearchResults(data);
+          setShowSuggestions(true);
+        } else {
+          setSearchResults([]);
+          setShowSuggestions(false);
         }
       } catch (err) {
-        console.warn("Geocoding failed:", err);
+        console.warn("Autocomplete geocoding failed:", err);
+        setSearchResults([]);
+        setShowSuggestions(false);
       } finally {
         setGeocoding(false);
       }
     }, 600);
+  };
+
+  /** Called when the user clicks (or presses Enter on) a suggestion */
+  const handleSelectSuggestion = async (suggestion: SearchSuggestion) => {
+    const lat = parseFloat(suggestion.lat);
+    const lon = parseFloat(suggestion.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+    flyTo(lat, lon, 13);
+    await saveNewLocation(lat, lon, suggestion.display_name);
+    setSearchQuery("");
+    setDebouncedSearch("");
+    fitRadiusToView(lat, lon, radiusKm);
+  };
+
+  /** Allow pressing Enter to pick the first suggestion from the dropdown */
+  const handleSuggestionKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key === "Enter" && searchResults.length > 0) {
+      e.preventDefault();
+      handleSelectSuggestion(searchResults[0]);
+    }
+    if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setSearchResults([]);
+    }
   };
 
   const centerOnUser = () => {
@@ -524,6 +734,16 @@ export default function MapView({ user }: { user: User }) {
   const handleItemClick = useCallback(
     (item: any) => {
       setSelectedItem(item);
+      setSelectedUser(null);
+      flyTo(item.latitude, item.longitude, 13);
+    },
+    [flyTo],
+  );
+
+  const handleUserItemClick = useCallback(
+    (item: any) => {
+      setSelectedUser(item);
+      setSelectedItem(null);
       flyTo(item.latitude, item.longitude, 13);
     },
     [flyTo],
@@ -537,6 +757,7 @@ export default function MapView({ user }: { user: User }) {
       router.push(`/tasks/${selectedItem.id}`);
     }
   };
+
   return (
     <div className="relative h-[calc(100vh-5rem)] w-full">
       {showPermissionModal && (
@@ -581,13 +802,102 @@ export default function MapView({ user }: { user: User }) {
           <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search location (e.g. Dhanmondi, Dhaka)..."
+            value={searchQuery}
+            placeholder={
+              lastLocation?.address
+                ? `Last: ${lastLocation.address}`
+                : "Search location (e.g. Dhanmondi, Dhaka)..."
+            }
             onChange={(e) => handleSearch(e.target.value)}
+            onFocus={() => {
+              setSearchFocused(true);
+              if (searchResults.length > 0) setShowSuggestions(true);
+            }}
+            onBlur={() => {
+              setSearchFocused(false);
+              setTimeout(() => setShowSuggestions(false), 150);
+            }}
+            onKeyDown={handleSuggestionKeyDown}
             className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 bg-white shadow-lg text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {geocoding && (
             <Loader2 className="absolute right-3.5 top-3 w-4 h-4 text-blue-500 animate-spin" />
           )}
+
+          {showSuggestions && searchResults.length > 0 && (
+            <div className="absolute left-0 right-0 top-full mt-1.5 max-h-80 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-2xl z-30">
+              {searchResults.map((result, idx) => (
+                <button
+                  key={`${result.place_id}-${idx}`}
+                  onClick={() => handleSelectSuggestion(result)}
+                  className="w-full flex items-start gap-2.5 px-3.5 py-2.5 text-left hover:bg-blue-50 transition-colors"
+                >
+                  <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-800 truncate">
+                      {result.display_name}
+                    </p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {result.type === "city" || result.type === "administrative"
+                        ? "City / Region"
+                        : result.type === "road"
+                          ? "Street"
+                          : "Place"}
+                      {result.lat && result.lon
+                        ? ` • ${parseFloat(result.lat).toFixed(4)}, ${parseFloat(
+                            result.lon,
+                          ).toFixed(4)}`
+                        : ""}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!showSuggestions &&
+            !geocoding &&
+            searchQuery === "" &&
+            searchFocused &&
+            locationHistory.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-1.5 max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-2xl z-30">
+                <p className="px-3.5 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Recent locations
+                </p>
+                {locationHistory.slice(0, 5).map((loc, idx) => (
+                  <button
+                    key={`${loc.id}-${idx}`}
+                    onClick={() => {
+                      flyTo(
+                        Number(loc.latitude),
+                        Number(loc.longitude),
+                        13,
+                      );
+                      saveNewLocation(
+                        Number(loc.latitude),
+                        Number(loc.longitude),
+                        loc.address ?? undefined,
+                      );
+                      setSearchQuery("");
+                      setDebouncedSearch("");
+                      fitRadiusToView(
+                        Number(loc.latitude),
+                        Number(loc.longitude),
+                        radiusKm,
+                      );
+                    }}
+                    className="w-full flex items-start gap-2.5 px-3.5 py-2.5 text-left hover:bg-blue-50 transition-colors"
+                  >
+                    <Clock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                    <span className="text-sm text-slate-700 truncate">
+                      {loc.address || `${Number(loc.latitude).toFixed(4)}, ${Number(
+                        loc.longitude,
+                      ).toFixed(4)}`}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
@@ -718,10 +1028,24 @@ export default function MapView({ user }: { user: User }) {
         <span className="text-sm font-medium text-slate-700">
           {loading
             ? "Searching..."
-            : `${items.length} ${
-                isCustomer ? "technician" : "task"
-              }${items.length !== 1 ? "s" : ""} found within ${radiusKm} km`}
+            : isCustomer
+              ? `${items.length} ${
+                  items.length !== 1 ? "technicians" : "technician"
+                } found within ${radiusKm} km`
+              : `${items.length} task${items.length !== 1 ? "s" : ""} • ${nearbyUsers.length} user${nearbyUsers.length !== 1 ? "s" : ""} within ${radiusKm} km`}
         </span>
+        {!isCustomer && !loading && (
+          <>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              <span className="text-[11px] text-slate-500">Task</span>
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full bg-violet-500" />
+              <span className="text-[11px] text-slate-500">User</span>
+            </span>
+          </>
+        )}
       </div>
 
       {selectedItem && (
@@ -790,6 +1114,42 @@ export default function MapView({ user }: { user: User }) {
         </div>
       )}
 
+      {selectedUser && (
+        <div className="absolute bottom-6 right-4 z-10 bg-white rounded-xl shadow-xl border border-violet-200 p-5 w-80 space-y-3">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-bold text-slate-900">{selectedUser.name}</h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {selectedUser.distanceKm} km away
+                {selectedUser.address ? ` • ${selectedUser.address}` : ""}
+              </p>
+            </div>
+            <button
+              onClick={() => setSelectedUser(null)}
+              className="text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="space-y-1.5 text-xs text-slate-600">
+            <p className="flex items-center gap-1.5">
+              <Phone className="w-3.5 h-3.5 text-slate-400" />
+              <span>{selectedUser.phone || "N/A"}</span>
+            </p>
+            <p className="flex items-center gap-1.5">
+              <Star className="w-3.5 h-3.5 text-amber-400" />
+              <span>{selectedUser.rating ?? 5} rating</span>
+            </p>
+          </div>
+          <button
+            onClick={() => router.push("/tasks")}
+            className="w-full py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-lg text-sm transition-all"
+          >
+            View As Task & Apply
+          </button>
+        </div>
+      )}
+
       <MapCanvas
         mapRef={mapRef}
         userLocation={userLocation}
@@ -798,6 +1158,8 @@ export default function MapView({ user }: { user: User }) {
         isCustomer={isCustomer}
         mapStyle={currentMapStyle}
         onItemClick={handleItemClick}
+        nearbyUsers={nearbyUsers}
+        onUserItemClick={handleUserItemClick}
       />
     </div>
   );

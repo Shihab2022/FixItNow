@@ -1,0 +1,13 @@
+model LocationHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  latitude  Float
+  longitude Float
+  address   String?
+  label     String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("location_history")
+}
