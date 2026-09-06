@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { CheckCircle2, Star, ShieldCheck, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export function HeroSection() {
   return (
@@ -32,12 +33,12 @@ export function HeroSection() {
               </p>
 
               <div className="mt-8 flex flex-wrap gap-4">
-                <a
-                  href="#search"
+                <Link
+                  href="/services"
                   className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3.5 font-semibold text-white shadow-md transition hover:bg-blue-700"
                 >
                   Find Services <ArrowRight className="h-4 w-4" />
-                </a>
+                </Link>
                 <a
                   href="#technician"
                   className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3.5 font-semibold text-slate-800 transition hover:bg-slate-50"
